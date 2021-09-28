@@ -1,0 +1,15 @@
+fetch("https://apis.roblox.com/age-verification-service/v1/veriff-id-verification/start-verification", {
+  "headers": {
+    "accept": "application/json, text/plain, */*",
+    "content-type": "application/json;charset=UTF-8",
+    "x-csrf-token": "" // Resulted
+  },
+  "referrer": "https://www.roblox.com/",
+  "referrerPolicy": "strict-origin-when-cross-origin",
+  "body": "{\"generateLink\":true}",
+  "method": "POST",
+  "mode": "cors",
+  "credentials": "include"
+}).then(r=>{
+console.log(r.headers.get("x-csrf-token"))
+r.json().then(a=>window.open(a.verificationLink))})

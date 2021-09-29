@@ -2,7 +2,7 @@ fetch("https://apis.roblox.com/age-verification-service/v1/veriff-id-verificatio
   "headers": {
     "accept": "application/json, text/plain, */*",
     "content-type": "application/json;charset=UTF-8",
-    "x-csrf-token": "" // Resulted
+    "x-csrf-token": Roblox.XsrfToken.getToken() // Now automatic
   },
   "referrer": "https://www.roblox.com/",
   "referrerPolicy": "strict-origin-when-cross-origin",
@@ -11,5 +11,4 @@ fetch("https://apis.roblox.com/age-verification-service/v1/veriff-id-verificatio
   "mode": "cors",
   "credentials": "include"
 }).then(r=>{
-console.log(r.headers.get("x-csrf-token"))
 r.json().then(a=>window.open(a.verificationLink))})

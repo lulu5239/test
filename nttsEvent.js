@@ -59,3 +59,7 @@
         // For the typing: use Fergun > OCR, or Nekotina ( https://discord.com/oauth2/authorize?client_id=429457053791158281 ) > Read from image
         return interaction.reply({ephemeral:true,content:"Mini-game not supported."})
       }
+// Egg 1: 656767
+// Egg 2: tookyalongenough
+// Egg 3: cat
+// Egg 4 (maybe): GOTTERDAMGERUNG

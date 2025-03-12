@@ -26,7 +26,7 @@
         party[card.dataset["amid"]] = {
           cardid:card.dataset["cardid"],
           element:null,
-          name:null,
+          name:card.dataset["nameonly"],
         }
       }
     }

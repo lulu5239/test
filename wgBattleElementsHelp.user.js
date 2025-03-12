@@ -44,11 +44,11 @@
     ">":{text:"More damage", good:1},
     ">>":{text:"Good", good:2},
     ">>>":{text:"Perfect", good:3},
-    "!>":{text:"More defense", good:1},
+    "!>":{text:"Less defense", good:-1},
     "<":{text:"Less damage", good:-1},
     "<<":{text:"Bad", good:-2},
     "<<<":{text:"Very bad", good:-3},
-    "!<":{text:"Less defense", good:-1},
+    "!<":{text:"More defense", good:1},
     "><":{text:"Both damages more", good:0},
     "<>":{text:"Both damages less", good:0},
   }

@@ -7,6 +7,7 @@
 // @match        https://waifugame.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=waifugame.com
 // @grant        none
+// @updateURL    https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.js
 // ==/UserScript==
 
 (function() {

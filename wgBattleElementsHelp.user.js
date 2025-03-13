@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-12
+// @version      2025-03-13
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -44,11 +44,11 @@
     ">":{text:"More damage", good:1},
     ">>":{text:"Good", good:2},
     ">>>":{text:"Perfect", good:3},
-    "!>":{text:"Less defense", good:-1},
+    "!>":{text:"Less defense", good:-0.9},
     "<":{text:"Less damage", good:-1},
     "<<":{text:"Bad", good:-2},
     "<<<":{text:"Very bad", good:-3},
-    "!<":{text:"More defense", good:1},
+    "!<":{text:"More defense", good:0.9},
     "><":{text:"Both damages more", good:0},
     "<>":{text:"Both damages less", good:0},
   }
@@ -78,38 +78,85 @@
     }
   return}
   
-    let previousParty = party
-    party = {}
-    for(let card of initialSwapData){
-      party[card.id] = {
-        cardid:previousParty[card.id]?.cardid,
-        element:card.element?.toLowerCase(),
-        name:card.name,
-      }
+  let previousParty = party
+  party = {}
+  for(let card of initialSwapData){
+    party[card.id] = {
+      cardid:previousParty[card.id]?.cardid,
+      element:card.element?.toLowerCase(),
+      name:card.name,
     }
-    localStorage["y_WG-party"] = JSON.stringify(party)
-    
-    let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
-    let originalHandleSwapPlayer2 = handleSwapPlayer2
-    handleSwapPlayer2 = (...args)=>{
-      opponentElement = args[0].element?.toLowerCase()
-      return originalHandleSwapPlayer2(...args)
+  }
+  localStorage["y_WG-party"] = JSON.stringify(party)
+
+  let handleSwapParty = cards=>{
+    for(let card of cards){
+      party[card.id].hp = card.currentHP
+      party[card.id].level = card.lvl
+      party[card.id].id = card.id
     }
-    document.querySelector("#btn_swap").addEventListener("click", ()=>{
-      for(let card of document.querySelector("#action_swap").children){
-        let button = card.querySelector("button")
-        let data = party[button.dataset.swapto]
-        if(!data){continue}
-        let text = button.querySelector(".elementInfo")
-        if(!text){
-          text = document.createElement("a")
-          text.style = "display:block; corner-radius:2px"
-          text.class = "elementInfo"
-          button.appendChild(text)
-        }
-        let effect = advantagesSymbols[advantages.find(e=>e[0]===data.element && e[2]===opponentElement)?.[1] || "!"+advantages.find(e=>e[2]===data.element && e[0]===opponentElement)?.[1]]
-        text.innerText = !effect ? "No advantage" : effect.text
-        text.style.backgroundColor = !effect?.good ? "#0000" : effect.good>0 ? `#0${(5+effect.good*3).toString(16)}0${(5+effect.good*3).toString(16)}` : `#${(5+effect.good*-3).toString(16)}00${(5+effect.good*-3).toString(16)}`
+    document.querySelector("#swapForXPoption").style.display = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0) ? "block" : "none"
+  }
+  let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
+  
+  let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
+  let originalHandleSwapPlayer2 = handleSwapPlayer2
+  handleSwapPlayer2 = (...args)=>{
+    opponentElement = args[0].element?.toLowerCase()
+    updateGoodness()
+    return originalHandleSwapPlayer2(...args)
+  }
+  let originalHandleSwap = handleSwap
+  handleSwap = (...args)=>{
+    currentCard = Object.values(party).find(c=>c.name===args[0].name) // No better way...
+    currentCard.receivingXP = true
+    handleSwapParty(args[0].swap_party)
+    let r = originalHandleSwap(...args)
+    setTimeout(()=>{
+      updateGoodness()
+      window.scrollTo(0,window.innerHeight)
+    },1000)
+    return r
+  }
+  let actionSwapList = document.querySelector("#action_swap")
+  //document.querySelector("#btn_swap").addEventListener("click", ()=>{
+  var updateGoodness = ()=>{
+    for(let card of actionSwapList.children){
+      let button = card.querySelector("button")
+      let data = party[button.dataset.swapto]
+      if(!data){continue}
+      let text = button.querySelector(".elementInfo")
+      if(!text){
+        text = document.createElement("a")
+        text.style = "display:block; corner-radius:2px"
+        text.className = "elementInfo"
+        button.appendChild(text)
       }
-    })
+      let effect = advantagesSymbols[advantages.find(e=>e[0]===data.element && e[2]===opponentElement)?.[1] || "!"+advantages.find(e=>e[2]===data.element && e[0]===opponentElement)?.[1]]
+      text.innerText = !effect ? "No advantage" : effect.text
+      text.style.backgroundColor = !effect?.good ? "#0000" : effect.good>0 ? `#0${(5+Math.ceil(effect.good)*3).toString(16)}0${(5+Math.ceil(effect.good)*3).toString(16)}` : `#${(5+Math.floor(effect.good)*-3).toString(16)}00${(5+Math.floor(effect.good)*-3).toString(16)}`
+      data.good = effect?.good || 0
+    }
+  }
+  updateGoodness()
+  let actionMenu = document.querySelector("#action_menu")
+  actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2" id="swapForXPoption"><button id="btn_swapForXP" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Level up cards</button><div>`)
+  party[initialSwapData[0].id].receivingXP = true
+  actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
+    let card = Object.values(party).find(card=>card.level<120 && !card.receivingXP && card.hp>0)
+    if(!card){return}
+    actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
+  })
+  actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_swapToBest" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Swap to best</button><div>`)
+  actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
+    let max = -9
+    for(let id in party){
+      if(!party[id].hp){continue}
+      if(party[id].good>max){max=party[id].good}
+    }
+    let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
+    if(card===currentCard){return} // Couldn't find better way to identify the current card
+    actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
+  })
+  handleSwapParty(initialSwapData)
 })();

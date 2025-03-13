@@ -140,7 +140,7 @@
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2" id="swapForXPoption"><button id="btn_swapForXP" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Level up cards</button><div>`)
   party[initialSwapData[0].id].receivingXP = true
   actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
-    let card = Object.values(party).find(card=>card.level<120 && !card.receivingXP)
+    let card = Object.values(party).find(card=>card.level<120 && !card.receivingXP && card.hp>0)
     if(!card){return}
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
@@ -148,6 +148,7 @@
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max = -9
     for(let id in party){
+      if(!party[id].hp){continue}
       if(party[id].good>max){max=party[id].good}
     }
     let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]

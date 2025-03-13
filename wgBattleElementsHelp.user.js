@@ -113,6 +113,9 @@
     handleSwapParty(args[0].swap_party)
     let r = originalHandleSwap(...args)
     updateGoodness()
+    setTimeout(()=>{
+      window.scrollTo(0,window.innerHeight)
+    },1000)
     return r
   }
   let actionSwapList = document.querySelector("#action_swap")

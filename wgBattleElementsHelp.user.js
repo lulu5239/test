@@ -97,7 +97,6 @@
     }
     document.querySelector("#swapForXPoption").style.display = Object.values(party).find(c=>c.lvl<120 && !c.receivingXP) ? "block" : "none"
   }
-  handleSwapParty(initialSwapData)
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
   
   let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
@@ -109,9 +108,9 @@
   }
   let originalHandleSwap = handleSwap 
   handleSwap = (...args)=>{
-    handleSwapParty(args[0].swap_party)
     currentCard = party[args[0].swap_party.slice(-1)[0].id]
-    currentCard.receivingXP
+    currentCard.receivingXP = true
+    handleSwapParty(args[0].swap_party)
     let r = originalHandleSwap(...args)
     updateGoodness()
     return r
@@ -155,4 +154,5 @@
     if(card===currentCard){return} // Couldn't find better way to identify the current card
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
+  handleSwapParty(initialSwapData)
 })();

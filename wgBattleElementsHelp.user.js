@@ -92,6 +92,8 @@
   let handleSwapParty = cards=>{
     for(let card of cards){
       party[card.id].HP = card.currentHP
+      party[card.id].level = card.lvl
+      party[card.id].id = card.id
     }
   }
   handleSwapParty(initialSwapData)
@@ -107,7 +109,9 @@
   handleSwap = (...args)=>{
     handleSwapParty(args[0].swap_party)
     party[args[0].swap_party.slice(-1)[0].id].receivingXP
-    return originalHandleSwap(...args)
+    let r = originalHandleSwap(...args)
+    updateGoodness()
+    return r
   }
   let actionSwapList = document.querySelector("#action_swap")
   //document.querySelector("#btn_swap").addEventListener("click", ()=>{
@@ -126,6 +130,7 @@
       let effect = advantagesSymbols[advantages.find(e=>e[0]===data.element && e[2]===opponentElement)?.[1] || "!"+advantages.find(e=>e[2]===data.element && e[0]===opponentElement)?.[1]]
       text.innerText = !effect ? "No advantage" : effect.text
       text.style.backgroundColor = !effect?.good ? "#0000" : effect.good>0 ? `#0${(5+effect.good*3).toString(16)}0${(5+effect.good*3).toString(16)}` : `#${(5+effect.good*-3).toString(16)}00${(5+effect.good*-3).toString(16)}`
+      data.good = effect?.good || 0
     }
   }
   updateGoodness()

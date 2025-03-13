@@ -112,8 +112,8 @@
     currentCard.receivingXP = true
     handleSwapParty(args[0].swap_party)
     let r = originalHandleSwap(...args)
-    updateGoodness()
     setTimeout(()=>{
+      updateGoodness()
       window.scrollTo(0,window.innerHeight)
     },1000)
     return r

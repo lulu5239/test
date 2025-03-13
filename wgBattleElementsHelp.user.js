@@ -78,38 +78,72 @@
     }
   return}
   
-    let previousParty = party
-    party = {}
-    for(let card of initialSwapData){
-      party[card.id] = {
-        cardid:previousParty[card.id]?.cardid,
-        element:card.element?.toLowerCase(),
-        name:card.name,
-      }
+  let previousParty = party
+  party = {}
+  for(let card of initialSwapData){
+    party[card.id] = {
+      cardid:previousParty[card.id]?.cardid,
+      element:card.element?.toLowerCase(),
+      name:card.name,
     }
-    localStorage["y_WG-party"] = JSON.stringify(party)
-    
-    let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
-    let originalHandleSwapPlayer2 = handleSwapPlayer2
-    handleSwapPlayer2 = (...args)=>{
-      opponentElement = args[0].element?.toLowerCase()
-      return originalHandleSwapPlayer2(...args)
+  }
+  localStorage["y_WG-party"] = JSON.stringify(party)
+
+  let handleSwapParty = cards=>{
+    for(let card of cards){
+      party[card.id].HP = card.currentHP
     }
-    document.querySelector("#btn_swap").addEventListener("click", ()=>{
-      for(let card of document.querySelector("#action_swap").children){
-        let button = card.querySelector("button")
-        let data = party[button.dataset.swapto]
-        if(!data){continue}
-        let text = button.querySelector(".elementInfo")
-        if(!text){
-          text = document.createElement("a")
-          text.style = "display:block; corner-radius:2px"
-          text.class = "elementInfo"
-          button.appendChild(text)
-        }
-        let effect = advantagesSymbols[advantages.find(e=>e[0]===data.element && e[2]===opponentElement)?.[1] || "!"+advantages.find(e=>e[2]===data.element && e[0]===opponentElement)?.[1]]
-        text.innerText = !effect ? "No advantage" : effect.text
-        text.style.backgroundColor = !effect?.good ? "#0000" : effect.good>0 ? `#0${(5+effect.good*3).toString(16)}0${(5+effect.good*3).toString(16)}` : `#${(5+effect.good*-3).toString(16)}00${(5+effect.good*-3).toString(16)}`
+  }
+  handleSwapParty(initialSwapData)
+  
+  let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
+  let originalHandleSwapPlayer2 = handleSwapPlayer2
+  handleSwapPlayer2 = (...args)=>{
+    opponentElement = args[0].element?.toLowerCase()
+    updateGoodness()
+    return originalHandleSwapPlayer2(...args)
+  }
+  let originalHandleSwap = handleSwap 
+  handleSwap = (...args)=>{
+    handleSwapParty(args[0].swap_party)
+    party[args[0].swap_party.slice(-1)[0].id].receivingXP
+    return originalHandleSwap(...args)
+  }
+  let actionSwapList = document.querySelector("#action_swap")
+  //document.querySelector("#btn_swap").addEventListener("click", ()=>{
+  var updateGoodness = ()=>{
+    for(let card of actionSwapList.children){
+      let button = card.querySelector("button")
+      let data = party[button.dataset.swapto]
+      if(!data){continue}
+      let text = button.querySelector(".elementInfo")
+      if(!text){
+        text = document.createElement("a")
+        text.style = "display:block; corner-radius:2px"
+        text.class = "elementInfo"
+        button.appendChild(text)
       }
-    })
+      let effect = advantagesSymbols[advantages.find(e=>e[0]===data.element && e[2]===opponentElement)?.[1] || "!"+advantages.find(e=>e[2]===data.element && e[0]===opponentElement)?.[1]]
+      text.innerText = !effect ? "No advantage" : effect.text
+      text.style.backgroundColor = !effect?.good ? "#0000" : effect.good>0 ? `#0${(5+effect.good*3).toString(16)}0${(5+effect.good*3).toString(16)}` : `#${(5+effect.good*-3).toString(16)}00${(5+effect.good*-3).toString(16)}`
+    }
+  }
+  updateGoodness()
+  let actionMenu = document.querySelector("#action_menu")
+  actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2" id="swapForXPoption"><button id="btn_swapForXP" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Level up cards</button><div>`)
+  party[initialSwapData[0].id].receivingXP = true
+  actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
+    let card = Object.values(party).find(card=>card.level<120 && !card.receivingXP)
+    if(!card){return}
+    actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
+  })
+  actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_swapToBest" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Swap to best</button><div>`)
+  actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
+    let max = -9
+    for(let id in party){
+      if(party[id].good>max){max=party[id].good}
+    }
+    let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
+    actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
+  })
 })();

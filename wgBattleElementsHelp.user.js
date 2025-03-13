@@ -44,11 +44,11 @@
     ">":{text:"More damage", good:1},
     ">>":{text:"Good", good:2},
     ">>>":{text:"Perfect", good:3},
-    "!>":{text:"Less defense", good:-1},
+    "!>":{text:"Less defense", good:-0.9},
     "<":{text:"Less damage", good:-1},
     "<<":{text:"Bad", good:-2},
     "<<<":{text:"Very bad", good:-3},
-    "!<":{text:"More defense", good:1},
+    "!<":{text:"More defense", good:0.9},
     "><":{text:"Both damages more", good:0},
     "<>":{text:"Both damages less", good:0},
   }
@@ -95,7 +95,7 @@
       party[card.id].level = card.lvl
       party[card.id].id = card.id
     }
-    document.querySelector("#swapForXPoption").style.display = Object.values(party).find(c=>c.lvl<120 && !c.receivingXP) ? "block" : "none"
+    document.querySelector("#swapForXPoption").style.display = Object.values(party).find(c=>c.level<120 && !c.receivingXP) ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
   
@@ -106,9 +106,9 @@
     updateGoodness()
     return originalHandleSwapPlayer2(...args)
   }
-  let originalHandleSwap = handleSwap 
+  let originalHandleSwap = handleSwap
   handleSwap = (...args)=>{
-    currentCard = party[args[0].swap_party.slice(-1)[0].id]
+    currentCard = Object.values(party).find(c=>c.name===args[0].name) // No better way...
     currentCard.receivingXP = true
     handleSwapParty(args[0].swap_party)
     let r = originalHandleSwap(...args)
@@ -126,12 +126,12 @@
       if(!text){
         text = document.createElement("a")
         text.style = "display:block; corner-radius:2px"
-        text.class = "elementInfo"
+        text.className = "elementInfo"
         button.appendChild(text)
       }
       let effect = advantagesSymbols[advantages.find(e=>e[0]===data.element && e[2]===opponentElement)?.[1] || "!"+advantages.find(e=>e[2]===data.element && e[0]===opponentElement)?.[1]]
       text.innerText = !effect ? "No advantage" : effect.text
-      text.style.backgroundColor = !effect?.good ? "#0000" : effect.good>0 ? `#0${(5+effect.good*3).toString(16)}0${(5+effect.good*3).toString(16)}` : `#${(5+effect.good*-3).toString(16)}00${(5+effect.good*-3).toString(16)}`
+      text.style.backgroundColor = !effect?.good ? "#0000" : effect.good>0 ? `#0${(5+Math.ceil(effect.good)*3).toString(16)}0${(5+Math.ceil(effect.good)*3).toString(16)}` : `#${(5+Math.floor(effect.good)*-3).toString(16)}00${(5+Math.floor(effect.good)*-3).toString(16)}`
       data.good = effect?.good || 0
     }
   }

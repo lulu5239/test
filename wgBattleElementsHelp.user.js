@@ -91,11 +91,11 @@
 
   let handleSwapParty = cards=>{
     for(let card of cards){
-      party[card.id].HP = card.currentHP
+      party[card.id].hp = card.currentHP
       party[card.id].level = card.lvl
       party[card.id].id = card.id
     }
-    document.querySelector("#swapForXPoption").style.display = Object.values(party).find(c=>c.level<120 && !c.receivingXP) ? "block" : "none"
+    document.querySelector("#swapForXPoption").style.display = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0) ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
   

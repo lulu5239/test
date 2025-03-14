@@ -199,7 +199,9 @@
       if(party[id].good>max){max=party[id].good}
     }
     let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
-    if(card===currentCard){return} // Couldn't find better way to identify the current card
+    if(card===currentCard){ // Couldn't find better way to identify the current card
+      return showErrorToast("Already using best card!")
+    }
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
   handleSwapParty(initialSwapData)

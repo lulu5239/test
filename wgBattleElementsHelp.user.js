@@ -18,7 +18,7 @@
   // Wait for scripts to exist
   let ok; let p = new Promise(f=>{ok=f})
   let observer = new MutationObserver((mutations, obs) => {
-    if (document.querySelector('script')) {
+    if (typeof(startCountdown)!=="undefined") {
       obs.disconnect();
       ok()
     }

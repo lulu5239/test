@@ -125,6 +125,8 @@
           currentCard = party[stats.id]
           currentCard.receivingXP = true
           handleSwapParty()
+        }
+        if(Object.keys(fullStats)===2){
           showInventory({
             ...lastSequenceData,
             faked:true,

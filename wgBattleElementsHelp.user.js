@@ -8,12 +8,23 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=waifugame.com
 // @downloadURL  https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
 // @updateURL    https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
-// @run-at       document-end
+// @run-at       document-start
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(async ()=>{
   //'use strict';
+
+  // Wait for scripts to exist
+  let ok; let p = new Promise(f=>{ok=f})
+  let observer = new MutationObserver((mutations, obs) => {
+    if (typeof(startCountdown)!=="undefined") {
+      obs.disconnect();
+      ok()
+    }
+  });
+  observer.observe(document, { childList: true, subtree: true });
+  await p
   
   let party = localStorage["y_WG-party"] && JSON.parse(localStorage["y_WG-party"])
   if(!party){
@@ -54,6 +65,7 @@
     "><":{text:"Both damages more", good:0},
     "<>":{text:"Both damages less", good:0},
   }
+  var magicElements = ["grass","fire","water","electric","psychic","ice","music","dark","light"]
    
   if(document.location.pathname==="/battle"){
     for(let card of document.querySelectorAll(".battle-card")){
@@ -79,11 +91,19 @@
       }else{
         text.style.display = "none"
       }
+      if(localStorage["y_WG-autoBattle"]){ // Experimental, enable if you want
+        text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
+        text.querySelector(".autoBattleButton").addEventListener("click",()=>{
+          let button = card.parentElement.parentElement.querySelector("a.btn")
+          localStorage["y_WG-autoBattle"] = button.href.split("/").slice(-1)[0]
+          button.click()
+        })
+      }
     }
   return}
   
   let previousParty = party
-  party = {}
+  party = window.battleHelpVars.party = {}
   for(let card of initialSwapData){
     party[card.id] = {
       cardid:previousParty[card.id]?.cardid,
@@ -92,6 +112,7 @@
     }
   }
   localStorage["y_WG-party"] = JSON.stringify(party)
+  window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID
 
   let handleSwapParty = (cards=[])=>{
     for(let card of cards){
@@ -99,11 +120,13 @@
       party[card.id].level = card.lvl
       party[card.id].id = card.id
     }
-    document.querySelector("#swapForXPoption").style.display = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0) ? "block" : "none"
+    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0)?.id || ""
+    document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
 
   let fullStats = window.battleHelpVars.fullStats = {}
+  let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
     for(let e of args[0]){
@@ -119,34 +142,54 @@
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }
-        if(party[stats.card_id]){
-          currentCard = party[stats.card_id]
+        if(party[stats.id]){
+          currentCard = party[stats.id]
           currentCard.receivingXP = true
           handleSwapParty()
+        }
+        if(Object.keys(fullStats).length===2){
+          showInventory({
+            ...lastSequenceData,
+            faked:true,
+          })
         }
       }
     }
     setTimeout(()=>{
       if(busy){return}
       window.scrollTo(0, 185)
+      if(!battleHelpVars.auto || document.querySelector("#action_block").style.display==="none"){return}
+      if(document.querySelector("#swapForXPoption").dataset.card){
+        document.querySelector("#btn_swapForXP").click()
+      }else if(!window.battleHelpVars.usingBest || currentCard.hp<50 && currentCard.level<120){
+        window.battleHelpVars.usingBest = true
+        document.querySelector("#btn_swapToBest").click()
+      }else{
+        document.querySelector("#btn_bestMove").click()
+      }
     },1000)
     return originalPlaySequence(...args)
   }
+  let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
+    lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
     if(fullStats.p1){
       fullStats.p1.moves = currentCard.moves = args[0].output.move_data
       let noPP = true
       for(let m in fullStats.p1.moves){
-        fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
-        if(fullStats.p1.moves[m].pp>0){noPP=false}
+        let move = fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
+        if(move.pp>0){noPP=false}
+        let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1]
+        let multiplier = !effect ? 1 : effect.startsWith(">") ? 2 : 0.5
+        move.estimatedDamage = Math.pow(move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"], 0.9) * multiplier
       }
       if(noPP){currentCard.noPP = true}
     }
+    if(args[0].faked){return}
     return originalShowInventory(...args)
   }
   
-  let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   let originalHandleSwapPlayer2 = handleSwapPlayer2
   handleSwapPlayer2 = (...args)=>{
     opponentElement = args[0].element?.toLowerCase()
@@ -189,9 +232,9 @@
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2" id="swapForXPoption"><button id="btn_swapForXP" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Level up cards</button><div>`)
   party[initialSwapData[0].id].receivingXP = true
   actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
-    let card = Object.values(party).find(card=>card.level<120 && !card.receivingXP && card.hp>0 && !card.noPP)
+    let card = document.querySelector("#swapForXPoption").dataset.card
     if(!card){return}
-    actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
+    actionSwapList.querySelector(`button[data-swapto="${card}"]`).click()
   })
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_swapToBest" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Swap to best</button><div>`)
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
@@ -202,9 +245,38 @@
     }
     let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
     if(card===currentCard){ // Couldn't find better way to identify the current card
+      if(window.battleHelpVars.auto){
+        document.querySelector("#btn_bestMove").click()
+      }
       return showErrorToast("Already using best card!")
     }
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
+
+  actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
+  actionMenu.querySelector("#btn_bestMove").addEventListener("click", ()=>{
+    let best; let canEnd
+    for(let move of currentCard.moves){
+      if(!move.pp){continue}
+      if(!best){best=move; continue}
+      if(move.estimatedDamage*0.95>fullStats.p2.hp){ // Try to end battle with a single move (doesn't cost PP)
+        if(move.accuracy>=best.accuracy){
+          best = move
+        }
+        canEnd = true
+        continue
+      }
+      if(canEnd){continue}
+      if(move.estimatedDamage > best.estimatedDamage){
+        best = move
+      }
+    }
+    if(!best){
+      currentCard.noPP = true
+      return actionMenu.querySelector("#btn_swapToBest").click() // Out of PP: use other card
+    }
+    document.querySelector(`button[data-attack="${best.m}"]`).click()
+  })
+  
   handleSwapParty(initialSwapData)
 })();

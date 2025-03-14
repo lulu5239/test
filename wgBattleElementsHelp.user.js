@@ -76,6 +76,8 @@
         text.innerText = "You don't have any good animu against that opponent."
       }else if(max>-9){
         text.innerText = "All of your animus are bad against that opponent!"
+      }else{
+        text.style.display = "none"
       }
     }
   return}
@@ -133,7 +135,7 @@
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     if(fullStats.p1){
-      fullStats.p1.moves = args[0].output.move_data
+      fullStats.p1.moves = currentCard.moves = args[0].output.move_data
       let noPP = true
       for(let m in fullStats.p1.moves){
         fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}

@@ -104,6 +104,7 @@
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
 
   let fullStats = window.battleHelpVars.fullStats = {}
+  let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
     for(let e of args[0]){
@@ -123,6 +124,10 @@
           currentCard = party[stats.card_id]
           currentCard.receivingXP = true
           handleSwapParty()
+          showInventory({
+            ...lastSequenceData,
+            faked:true,
+          })
         }
       }
     }
@@ -134,6 +139,7 @@
   }
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
+    lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
     if(fullStats.p1){
       fullStats.p1.moves = currentCard.moves = args[0].output.move_data
       let noPP = true
@@ -143,6 +149,7 @@
       }
       if(noPP){currentCard.noPP = true}
     }
+    if(args[0].faked){return}
     return originalShowInventory(...args)
   }
   

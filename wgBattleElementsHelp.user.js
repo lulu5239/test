@@ -137,7 +137,7 @@
           currentCard.receivingXP = true
           handleSwapParty()
         }
-        if(Object.keys(fullStats)===2){
+        if(Object.keys(fullStats).length===2){
           showInventory({
             ...lastSequenceData,
             faked:true,
@@ -163,7 +163,7 @@
         if(move.pp>0){noPP=false}
         let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1]
         let multiplier = !effect ? 1 : effect.startsWith(">") ? 2 : 0.5
-        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * multiplier
+        move.estimatedDamage = Math.pow(move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"], 0.9) * multiplier
       }
       if(noPP){currentCard.noPP = true}
     }

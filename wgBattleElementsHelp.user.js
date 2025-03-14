@@ -8,12 +8,23 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=waifugame.com
 // @downloadURL  https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
 // @updateURL    https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
-// @run-at       document-end
+// @run-at       document-start
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(async ()=>{
   //'use strict';
+
+  // Wait for scripts to exist
+  let ok; let p = new Promise(f=>{ok=f})
+  let observer = new MutationObserver((mutations, obs) => {
+    if (document.querySelector('script')) {
+      obs.disconnect();
+      ok()
+    }
+  });
+  observer.observe(document, { childList: true, subtree: true });
+  await p
   
   let party = localStorage["y_WG-party"] && JSON.parse(localStorage["y_WG-party"])
   if(!party){
@@ -151,8 +162,8 @@
         let move = fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
         if(move.pp>0){noPP=false}
         let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1]
-        effect = !effect ? 1 : effect.startsWith(">") ? 2 : 0.5
-        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * effect
+        let multiplier = !effect ? 1 : effect.startsWith(">") ? 2 : 0.5
+        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * multiplier
       }
       if(noPP){currentCard.noPP = true}
     }

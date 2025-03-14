@@ -128,9 +128,10 @@
     },1000)
     return originalPlaySequence(...args)
   }
-  originalHandleBattleAjax = handleBattleAjax
-  handleBattleAjax = (...args)=>{
+  originalShowInventory = showInventory
+  showInventory = (...args)=>{ // handleBattleAjax was a constant
     fullStats.p1.moves = args[0].output.move_data
+    return showInventory(...args)
   }
   setTimeout(()=>{console.log(party, fullStats)},10000)
   

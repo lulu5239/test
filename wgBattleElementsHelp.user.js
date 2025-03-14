@@ -140,7 +140,7 @@
       }
       if(noPP){currentCard.noPP = true}
     }
-    return showInventory(...args)
+    return originalShowInventory(...args)
   }
   setTimeout(()=>{console.log(party, fullStats)},10000)
   

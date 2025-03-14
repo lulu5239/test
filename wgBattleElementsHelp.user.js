@@ -8,6 +8,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=waifugame.com
 // @downloadURL  https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
 // @updateURL    https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
+// @run-at       document-end
 // @grant        none
 // ==/UserScript==
 
@@ -110,8 +111,8 @@
           party[c].receivingXP = true
         }
       }
-      if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2{")){
-        let stats = fullStats[e.p.text.slice(0,2)] = JSON.parse(e.p.text.slice(2))
+      if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {")){
+        let stats = fullStats[e.p.text.slice(0,2)] = JSON.parse(e.p.text.slice(e.p.text.indexOf("{")).split("\n")[0])
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }

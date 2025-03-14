@@ -104,6 +104,7 @@
     }
   }
   localStorage["y_WG-party"] = JSON.stringify(party)
+  window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID
 
   let handleSwapParty = (cards=[])=>{
     for(let card of cards){
@@ -149,7 +150,7 @@
     setTimeout(()=>{
       if(busy){return}
       window.scrollTo(0, 185)
-      if(!battleHelpVars.auto){return}
+      if(!battleHelpVars.auto || document.querySelector("#action_block").style.display==="none"){return}
       if(document.querySelector("#swapForXPoption").dataset.card){
         document.querySelector("#btn_swapForXP").click()
       }else if(!window.battleHelpVars.usingBest || currentCard.hp<50 && currentCard.level<120){

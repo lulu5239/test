@@ -112,7 +112,7 @@
         }
       }
       if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {")){
-        let stats = fullStats[e.p.text.slice(0,2)] = JSON.parse(e.p.text.slice(e.p.text.indexOf("{")).split("\n")[0])
+        let stats = fullStats[e.p.text.slice(0,2)] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.slice(3).split("}").slice(0,-1).join("}"))
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }

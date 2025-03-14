@@ -38,6 +38,7 @@
     }
     localStorage["y_WG-party"] = JSON.stringify(party)
   }
+  window.battleHelpVars = {party}
   if(!document.location.pathname?.startsWith("/battle")){return}
   
   var advantages = `normal >< normal;fight > normal;light < normal;wind >> fight;bug <> fight;tech > fight;dark < fight;light < fight;fight << wind;earth <> wind;bug << wind;grass << wind;electric >> wind;ice > wind;fight < poison;poison <> poison;earth >> poison;bug < poison;blood < poison;psychic > poison;dark > poison;light >< poison;normal < earth;wind <> earth;poison <<< earth;metal >< earth;grass >> earth;fire <<< earth;water > earth;electric <<< earth;ice > earth;music < earth;normal > bug;fight <> bug;wind >>> bug;earth < bug;tech << bug;grass << bug;fire >>> bug;ice > bug;normal < metal;fight > metal;wind < metal;poison < metal;earth >< metal;bug < metal;metal <> metal;grass <<< metal;fire >> metal;water > metal;electric >> metal;psychic < metal;ice <<< metal;music > metal;tech > blood;grass > blood;fire > blood;water << blood;normal > tech;wind < tech;bug >>> tech;tech >< tech;fire < tech;water >>> tech;electric > tech;psychic > tech;ice < tech;music << tech;wind >> grass;poison > grass;earth << grass;bug >> grass;metal >> grass;tech < grass;grass <> grass;fire >> grass;electric < grass;ice > grass;earth >> fire;bug << fire;metal << fire;grass << fire;fire <> fire;water >> fire;ice << fire;blood >> water;tech << water;grass > water;water <> water;fire << water;electric > water;ice <> water;wind << electric;earth >> electric;metal << electric;electric <> electric;fight < psychic;bug > psychic;blood > psychic;psychic <> psychic;dark >> psychic;light > psychic;fight > ice;metal >> ice;fire >> ice;water <> ice;ice <> ice;music < ice;tech >> music;electric < music;normal < dark;psychic <<< dark;music > dark;dark <> dark;light >< dark;poison >< light;blood < light;dark >< light;light <> light`.split(";").map(e=>e.split(" "))
@@ -100,7 +101,7 @@
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
 
-  let fullStats = {}
+  let fullStats = window.battleHelpVars.fullStats = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
     for(let e of args[0]){
@@ -163,7 +164,7 @@
   }
   let actionSwapList = document.querySelector("#action_swap")
   //document.querySelector("#btn_swap").addEventListener("click", ()=>{
-  var updateGoodness = ()=>{
+  var updateGoodness = window.battleHelpVars.updateGoodness = ()=>{
     for(let card of actionSwapList.children){
       let button = card.querySelector("button")
       let data = party[button.dataset.swapto]

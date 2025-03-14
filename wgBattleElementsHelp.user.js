@@ -230,5 +230,31 @@
     }
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
+
+  actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
+  actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
+    let best; let canEnd
+    for(let move of currentCard.moves){
+      if(!move.pp){continue}
+      if(!best){best=move; continue}
+      if(move.estimatedDamage*0.95>fullStats.p2.hp){ // Try to end battle with a single move (doesn't cost PP)
+        if(move.accuracy>=best.accuracy){
+          best = move
+        }
+        canEnd = true
+        continue
+      }
+      if(canEnd){continue}
+      if(move.estimatedDamage > best.estimatedDamage){
+        best = move
+      }
+    }
+    if(!best){
+      currentCard.noPP = true
+      return actionMenu.querySelector("#btn_swapToBest").click() // Out of PP: use other card
+    }
+    document.querySelector(`button[data-attack="${best.m}"]`).click()
+  })
+  
   handleSwapParty(initialSwapData)
 })();

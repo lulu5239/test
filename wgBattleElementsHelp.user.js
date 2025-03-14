@@ -125,7 +125,7 @@
     }
     setTimeout(()=>{
       if(busy){return}
-      window.scrollTo(0, window.innerHeight)
+      window.scrollTo(0, 185)
     },1000)
     return originalPlaySequence(...args)
   }
@@ -142,7 +142,6 @@
     }
     return originalShowInventory(...args)
   }
-  setTimeout(()=>{console.log(party, fullStats)},10000)
   
   let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   let originalHandleSwapPlayer2 = handleSwapPlayer2

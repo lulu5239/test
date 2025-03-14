@@ -8,6 +8,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=waifugame.com
 // @downloadURL  https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
 // @updateURL    https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
+// @run-at       document-end
 // @grant        none
 // ==/UserScript==
 
@@ -89,7 +90,7 @@
   }
   localStorage["y_WG-party"] = JSON.stringify(party)
 
-  let handleSwapParty = cards=>{
+  let handleSwapParty = (cards=[])=>{
     for(let card of cards){
       party[card.id].hp = card.currentHP
       party[card.id].level = card.lvl
@@ -98,6 +99,49 @@
     document.querySelector("#swapForXPoption").style.display = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0) ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
+
+  let fullStats = {}
+  let originalPlaySequence = playSequence
+  playSequence = (...args)=>{
+    for(let e of args[0]){
+      if(e.a!="debug"){continue}
+      if(e.p.text.startsWith("DEBUG XP GAIN:")){
+        for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
+          if(!party[c]){continue}
+          party[c].receivingXP = true
+        }
+      }
+      if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {")){
+        let stats = fullStats[e.p.text.slice(0,2)] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}")
+        for(let p of ["moves", "special", "stats"]){
+          stats[p] = JSON.parse(stats[p])
+        }
+        if(party[stats.card_id]){
+          currentCard = party[stats.card_id]
+          currentCard.receivingXP = true
+          handleSwapParty()
+        }
+      }
+    }
+    setTimeout(()=>{
+      if(busy){return}
+      window.scrollTo(0, 185)
+    },1000)
+    return originalPlaySequence(...args)
+  }
+  originalShowInventory = showInventory
+  showInventory = (...args)=>{ // handleBattleAjax was a constant
+    if(fullStats.p1){
+      fullStats.p1.moves = args[0].output.move_data
+      let noPP = true
+      for(let m in fullStats.p1.moves){
+        fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
+        if(fullStats.p1.moves[m].pp>0){noPP=false}
+      }
+      if(noPP){currentCard.noPP = true}
+    }
+    return originalShowInventory(...args)
+  }
   
   let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   let originalHandleSwapPlayer2 = handleSwapPlayer2
@@ -114,7 +158,6 @@
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
       updateGoodness()
-      window.scrollTo(0,window.innerHeight)
     },1000)
     return r
   }
@@ -143,7 +186,7 @@
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2" id="swapForXPoption"><button id="btn_swapForXP" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Level up cards</button><div>`)
   party[initialSwapData[0].id].receivingXP = true
   actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
-    let card = Object.values(party).find(card=>card.level<120 && !card.receivingXP && card.hp>0)
+    let card = Object.values(party).find(card=>card.level<120 && !card.receivingXP && card.hp>0 && !card.noPP)
     if(!card){return}
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
@@ -151,11 +194,13 @@
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max = -9
     for(let id in party){
-      if(!party[id].hp){continue}
+      if(!party[id].hp || party[id].noPP){continue}
       if(party[id].good>max){max=party[id].good}
     }
     let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
-    if(card===currentCard){return} // Couldn't find better way to identify the current card
+    if(card===currentCard){ // Couldn't find better way to identify the current card
+      return showErrorToast("Already using best card!")
+    }
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
   handleSwapParty(initialSwapData)

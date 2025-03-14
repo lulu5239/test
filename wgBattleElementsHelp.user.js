@@ -90,7 +90,7 @@
   }
   localStorage["y_WG-party"] = JSON.stringify(party)
 
-  let handleSwapParty = cards=>{
+  let handleSwapParty = (cards=[])=>{
     for(let card of cards){
       party[card.id].hp = card.currentHP
       party[card.id].level = card.lvl
@@ -116,10 +116,15 @@
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }
+        if(party[stats.card_id]){
+          party[stats.card_id].receivingXP = true
+          handleSwapParty()
+        }
       }
     }
     return originalPlaySequence(...args)
   }
+  setTimeout(()=>{console.log(party, fullStats)},10000)
   
   let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   let originalHandleSwapPlayer2 = handleSwapPlayer2

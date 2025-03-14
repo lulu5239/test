@@ -111,7 +111,10 @@
         }
       }
       if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2{")){
-        fullStats[e.p.text.slice(0,2)] = JSON.parse(e.p.text.slice(2))
+        let stats = fullStats[e.p.text.slice(0,2)] = JSON.parse(e.p.text.slice(2))
+        for(let p of ["moves", "special", "stats"]){
+          stats[p] = JSON.parse(stats[p])
+        }
       }
     }
     return originalPlaySequence(...args)

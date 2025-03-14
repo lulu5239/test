@@ -83,7 +83,7 @@
   return}
   
   let previousParty = party
-  party = {}
+  party = window.battleHelpVars.party = {}
   for(let card of initialSwapData){
     party[card.id] = {
       cardid:previousParty[card.id]?.cardid,
@@ -120,8 +120,8 @@
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }
-        if(party[stats.card_id]){
-          currentCard = party[stats.card_id]
+        if(party[stats.id]){
+          currentCard = party[stats.id]
           currentCard.receivingXP = true
           handleSwapParty()
           showInventory({

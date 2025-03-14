@@ -111,7 +111,8 @@
       party[card.id].level = card.lvl
       party[card.id].id = card.id
     }
-    document.querySelector("#swapForXPoption").style.display = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0) ? "block" : "none"
+    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0)?.id
+    document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
 
@@ -148,6 +149,15 @@
     setTimeout(()=>{
       if(busy){return}
       window.scrollTo(0, 185)
+      if(!battleHelpVars.auto){return}
+      if(document.querySelector("#swapForXPoption").dataset.card){
+        document.querySelector("#btn_swapForXP").click()
+      }else if(!window.battleHelpVars.usingBest || currentCard.hp<50 && currentCard.level<120){
+        window.battleHelpVars.usingBest = true
+        document.querySelector("#btn_swapToBest").click()
+      }else{
+        document.querySelector("#btn_bestMove").click()
+      }
     },1000)
     return originalPlaySequence(...args)
   }
@@ -213,9 +223,9 @@
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2" id="swapForXPoption"><button id="btn_swapForXP" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Level up cards</button><div>`)
   party[initialSwapData[0].id].receivingXP = true
   actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
-    let card = Object.values(party).find(card=>card.level<120 && !card.receivingXP && card.hp>0 && !card.noPP)
+    let card = document.querySelector("#swapForXPoption").dataset.card || Object.values(party).find(card=>card.level<120 && !card.receivingXP && card.hp>0 && !card.noPP)?.id
     if(!card){return}
-    actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
+    actionSwapList.querySelector(`button[data-swapto="${card}"]`).click()
   })
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_swapToBest" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Swap to best</button><div>`)
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
@@ -226,13 +236,16 @@
     }
     let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
     if(card===currentCard){ // Couldn't find better way to identify the current card
+      if(window.battleHelpVars.auto){
+        document.querySelector("#btn_bestMove").click()
+      }
       return showErrorToast("Already using best card!")
     }
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
-  actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
+  actionMenu.querySelector("#btn_bestMove").addEventListener("click", ()=>{
     let best; let canEnd
     for(let move of currentCard.moves){
       if(!move.pp){continue}

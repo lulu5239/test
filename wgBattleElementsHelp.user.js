@@ -98,6 +98,24 @@
     document.querySelector("#swapForXPoption").style.display = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0) ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
+
+  let fullStats = {}
+  let originalPlaySequence = playSequence
+  playSequence = (...args)=>{
+    for(let e of args[0]){
+      if(e.a!="debug"){continue}
+      if(e.p.text.startsWith("DEBUG XP GAIN:")){
+        for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
+          if(!party[c]){continue}
+          party[c].receivingXP = true
+        }
+      }
+      if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2{")){
+        fullStats[e.p.text.slice(0,2)] = JSON.parse(e.p.text.slice(2))
+      }
+    }
+    return originalPlaySequence(...args)
+  }
   
   let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   let originalHandleSwapPlayer2 = handleSwapPlayer2

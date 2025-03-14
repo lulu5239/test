@@ -136,7 +136,7 @@
       let noPP = true
       for(let m in fullStats.p1.moves){
         fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
-        if(fullStats.p1.moves.pp>0){noPP=false}
+        if(fullStats.p1.moves[m].pp>0){noPP=false}
       }
       if(noPP){currentCard.noPP = true}
     }

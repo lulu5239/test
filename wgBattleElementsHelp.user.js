@@ -122,7 +122,15 @@
         }
       }
     }
+    setTimeout(()=>{
+      if(busy){return}
+      window.scrollTo(0, window.innerHeight)
+    },1000)
     return originalPlaySequence(...args)
+  }
+  originalHandleBattleAjax = handleBattleAjax
+  handleBattleAjax = (...args)=>{
+    fullStats.p1.moves = args[0].output.move_data
   }
   setTimeout(()=>{console.log(party, fullStats)},10000)
   
@@ -141,7 +149,6 @@
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
       updateGoodness()
-      window.scrollTo(0,window.innerHeight)
     },1000)
     return r
   }

@@ -117,7 +117,8 @@
           stats[p] = JSON.parse(stats[p])
         }
         if(party[stats.card_id]){
-          party[stats.card_id].receivingXP = true
+          currentCard = party[stats.card_id]
+          currentCard.receivingXP = true
           handleSwapParty()
         }
       }
@@ -130,7 +131,15 @@
   }
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
-    fullStats.p1.moves = args[0].output.move_data
+    if(fullStats.p1){
+      fullStats.p1.moves = args[0].output.move_data
+      let noPP = true
+      for(let m in fullStats.p1.moves){
+        fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
+        if(fullStats.p1.moves.pp>0){noPP=false}
+      }
+      if(noPP){currentCard.noPP = true}
+    }
     return showInventory(...args)
   }
   setTimeout(()=>{console.log(party, fullStats)},10000)
@@ -178,7 +187,7 @@
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2" id="swapForXPoption"><button id="btn_swapForXP" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Level up cards</button><div>`)
   party[initialSwapData[0].id].receivingXP = true
   actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
-    let card = Object.values(party).find(card=>card.level<120 && !card.receivingXP && card.hp>0)
+    let card = Object.values(party).find(card=>card.level<120 && !card.receivingXP && card.hp>0 && !card.noPP)
     if(!card){return}
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
@@ -186,7 +195,7 @@
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max = -9
     for(let id in party){
-      if(!party[id].hp){continue}
+      if(!party[id].hp || party[id].noPP){continue}
       if(party[id].good>max){max=party[id].good}
     }
     let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]

@@ -94,7 +94,7 @@
       if(localStorage["y_WG-autoBattle"]){ // Experimental, enable if you want
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
         text.querySelector(".autoBattleButton").addEventListener("click",()=>{
-          let button = element.parentElement.parentElement.querySelector("a.btn")
+          let button = card.parentElement.parentElement.querySelector("a.btn")
           localStorage["y_WG-autoBattle"] = button.href.split("/").slice(-1)[0]
           button.click()
         })

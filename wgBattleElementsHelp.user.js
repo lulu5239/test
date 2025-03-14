@@ -54,6 +54,7 @@
     "><":{text:"Both damages more", good:0},
     "<>":{text:"Both damages less", good:0},
   }
+  var magicElements = ["grass","fire","water","electric","psychic","ice","music","dark","light"]
    
   if(document.location.pathname==="/battle"){
     for(let card of document.querySelectorAll(".battle-card")){
@@ -137,6 +138,7 @@
     },1000)
     return originalPlaySequence(...args)
   }
+  let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
@@ -144,8 +146,11 @@
       fullStats.p1.moves = currentCard.moves = args[0].output.move_data
       let noPP = true
       for(let m in fullStats.p1.moves){
-        fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
-        if(fullStats.p1.moves[m].pp>0){noPP=false}
+        let move = fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
+        if(move.pp>0){noPP=false}
+        let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1]
+        effect = !effect ? 1 : effect.startsWith(">") ? 2 : 0.5
+        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * effect
       }
       if(noPP){currentCard.noPP = true}
     }
@@ -153,7 +158,6 @@
     return originalShowInventory(...args)
   }
   
-  let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   let originalHandleSwapPlayer2 = handleSwapPlayer2
   handleSwapPlayer2 = (...args)=>{
     opponentElement = args[0].element?.toLowerCase()

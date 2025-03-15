@@ -143,7 +143,7 @@
         let i = battles.findIndex(b=>b.id===battleID)
         if(i>=0){
           battles.splice(i,1)
-          localStorage["y_WG-party"] = JSON.stringify(battles)
+          localStorage["y_WG-battles"] = JSON.stringify(battles)
         }
         let battle = battles[0]
         if(!battle){continue}

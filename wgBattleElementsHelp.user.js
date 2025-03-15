@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-13
+// @version      2025-03-15
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -145,7 +145,7 @@
           battles.splice(i,1)
           localStorage["y_WG-battles"] = JSON.stringify(battles)
         }
-        let battle = battles[0]
+        let battle = battles.slice(-1)[0]
         if(!battle){continue}
         document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}</p></button>`)
         document.querySelector("#btn_nextBattle").addEventListener("click", ()=>{

@@ -138,7 +138,7 @@
         }
       }
       if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {") || e.p.text.startsWith("Found next opponent: ")){
-        let stats = fullStats[e.p.text.startsWith("p1") ? "p1" : "p2"] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
+        let stats = fullStats[e.p.text.startsWith("p1") ? "p1" : "p2"] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }

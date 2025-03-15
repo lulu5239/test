@@ -68,6 +68,7 @@
   var magicElements = ["grass","fire","water","electric","psychic","ice","music","dark","light"]
    
   if(document.location.pathname==="/battle"){
+    let list = []
     for(let card of document.querySelectorAll(".battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()
       card.parentElement.querySelector("p").style.marginBottom="0px"
@@ -91,15 +92,21 @@
       }else{
         text.style.display = "none"
       }
+      let button = card.parentElement.parentElement.querySelector("a.btn")
+      let battleID = button.href.split("/").slice(-1)[0]
+      list.push({
+        id:battleID,
+        element,
+      })
       if(localStorage["y_WG-autoBattle"]){ // Experimental, enable if you want
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
         text.querySelector(".autoBattleButton").addEventListener("click",()=>{
-          let button = card.parentElement.parentElement.querySelector("a.btn")
-          localStorage["y_WG-autoBattle"] = button.href.split("/").slice(-1)[0]
+          localStorage["y_WG-autoBattle"] = battleID
           button.click()
         })
       }
     }
+    localStorage["y_WG-battles"] = JSON.stringify(list)
   return}
   
   let previousParty = party
@@ -130,7 +137,25 @@
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
     for(let e of args[0]){
-      if(e.a!="debug"){continue}
+      if(e.a==="playerwin"){
+        let battles = localStorage["y_WG-battles"] && JSON.parse(localStorage["y_WG-battles"])
+        if(!battles){continue}
+        let i = battles.findIndex(b=>b.id===battleID)
+        if(i>=0){
+          battles.splice(i,1)
+          localStorage["y_WG-party"] = JSON.stringify(battles)
+        }
+        let battle = battles[0]
+        if(!battle){continue}
+        document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}</p></button>`)
+        document.querySelector("#btn_nextBattle").addEventListener("click", ()=>{
+          if(window.battleHelpVars.auto){
+            localStorage["y_WG-autoBattle"] = battle.id
+          }
+          document.location.href = "/battle/"+battle.id
+        })
+      }
+      if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
           if(!party[c]){continue}

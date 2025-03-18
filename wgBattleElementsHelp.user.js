@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-15
+// @version      2025-03-18
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -34,17 +34,29 @@
     let nowHere = []
     for(let card of document.querySelectorAll(".card[data-amid]")){
       nowHere.push(card.dataset["amid"])
-      if(!party[card.dataset["amid"]]){
-        party[card.dataset["amid"]] = {
+      let c = party[card.dataset["amid"]]
+      if(!c){
+        c = party[card.dataset["amid"]] = {
           cardid:card.dataset["cardid"],
           element:null,
           name:card.dataset["nameonly"],
         }
       }
+      delete c.lastSeen
+      let level = +card.querySelector(".levelBadge").innerText.slice(3)
+      if(c!==level){
+        c.level = level
+        delete c.stats
+      }
     }
     for(let k in party){
       if(!nowHere.includes(k)){
-        delete party[k]
+        if(!party[k].lastSeen){
+          party[k].lastSeen = +new Date()
+        continue}
+        if(+new Date()-party[k].lastSeen>24*3600000){ // 24 hours
+          delete party[k]
+        }
       }
     }
     localStorage["y_WG-party"] = JSON.stringify(party)
@@ -112,13 +124,21 @@
   let previousParty = party
   party = window.battleHelpVars.party = {}
   for(let card of initialSwapData){
-    party[card.id] = {
-      cardid:previousParty[card.id]?.cardid,
-      element:card.element?.toLowerCase(),
-      name:card.name,
+    let c = previousParty[card.id]
+    if(!c){
+      c = previousParty[card.id] = {
+        name:card.name,
+        level:card.lvl,
+      }
     }
+    c.element = card.element?.toLowerCase()
+    if(card.lvl!==c.level){
+      c.level = card.lvl
+      delete c.stats
+    }
+    party[card.id] = c
   }
-  localStorage["y_WG-party"] = JSON.stringify(party)
+  localStorage["y_WG-party"] = JSON.stringify(previousParty)
   window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID
 
   let handleSwapParty = (cards=[])=>{
@@ -154,7 +174,10 @@
           }
           document.location.href = "/battle/"+battle.id
         })
-      }
+      continue}
+      if(e.a==="newhp" && e.t==="player1" && currentCard){
+        currentCard.hp = e.p.abs
+      continue}
       if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
@@ -170,7 +193,13 @@
         if(party[stats.id]){
           currentCard = party[stats.id]
           currentCard.receivingXP = true
+          currentCard.stats = stats.stats
           handleSwapParty()
+          // Store stats in party
+          let previous = JSON.parse(localStorage["y_WG-party"])
+          previous[stats.id].stats = stats.stats
+          previous[stats.id].level = stats.level
+          localStorage["y_WG-party"] = JSON.stringify(previous)
         }
         if(Object.keys(fullStats).length===2){
           showInventory({
@@ -199,7 +228,7 @@
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
-    if(fullStats.p1){
+    if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       fullStats.p1.moves = currentCard.moves = args[0].output.move_data
       let noPP = true
       for(let m in fullStats.p1.moves){
@@ -207,7 +236,7 @@
         if(move.pp>0){noPP=false}
         let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1]
         let multiplier = !effect ? 1 : effect.startsWith(">") ? 2 : 0.5
-        move.estimatedDamage = Math.pow(move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"], 0.9) * multiplier
+        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * 2/3 * multiplier
       }
       if(noPP){currentCard.noPP = true}
     }
@@ -225,6 +254,10 @@
   handleSwap = (...args)=>{
     currentCard = Object.values(party).find(c=>c.name===args[0].name) // No better way...
     currentCard.receivingXP = true
+    fullStats.p1 = {
+      ...currentCard,
+      moves:args[0].attacks,
+    }
     handleSwapParty(args[0].swap_party)
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
@@ -271,7 +304,7 @@
     let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
     if(card===currentCard){ // Couldn't find better way to identify the current card
       if(window.battleHelpVars.auto){
-        document.querySelector("#btn_bestMove").click()
+        return document.querySelector("#btn_bestMove").click()
       }
       return showErrorToast("Already using best card!")
     }
@@ -280,6 +313,7 @@
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
   actionMenu.querySelector("#btn_bestMove").addEventListener("click", ()=>{
+    if(!currentCard.stats){document.location.reload()}
     let best; let canEnd
     for(let move of currentCard.moves){
       if(!move.pp){continue}

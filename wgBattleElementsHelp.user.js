@@ -44,7 +44,7 @@
       }
       delete c.lastSeen
       let level = +card.querySelector(".levelBadge").innerText.slice(3)
-      if(c!==level){
+      if(c.level!==level){
         c.level = level
         delete c.stats
       }

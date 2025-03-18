@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-15
+// @version      2025-03-18
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -154,7 +154,7 @@
           }
           document.location.href = "/battle/"+battle.id
         })
-      }
+      continue}
       if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
@@ -171,6 +171,11 @@
           currentCard = party[stats.id]
           currentCard.receivingXP = true
           handleSwapParty()
+          // Store stats in party
+          let previous = JSON.parse(localStorage["y_WG-party"])
+          previous[stats.id].stats = stats.stats
+          previous[stats.id].level = stats.level
+          localStorage["y_WG-party"] = JSON.stringify(previous)
         }
         if(Object.keys(fullStats).length===2){
           showInventory({
@@ -199,7 +204,7 @@
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
-    if(fullStats.p1){
+    if(fullStats.p1?.stats){
       fullStats.p1.moves = currentCard.moves = args[0].output.move_data
       let noPP = true
       for(let m in fullStats.p1.moves){
@@ -225,6 +230,10 @@
   handleSwap = (...args)=>{
     currentCard = Object.values(party).find(c=>c.name===args[0].name) // No better way...
     currentCard.receivingXP = true
+    fullStats.p1 = {
+      ...currentCard,
+      moves:args[0].attacks,
+    }
     handleSwapParty(args[0].swap_party)
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
@@ -271,7 +280,7 @@
     let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
     if(card===currentCard){ // Couldn't find better way to identify the current card
       if(window.battleHelpVars.auto){
-        document.querySelector("#btn_bestMove").click()
+        return document.querySelector("#btn_bestMove").click()
       }
       return showErrorToast("Already using best card!")
     }

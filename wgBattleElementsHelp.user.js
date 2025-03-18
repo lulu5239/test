@@ -170,6 +170,7 @@
         if(party[stats.id]){
           currentCard = party[stats.id]
           currentCard.receivingXP = true
+          currentCard.stats = stats.stats
           handleSwapParty()
           // Store stats in party
           let previous = JSON.parse(localStorage["y_WG-party"])
@@ -204,7 +205,7 @@
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
-    if(fullStats.p1?.stats){
+    if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       fullStats.p1.moves = currentCard.moves = args[0].output.move_data
       let noPP = true
       for(let m in fullStats.p1.moves){
@@ -289,6 +290,7 @@
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
   actionMenu.querySelector("#btn_bestMove").addEventListener("click", ()=>{
+    if(!currentCard.stats){document.reload()}
     let best; let canEnd
     for(let move of currentCard.moves){
       if(!move.pp){continue}

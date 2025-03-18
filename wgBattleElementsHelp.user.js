@@ -34,17 +34,19 @@
     let nowHere = []
     for(let card of document.querySelectorAll(".card[data-amid]")){
       nowHere.push(card.dataset["amid"])
-      if(!party[card.dataset["amid"]]){
-        let c = party[card.dataset["amid"]] = {
+      let c = party[card.dataset["amid"]]
+      if(!c){
+        c = party[card.dataset["amid"]] = {
           cardid:card.dataset["cardid"],
           element:null,
           name:card.dataset["nameonly"],
         }
-        let level = +card.querySelector(".levelBadge").innerText.slice(3)
-        if(c!=level){
-          c.level = level
-          delete c.stats
-        }
+      }
+      delete c.lastSeen
+      let level = +card.querySelector(".levelBadge").innerText.slice(3)
+      if(c!==level){
+        c.level = level
+        delete c.stats
       }
     }
     for(let k in party){

@@ -35,16 +35,26 @@
     for(let card of document.querySelectorAll(".card[data-amid]")){
       nowHere.push(card.dataset["amid"])
       if(!party[card.dataset["amid"]]){
-        party[card.dataset["amid"]] = {
+        let c = party[card.dataset["amid"]] = {
           cardid:card.dataset["cardid"],
           element:null,
           name:card.dataset["nameonly"],
+        }
+        let level = +card.querySelector(".levelBadge").innerText.slice(3)
+        if(c!=level){
+          c.level = level
+          delete c.stats
         }
       }
     }
     for(let k in party){
       if(!nowHere.includes(k)){
-        delete party[k]
+        if(!party[k].lastSeen){
+          party[k].lastSeen = +new Date()
+        continue}
+        if(+new Date()-party[k].lastSeen>24*3600000){ // 24 hours
+          delete party[k]
+        }
       }
     }
     localStorage["y_WG-party"] = JSON.stringify(party)

@@ -290,7 +290,7 @@
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
   actionMenu.querySelector("#btn_bestMove").addEventListener("click", ()=>{
-    if(!currentCard.stats){document.reload()}
+    if(!currentCard.stats){document.location.reload()}
     let best; let canEnd
     for(let move of currentCard.moves){
       if(!move.pp){continue}

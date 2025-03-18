@@ -113,7 +113,9 @@
       if(localStorage["y_WG-autoBattle"]){ // Experimental, enable if you want
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
         text.querySelector(".autoBattleButton").addEventListener("click",()=>{
-          localStorage["y_WG-autoBattle"] = battleID
+          if(localStorage["y_WG-autoBattle"]!=="all"){
+            localStorage["y_WG-autoBattle"] = battleID
+          }
           button.click()
         })
       }

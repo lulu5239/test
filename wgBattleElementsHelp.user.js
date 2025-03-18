@@ -88,7 +88,7 @@
       card.parentElement.appendChild(text)
       let max = -9
       for(let id in party){
-        if(!party[id].element){continue}
+        if(!party[id].element || party[id].lastSeen){continue}
         party[id].effect = advantagesSymbols[advantages.find(e=>e[0]===party[id].element && e[2]===element)?.[1] || "!"+advantages.find(e=>e[2]===party[id].element && e[0]===element)?.[1]]
         if(party[id].effect?.good>max){
           max = party[id].effect.good
@@ -113,7 +113,9 @@
       if(localStorage["y_WG-autoBattle"]){ // Experimental, enable if you want
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
         text.querySelector(".autoBattleButton").addEventListener("click",()=>{
-          localStorage["y_WG-autoBattle"] = battleID
+          if(localStorage["y_WG-autoBattle"]!=="all"){
+            localStorage["y_WG-autoBattle"] = battleID
+          }
           button.click()
         })
       }
@@ -139,8 +141,8 @@
     party[card.id] = c
   }
   localStorage["y_WG-party"] = JSON.stringify(previousParty)
-  window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID
-
+  window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID || localStorage["y_WG-autoBattle"]==="all"
+  
   let handleSwapParty = (cards=[])=>{
     for(let card of cards){
       party[card.id].hp = card.currentHP
@@ -174,6 +176,11 @@
           }
           document.location.href = "/battle/"+battle.id
         })
+        if(localStorage["y_WG-autoBattle"]==="all"){
+          setTimeout(()=>{
+            document.location.href = "/battle/"+battle.id
+          }, 3000)
+        }
       continue}
       if(e.a==="newhp" && e.t==="player1" && currentCard){
         currentCard.hp = e.p.abs

@@ -155,6 +155,9 @@
           document.location.href = "/battle/"+battle.id
         })
       continue}
+      if(e.a==="newhp" && e.t==="player1" && currentCard){
+        currentCard.hp = e.p.abs
+      continue}
       if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){

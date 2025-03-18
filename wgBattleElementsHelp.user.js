@@ -124,13 +124,21 @@
   let previousParty = party
   party = window.battleHelpVars.party = {}
   for(let card of initialSwapData){
-    party[card.id] = {
-      cardid:previousParty[card.id]?.cardid,
-      element:card.element?.toLowerCase(),
-      name:card.name,
+    let c = previousParty[card.id]
+    if(!c){
+      c = previousParty[card.id] = {
+        name:card.name,
+        level:card.lvl,
+      }
     }
+    c.element = card.element?.toLowerCase()
+    if(card.lvl!==c.level){
+      c.level = card.lvl
+      delete c.stats
+    }
+    party[card.id] = c
   }
-  localStorage["y_WG-party"] = JSON.stringify(party)
+  localStorage["y_WG-party"] = JSON.stringify(previousParty)
   window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID
 
   let handleSwapParty = (cards=[])=>{

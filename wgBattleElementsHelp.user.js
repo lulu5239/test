@@ -175,7 +175,9 @@
           document.location.href = "/battle/"+battle.id
         })
         if(localStorage["y_WG-autoBattle"]==="all"){
-          setTimeout(()=>{document.querySelector("#btn_nextBattle").click()}, 3000)
+          setTimeout(()=>{
+            document.location.href = "/battle/"+battle.id
+          }, 3000)
         }
       continue}
       if(e.a==="newhp" && e.t==="player1" && currentCard){

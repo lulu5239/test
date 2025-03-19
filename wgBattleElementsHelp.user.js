@@ -308,7 +308,7 @@
       if(!party[id].hp || party[id].noPP){continue}
       if(party[id].good>max){max=party[id].good}
     }
-    let card = Object.values(party).filter(card=>card.good===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
+    let card = Object.values(party).filter(card=>card.good===max && !card.noPP).sort((c1,c2)=>c2.hp-c1.hp)[0]
     if(card===currentCard){ // Couldn't find better way to identify the current card
       if(window.battleHelpVars.auto){
         return document.querySelector("#btn_bestMove").click()

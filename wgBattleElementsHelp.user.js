@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-18
+// @version      2025-03-20
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -153,13 +153,14 @@
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
+  battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = window.battleHelpVars.fullStats = {}
   let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
     for(let e of args[0]){
-      if(e.a==="playerwin"){
+      if(e.a==="playerwin" && e.t==="player1"){
         let battles = localStorage["y_WG-battles"] && JSON.parse(localStorage["y_WG-battles"])
         if(!battles){continue}
         let i = battles.findIndex(b=>b.id===battleID)
@@ -185,6 +186,9 @@
       if(e.a==="newhp" && e.t==="player1" && currentCard){
         currentCard.hp = e.p.abs
       continue}
+      if(e.a==="faint" && e.t==="player1"){
+        window.battleHelpVars.usingBest = false
+      }
       if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
@@ -234,9 +238,9 @@
   let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
-    lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
+    if(!args[0].faked){lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]}
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
-      fullStats.p1.moves = currentCard.moves = args[0].output.move_data
+      if(args[0].output){fullStats.p1.moves = currentCard.moves = args[0].output.move_data}
       let noPP = true
       for(let m in fullStats.p1.moves){
         let move = fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
@@ -265,7 +269,9 @@
       ...currentCard,
       moves:args[0].attacks,
     }
+    currentCard.moves = args[0].attacks
     handleSwapParty(args[0].swap_party)
+    showInventory({output:lastSequenceData.output, faked:true})
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
       updateGoodness()

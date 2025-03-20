@@ -237,7 +237,7 @@
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     if(!args[0].faked){lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]}
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
-      fullStats.p1.moves = currentCard.moves = args[0].output.move_data
+      if(args[0].output){fullStats.p1.moves = currentCard.moves = args[0].output.move_data}
       let noPP = true
       for(let m in fullStats.p1.moves){
         let move = fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
@@ -268,7 +268,7 @@
     }
     currentCard.moves = args[0].attacks
     handleSwapParty(args[0].swap_party)
-    showInventory({faked:true})
+    showInventory({output:lastSequenceData.output, faked:true})
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
       updateGoodness()

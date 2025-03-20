@@ -149,7 +149,7 @@
       party[card.id].level = card.lvl
       party[card.id].id = card.id
     }
-    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2.level))?.id || ""
+    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]

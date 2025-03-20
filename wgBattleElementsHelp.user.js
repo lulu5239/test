@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-18
+// @version      2025-03-20
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -235,7 +235,7 @@
   let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
-    lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
+    if(!args[0].faked){lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]}
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       fullStats.p1.moves = currentCard.moves = args[0].output.move_data
       let noPP = true
@@ -268,6 +268,7 @@
     }
     currentCard.moves = args[0].attacks
     handleSwapParty(args[0].swap_party)
+    showInventory({faked:true})
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
       updateGoodness()

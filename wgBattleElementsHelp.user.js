@@ -149,7 +149,7 @@
       party[card.id].level = card.lvl
       party[card.id].id = card.id
     }
-    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2.stats.SPD))?.id || ""
+    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD))?.id || ""
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
@@ -309,7 +309,7 @@
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_swapToBest" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Swap to best</button><div>`)
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max
-    for(let card of party){
+    for(let card of Object.values(party)){
       if(!card.hp || card.noPP){continue}
       card.goodATT = card.good * (card.stats[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}

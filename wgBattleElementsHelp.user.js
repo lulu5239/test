@@ -149,7 +149,7 @@
       party[card.id].level = card.lvl
       party[card.id].id = card.id
     }
-    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD))?.id || ""
+    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2.level))?.id || ""
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
@@ -311,7 +311,7 @@
     let max
     for(let card of Object.values(party)){
       if(!card.hp || card.noPP){continue}
-      card.goodATT = (card.good>=0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || 1)
+      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
     let card = Object.values(party).filter(card=>card.goodATT===max && !card.noPP).sort((c1,c2)=>c2.hp-c1.hp)[0]

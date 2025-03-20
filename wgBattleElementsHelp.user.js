@@ -153,6 +153,7 @@
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
+  battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = window.battleHelpVars.fullStats = {}
   let lastSequenceData = {}
@@ -265,6 +266,7 @@
       ...currentCard,
       moves:args[0].attacks,
     }
+    currentCard.moves = args[0].attacks
     handleSwapParty(args[0].swap_party)
     let r = originalHandleSwap(...args)
     setTimeout(()=>{

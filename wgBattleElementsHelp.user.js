@@ -160,7 +160,7 @@
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
     for(let e of args[0]){
-      if(e.a==="playerwin"){
+      if(e.a==="playerwin" && e.t==="player1"){
         let battles = localStorage["y_WG-battles"] && JSON.parse(localStorage["y_WG-battles"])
         if(!battles){continue}
         let i = battles.findIndex(b=>b.id===battleID)
@@ -186,6 +186,9 @@
       if(e.a==="newhp" && e.t==="player1" && currentCard){
         currentCard.hp = e.p.abs
       continue}
+      if(e.a==="faint" && e.t==="player1"){
+        window.battleHelpVars.usingBest = false
+      }
       if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){

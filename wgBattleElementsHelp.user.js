@@ -16,7 +16,7 @@
   //'use strict';
 
   let path = document.location.pathname
-  if(path.startsWith("/index.php/"){
+  if(path.startsWith("/index.php/")){
     path = path.slice(10)
   }
 
@@ -39,7 +39,7 @@
             relXP:0,
             hpText:hp+"%",
             relHP:hp,
-          })
+          }, true)
         })
       }
     }
@@ -142,6 +142,7 @@
       }
     }
     localStorage["y_WG-battles"] = JSON.stringify(list)
+    document.querySelector("#partyView").querySelector("p.font-italic").innerText = "You can heal your Animus from this page."
   return}
   
   let previousParty = party

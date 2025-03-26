@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-20
+// @version      2025-03-26
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -15,12 +15,33 @@
 (async ()=>{
   //'use strict';
 
+  let path = document.location.pathname
+  if(path.startsWith("/index.php/")){
+    path = path.slice(10)
+  }
+
   // Wait for scripts to exist
   let ok; let p = new Promise(f=>{ok=f})
   let observer = new MutationObserver((mutations, obs) => {
     if (typeof(startCountdown)!=="undefined") {
       obs.disconnect();
       ok()
+    }else if(path==="/battle"){ // Edit class before scripts runs
+      for(let card of document.querySelectorAll(".showCardInfo")){
+        card.classList.remove("showCardInfo")
+        card.addEventListener("click", ()=>{
+          let hp = card.parentElement.querySelector("center").innerText.split("\n")[1].slice(0,-4)
+          showWaifuMenu({
+            name:card.parentElement.dataset["tippy-content"],
+            id:card.parentElement.dataset.anniemay,
+            cardID:card.dataset.cardid,
+            xpText:card.parentElement.querySelector("span").innerText,
+            relXP:0,
+            hpText:hp+"%",
+            relHP:hp,
+          }, true)
+        })
+      }
     }
   });
   observer.observe(document, { childList: true, subtree: true });
@@ -30,7 +51,7 @@
   if(!party){
     party = localStorage["y_WG-party"] = {}
   }
-  if(document.location.pathname==="/home"){
+  if(path==="/home"){
     let nowHere = []
     for(let card of document.querySelectorAll(".card[data-amid]")){
       nowHere.push(card.dataset["amid"])
@@ -62,7 +83,7 @@
     localStorage["y_WG-party"] = JSON.stringify(party)
   }
   window.battleHelpVars = {party}
-  if(!document.location.pathname?.startsWith("/battle")){return}
+  if(!path.startsWith("/battle")){return}
   
   var advantages = `normal >< normal;fight > normal;light < normal;wind >> fight;bug <> fight;tech > fight;dark < fight;light < fight;fight << wind;earth <> wind;bug << wind;grass << wind;electric >> wind;ice > wind;fight < poison;poison <> poison;earth >> poison;bug < poison;blood < poison;psychic > poison;dark > poison;light >< poison;normal < earth;wind <> earth;poison <<< earth;metal >< earth;grass >> earth;fire <<< earth;water > earth;electric <<< earth;ice > earth;music < earth;normal > bug;fight <> bug;wind >>> bug;earth < bug;tech << bug;grass << bug;fire >>> bug;ice > bug;normal < metal;fight > metal;wind < metal;poison < metal;earth >< metal;bug < metal;metal <> metal;grass <<< metal;fire >> metal;water > metal;electric >> metal;psychic < metal;ice <<< metal;music > metal;tech > blood;grass > blood;fire > blood;water << blood;normal > tech;wind < tech;bug >>> tech;tech >< tech;fire < tech;water >>> tech;electric > tech;psychic > tech;ice < tech;music << tech;wind >> grass;poison > grass;earth << grass;bug >> grass;metal >> grass;tech < grass;grass <> grass;fire >> grass;electric < grass;ice > grass;earth >> fire;bug << fire;metal << fire;grass << fire;fire <> fire;water >> fire;ice << fire;blood >> water;tech << water;grass > water;water <> water;fire << water;electric > water;ice <> water;wind << electric;earth >> electric;metal << electric;electric <> electric;fight < psychic;bug > psychic;blood > psychic;psychic <> psychic;dark >> psychic;light > psychic;fight > ice;metal >> ice;fire >> ice;water <> ice;ice <> ice;music < ice;tech >> music;electric < music;normal < dark;psychic <<< dark;music > dark;dark <> dark;light >< dark;poison >< light;blood < light;dark >< light;light <> light`.split(";").map(e=>e.split(" "))
   var advantagesSymbols = {
@@ -79,7 +100,7 @@
   }
   var magicElements = ["grass","fire","water","electric","psychic","ice","music","dark","light"]
    
-  if(document.location.pathname==="/battle"){
+  if(path==="/battle"){
     let list = []
     for(let card of document.querySelectorAll(".battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()
@@ -121,6 +142,7 @@
       }
     }
     localStorage["y_WG-battles"] = JSON.stringify(list)
+    document.querySelector("#partyView").querySelector("p.font-italic").innerText = "You can heal your Animus from this page."
   return}
   
   let previousParty = party

@@ -15,12 +15,33 @@
 (async ()=>{
   //'use strict';
 
+  let path = document.location.pathname
+  if(path.startsWith("/index.php/"){
+    path = path.slice(10)
+  }
+
   // Wait for scripts to exist
   let ok; let p = new Promise(f=>{ok=f})
   let observer = new MutationObserver((mutations, obs) => {
     if (typeof(startCountdown)!=="undefined") {
       obs.disconnect();
       ok()
+    }else if(path==="/battle"){ // Edit class before scripts runs
+      for(let card of document.querySelectorAll(".showCardInfo")){
+        card.classList.remove("showCardInfo")
+        card.addEventListener("click", ()=>{
+          let hp = card.parentElement.querySelector("center").innerText.split("\n")[1].slice(0,-4)
+          showWaifuMenu({
+            name:card.parentElement.dataset["tippy-content"],
+            id:card.parentElement.dataset.anniemay,
+            cardID:card.dataset.cardid,
+            xpText:card.parentElement.querySelector("span").innerText,
+            relXP:0,
+            hpText:hp+"%",
+            relHP:hp,
+          })
+        })
+      }
     }
   });
   observer.observe(document, { childList: true, subtree: true });

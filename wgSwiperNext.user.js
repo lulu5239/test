@@ -23,11 +23,11 @@
   var processCardActions = async ()=>{
     let actions = {}
     let cards = JSON.parse(localStorage["y_WG-cardActions"])
-    for(let id of cards){
+    for(let id in cards){
       if(!actions[cards[id]]){actions[cards[id]]=[id]}
       else{actions[cards[id]].push(id)}
     }
-    for(let action of actions){
+    for(let action in actions){
       fetch('https://waifugame.com/json/multi_'+(action==0 ? "disenchant" : "move"), {
         method: 'POST',
         headers: {
@@ -104,7 +104,7 @@
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
         if(data.result.includes(" Card (\u2116 ") && action!==1){
-          cardActions[data.result.split(" Card (\u2116 ")[1].split(" ")[0]] = action
+          cardActions[data.result.split(" Card (\u2116 ")[1].split(")")[0]] = action
           localStorage["y_WG-cardActions"] = JSON.stringify(cardActions)
         }
         if(originalSuccessFn){return originalSuccessFn(data)}

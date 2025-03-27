@@ -71,16 +71,19 @@
     postServer = (...args)=>{
       let card = $($('.tinder--card[data-encounterid=' + args[0] + ']')).data("data")
       let action = selectedOnce!==null ? selectedOnce : selected
-      if(action!==1){
-        cardActions[card.card_id] = action
-        localStorage["y_WG-cardActions"] = JSON.stringify(cardActions)
-      }
       if(selectedOnce!==null){
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
         selectedOnce = null
       }
-      return originalPostServer(...args)
+      let originalSuccessFn = args[2]
+      return originalPostServer(...args.slice(0,2), data=>{
+        if(data.result.includes(" Card (\u2116 ") && action!==1){
+          cardActions[card.card_id] = action
+          localStorage["y_WG-cardActions"] = JSON.stringify(cardActions)
+        }
+        if(originalSuccessFn){return originalSuccessFn(data)}
+      })
     }
   }
 })();

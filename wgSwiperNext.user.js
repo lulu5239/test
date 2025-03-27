@@ -22,9 +22,9 @@
   
   if(path==="/swiper"){
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
-      `<br>` + [0,1,2,3,4].map(i=>{
-        `<button style="display:inline-block" data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : "Box "+(i-1)}</button>`
-      }).join(" ")
+      `<br>` + [0,1,2,3,4].map(i=>
+        `<div style="display:inline-block; color:#fff; background-color:#111" data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : "Box "+(i-1)}</div>`
+      ).join(" ")
     )
     let selected = 1
     let selectedOnce = null
@@ -38,23 +38,23 @@
       button.addEventListener("click", ()=>{
         if(selected===i){
           if(selectedOnce!==null){
-            document.querySelector(`.swiperNextButton[data-nextaction=${selectedOnce}]`).style.border = null
+            document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
             selectedOnce = null
             button.style.border = "solid 3px #"+colors.selected
           }
         return}
         if(selectedOnce===i){
-          document.querySelector(`.swiperNextButton[data-nextaction=${selected}]`).style.border = null
+          document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = null
           selected = i
           selectedOnce = null
           button.style.border = "solid 2px #"+colors.selected
         return}
         if(selectedOnce!==null){
-          document.querySelector(`.swiperNextButton[data-nextaction=${selectedOnce}]`).style.border = null
+          document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
         }
         selectedOnce = i
         button.style.border = "solid 2px #"+colors.selectedOnce
-        document.querySelector(`.swiperNextButton[data-nextaction=${selected}]`).style.border = "solid 2px #"+colors.selectedNotNow
+        document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 2px #"+colors.selectedNotNow
       })
       if(i===1){button.click()} // Default option
     }
@@ -69,8 +69,8 @@
         localStorage["y_WG-cardActions"] = JSON.stringify(cardActions)
       }
       if(selectedOnce!==null){
-        document.querySelector(`.swiperNextButton[data-nextaction=${selected}]`).style.border = "solid 3px #"+colors.selected
-        document.querySelector(`.swiperNextButton[data-nextaction=${selectedOnce}]`).style.border = null
+        document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
+        document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
         selectedOnce = null
       }
       return originalPostServer(...args)

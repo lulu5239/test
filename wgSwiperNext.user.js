@@ -79,7 +79,7 @@
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
         if(data.result.includes(" Card (\u2116 ") && action!==1){
-          cardActions[card.card_id] = action
+          cardActions[data.result.split(" Card (\u2116 ")[1].split(" ")[0]] = action
           localStorage["y_WG-cardActions"] = JSON.stringify(cardActions)
         }
         if(originalSuccessFn){return originalSuccessFn(data)}

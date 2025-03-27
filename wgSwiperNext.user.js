@@ -19,6 +19,31 @@
   if(path.startsWith("/index.php/")){
     path = path.slice(10)
   }
+
+  var processCardActions = async ()=>{
+    let actions = {}
+    let cards = JSON.parse(localStorage["y_WG-cardActions"])
+    for(let id of cards){
+      if(!actions[cards[id]]){actions[cards[id]]=[id]}
+      else{actions[cards[id]].push(id)}
+    }
+    for(let action of actions){
+      fetch('https://waifugame.com/json/multi_'+(action==0 ? "disenchant" : "move"), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/javascript, */*; q=0.01',
+        },
+        body: JSON.stringify({
+          '_token': token,
+          'pivots': actions[action],
+          destination:action==0 ? undefined : "box"+(action-1)
+        })
+      });
+    }
+    localStorage["y_WG-cardActions"] = "{}"
+  }
+  window.processCardActions = processCardActions
   
   if(path==="/swiper"){
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",

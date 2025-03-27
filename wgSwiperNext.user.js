@@ -131,7 +131,7 @@
       `<button id="doCardActions" class="btn btn-block" style="width:auto; background-color:#333; display:inline-block">Do card actions</button>
       <button id="resetCardActions" class="btn btn-block" style="width:auto; background-color:#411; display:inline-block">Reset card actions</button>`
     )
-    document.querySelector("#doCardActions").addEventListener("click", ()=>{
+    document.querySelector("#doCardActions").addEventListener("click", async ()=>{
       for(let button of document.querySelectorAll(".cancelNext")){
         button.remove()
       }
@@ -150,6 +150,7 @@
         cards = {}
         localStorage["y_WG-cardActions"] = "{}"
         button.innerText = "Done."
+        document.querySelector("a.close-menu").click()
       })
     })
   return}

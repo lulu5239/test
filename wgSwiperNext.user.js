@@ -128,8 +128,8 @@
     window.processCardActions = processCardActions
 
     document.querySelector(".card-style.ml-0.mr-0").insertAdjacentHTML("beforebegin",
-      `<button id="doCardActions">Do card actions</button>
-      <button id="resetCardActions">Reset card actions</button>`
+      `<button id="doCardActions" class="btn btn-block" style="width:auto; background-color:#333; display:inline-block">Do card actions</button>
+      <button id="resetCardActions" class="btn btn-block" style="width:auto; background-color:#411; display:inline-block">Reset card actions</button>`
     )
     document.querySelector("#doCardActions").addEventListener("click", ()=>{
       for(let button of document.querySelectorAll(".cancelNext")){

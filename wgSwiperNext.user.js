@@ -94,8 +94,8 @@
       let id = JSON.parse(card.dataset.card).id
       if(cards[id]===undefined){continue}
       let action = cards[id]
-      if(!actions[action]){actions[action]=[card.dataset.pivot]}
-      else{actions[action].push(card.dataset.pivot)}
+      if(!actions[action]){actions[action]=[card.dataset.pivotselect]}
+      else{actions[action].push(card.dataset.pivotselect)}
       card.querySelector(".fa-angle-right").insertAdjacentHTML("beforebegin",
         `<strong class="nextAction" style="margin-top:30px">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
       )

@@ -97,15 +97,15 @@
       if(!actions[action]){actions[action]=[card.dataset.pivot]}
       else{actions[action].push(card.dataset.pivot)}
       card.querySelector(".fa-angle-right").insertAdjacentHTML("beforebegin",
-        `<strong class="nextAction" style="margin-top:30px">${action==0 ? "To disenchant" : "To move to box "+(action-1)}</span> <button class="cancelNext" style="height:auto">Cancel</button>`
+        `<strong class="nextAction" style="margin-top:30px">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="height:auto; color:#fff; background-color:#111; padding:5px">Cancel</div></strong>`
       )
-      card.querySelector(".cancelNext").onclick = ()=>{
+      card.querySelector(".cancelNext").addEventListener("click", ()=>{
         delete cards[id]
         localStorage["y_WG-cardActions"] = JSON.stringify(cards)
         actions[action].splice(actions[action].findIndex(c=>c===id),1)
         card.querySelector(".nextAction").remove()
         card.querySelector(".cancelNext").remove()
-      }
+      })
     }
     
     var processCardActions = async ()=>{

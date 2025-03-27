@@ -20,31 +20,6 @@
     path = path.slice(10)
   }
 
-  var processCardActions = async ()=>{
-    let actions = {}
-    let cards = JSON.parse(localStorage["y_WG-cardActions"])
-    for(let id in cards){
-      if(!actions[cards[id]]){actions[cards[id]]=[id]}
-      else{actions[cards[id]].push(id)}
-    }
-    for(let action in actions){
-      fetch('https://waifugame.com/json/multi_'+(action==0 ? "disenchant" : "move"), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json, text/javascript, */*; q=0.01',
-        },
-        body: JSON.stringify({
-          '_token': token,
-          'pivots': actions[action],
-          destination:action==0 ? undefined : "box"+(action-1)
-        })
-      });
-    }
-    localStorage["y_WG-cardActions"] = "{}"
-  }
-  window.processCardActions = processCardActions
-  
   if(path==="/swiper"){
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
       `<br><style>.swiperNextButton {
@@ -110,5 +85,46 @@
         if(originalSuccessFn){return originalSuccessFn(data)}
       })
     }
-  }
+  return}
+
+  if(path==="/cards"){
+    let actions = {}
+    let cards = JSON.parse(localStorage["y_WG-cardActions"])
+    for(let card of document.querySelectorAll("a.selectCard")){
+      let id = JSON.parse(card.dataset.card).id
+      if(!cards[id]){continue}
+      let action = cards[id]
+      if(!actions[action]){actions[action]=[card.dataset.pivot]}
+      else{actions[action].push(card.dataset.pivot)}
+      card.querySelector("fa-angle-right").insertAdjacentHTML("beforestart",
+        `<span class="nextAction">${action==0 ? "To disenchant" : "To move to box "+(action-1)}</span> <button class="cancelNext">Cancel</button>`
+      )
+      card.querySelector(".cancelNext").onclick = ()=>{
+        delete cards[id]
+        localStorage["y_WG-cardActions"] = JSON.stringify(cards)
+        actions[action].splice(actions[action].findIndex(c=>c===id),1)
+        card.querySelector(".nextAction").remove()
+        card.querySelector(".cancelNext").remove()
+      }
+    }
+    
+    var processCardActions = async ()=>{
+      for(let action in actions){
+        fetch('https://waifugame.com/json/multi_'+(action==0 ? "disenchant" : "move"), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+          },
+          body: JSON.stringify({
+            '_token': token,
+            'pivots': actions[action],
+            destination:action==0 ? undefined : "box"+(action-1)
+          })
+        });
+      }
+      localStorage["y_WG-cardActions"] = "{}"
+    }
+    window.processCardActions = processCardActions
+  return}
 })();

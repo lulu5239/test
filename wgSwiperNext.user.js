@@ -97,7 +97,7 @@
       if(!actions[action]){actions[action]=[card.dataset.pivot]}
       else{actions[action].push(card.dataset.pivot)}
       card.querySelector(".fa-angle-right").insertAdjacentHTML("beforebegin",
-        `<strong class="nextAction" style="margin-top:30px">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#111; padding:5px; z-index:50">Cancel</div></strong>`
+        `<strong class="nextAction" style="margin-top:30px">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
       )
       card.querySelector(".cancelNext").addEventListener("click", event=>{
         delete cards[id]
@@ -126,5 +126,31 @@
       localStorage["y_WG-cardActions"] = "{}"
     }
     window.processCardActions = processCardActions
+
+    document.querySelector(".card-style.ml-0.mr-0").insertAdjacentHTML("beforebegin",
+      `<button id="doCardActions">Do card actions</button>
+      <button id="resetCardActions">Reset card actions</button>`
+    )
+    document.querySelector("#doCardActions").addEventListener("click", ()=>{
+      for(let button of document.querySelectorAll(".cancelNext")){
+        button.remove()
+      }
+      let button = document.querySelector("#doCardActions")
+      button.disabled = true
+      await processCardActions()
+      button.innerText = "Done."
+    })
+    document.querySelector("#resetCardActions").addEventListener("click", ()=>{
+      areYouSure("If you want to cancel just some actions, use the Cancel button in the cards list. This is only useful to remove actions that might still be stored for cards you don't have anymore.", ()=>{
+        for(let button of document.querySelectorAll(".cancelNext")){
+          button.remove()
+        }
+        let button = document.querySelector("#resetCardActions")
+        button.disabled = true
+        cards = {}
+        localStorage["y_WG-cardActions"] = "{}"
+        button.innerText = "Done."
+      })
+    })
   return}
 })();

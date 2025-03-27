@@ -92,7 +92,7 @@
     let cards = JSON.parse(localStorage["y_WG-cardActions"])
     for(let card of document.querySelectorAll("a.selectCard")){
       let id = JSON.parse(card.dataset.card).id
-      if(!cards[id]){continue}
+      if(cards[id]===undefined){continue}
       let action = cards[id]
       if(!actions[action]){actions[action]=[card.dataset.pivot]}
       else{actions[action].push(card.dataset.pivot)}

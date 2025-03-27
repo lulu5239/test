@@ -96,8 +96,8 @@
       let action = cards[id]
       if(!actions[action]){actions[action]=[card.dataset.pivot]}
       else{actions[action].push(card.dataset.pivot)}
-      card.querySelector("fa-angle-right").insertAdjacentHTML("beforestart",
-        `<span class="nextAction">${action==0 ? "To disenchant" : "To move to box "+(action-1)}</span> <button class="cancelNext">Cancel</button>`
+      card.querySelector(".fa-angle-right").insertAdjacentHTML("beforebegin",
+        `<strong class="nextAction" style="margin-top:30px">${action==0 ? "To disenchant" : "To move to box "+(action-1)}</span> <button class="cancelNext" style="height:auto">Cancel</button>`
       )
       card.querySelector(".cancelNext").onclick = ()=>{
         delete cards[id]

@@ -22,15 +22,20 @@
   
   if(path==="/swiper"){
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
-      `<br>` + [0,1,2,3,4].map(i=>
-        `<div style="display:inline-block; color:#fff; background-color:#111" data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : "Box "+(i-1)}</div>`
+      `<br><style>.swiperNextButton {
+        display:inline-block;
+        color:#fff;
+        background-color:#111;
+        padding:5px;
+      }</style>` + [0,1,2,3,4].map(i=>
+        `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : "Box "+(i-1)}</div>`
       ).join(" ")
     )
     let selected = 1
     let selectedOnce = null
     var colors = {
       selected:"7fa",
-      selectedNotNow:"#69b",
+      selectedNotNow:"69b",
       selectedOnce:"c42",
     }
     for(let button of document.querySelectorAll(".swiperNextButton")){
@@ -56,7 +61,9 @@
         button.style.border = "solid 2px #"+colors.selectedOnce
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 2px #"+colors.selectedNotNow
       })
-      if(i===1){button.click()} // Default option
+      if(i===1){
+        button.style.border = "solid 2px #"+colors.selected
+      }
     }
     
     let cardActions = localStorage["y_WG-cardActions"] ? JSON.parse(localStorage["y_WG-cardActions"]) : {}

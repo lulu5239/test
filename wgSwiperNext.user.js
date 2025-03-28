@@ -26,9 +26,12 @@
         display:inline-block;
         color:#fff;
         background-color:#111;
-        padding:5px;
-      }</style>` + [0,1,2,3,4].map(i=>
-        `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : "Box "+(i-1)}</div>`
+        padding-left:5px;
+        padding-right:5px;
+        height:100%;
+        overflow-y:hidden;
+      }</style><div class="swiperNextButtons" style="height:30px">` + [0,1,2,3,4,"swap"].map(i=>
+        `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-swap"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")
     )
     
@@ -44,6 +47,11 @@
       selectedOnce:"c42",
     }
     for(let button of document.querySelectorAll(".swiperNextButton")){
+      if(button.dataset.nextaction==="swap"){
+        button.addEventListener("click", ()=>{
+          
+        })
+      continue}
       let i = +button.dataset.nextaction
       button.addEventListener("click", ()=>{
         if(selected===i){

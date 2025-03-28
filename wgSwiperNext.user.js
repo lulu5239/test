@@ -32,7 +32,7 @@
         align-items:center;
       }</style><div id="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
-      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton">Back</div> <span>Charisma:</span></div>`
+      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
     )
     let swiperNextButtons = document.querySelector("#swiperNextButtons")
     
@@ -99,6 +99,7 @@
       button.addEventListener("click", async ()=>{
         if(switchingFormation){return}
         switchingFormation = true
+        button.style.border = "solid 2px #ee4"
         let r = await fetch("/formation/change",{
           method:"POST",
           headers:{"content-type":"application/x-www-form-urlencoded"},
@@ -106,10 +107,11 @@
         }).catch(e=>{
           showErrorToast("Couldn't switch party.")
           switchingFormation = false
+          button.style.border = null
           throw e
         })
         switchingFormation = false
-        let current = Object.keys(formations).find(team=>team.selected)
+        let current = Object.keys(formations).find(id=>formations[id].selected)
         if(current){
           swiperNextButtons.querySelector(`div[data-formation="${current}"]`).style.border = null
           delete formations[current].selected

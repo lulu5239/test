@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-27
+// @version      2025-03-28
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -31,8 +31,13 @@
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : "Box "+(i-1)}</div>`
       ).join(" ")
     )
+    
     let selected = 1
     let selectedOnce = null
+    let getSelected = ()=>(selectedOnce===null ? selected : selectedOnce)
+    let updateFlirtButton = ()=>{
+      document.querySelector("#love .fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : "heart")
+    }
     var colors = {
       selected:"7fa",
       selectedNotNow:"69b",
@@ -60,6 +65,7 @@
         selectedOnce = i
         button.style.border = "solid 2px #"+colors.selectedOnce
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 2px #"+colors.selectedNotNow
+        updateFlirtButton()
       })
       if(i===1){
         button.style.border = "solid 2px #"+colors.selected
@@ -67,23 +73,49 @@
     }
     
     let cardActions = localStorage["y_WG-cardActions"] ? JSON.parse(localStorage["y_WG-cardActions"]) : {}
+    let formations = localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
+    let formation = Object.values(formations).find(team=>team.selected)
+    let charisma = formation?.charisma
+    
     let originalPostServer = postServer
     postServer = (...args)=>{
       let card = $($('.tinder--card[data-encounterid=' + args[0] + ']')).data("data")
-      let action = selectedOnce!==null ? selectedOnce : selected
+      let action = getSelected()
       if(selectedOnce!==null){
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
         selectedOnce = null
+      }
+      if(action==="0" && args[1]==="😘" && charisma-7>card.card.rarity){
+        args[1] = "👊"
       }
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
         if(data.result.includes(" Card (\u2116 ") && action!==1){
           cardActions[data.result.split(" Card (\u2116 ")[1].split(")")[0]] = action
           localStorage["y_WG-cardActions"] = JSON.stringify(cardActions)
+          let words = data.result.split(" ")
+          let xp = +words.slice(-3)[0]
+          charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1)
+          if(charisma!==formation.charisma){
+            formation.charisma = charisma
+            localStorage["y_WG-formations"] = JSON.stringify(formations)
+          }
         }
         if(originalSuccessFn){return originalSuccessFn(data)}
       })
+    }
+
+    let originalApplyEncounterStyle = applyEncounterStyle
+    applyEncounterStyle = (...args)=>{
+      let data = $('.tinder--card:not(.removed)').first()?.data("data")
+      if(data && charisma){
+        let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
+        button.dataset.battlemode = charisma-7>data.card.rarity ? true : ""
+        button.innerText = button.dataset.battlemode ? document.querySelector(".btnBattle").innerText.slice(1) : "Disenchant"
+        updateFlirtButton()
+      }
+      return applyEncounterStyle(...args)
     }
   return}
 
@@ -154,4 +186,21 @@
       })
     })
   return}
+
+  if(path==="/home"){
+    let formations = localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
+    for(let formation of document.querySelector("#party").querySelector("optgroup").children){
+      let data = formations[formation.value.slice(2)]
+      if(!data){
+        data = formations[formation.value.slice(2)] = {}
+      }
+      data.selected = formation.selected ? true : undefined
+      if(data.selected){
+        for(let i of [2,3,4]){
+          data[["perception", "charisma", "luck"][i-2]] = +document.querySelector(`a#im${i} .icon`).innerText
+        }
+      }
+    }
+    localStorage["y_WG-formations"] = JSON.stringify(formations)
+  }
 })();

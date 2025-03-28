@@ -121,6 +121,7 @@
         formation.selected = true
         charisma = formation.charisma
         localStorage["y_WG-formations"] = JSON.stringify(formations)
+        applyEncounterStyle({each:()=>{}})
       })
       button.innerText = thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma
       swiperNextButtons.appendChild(button)

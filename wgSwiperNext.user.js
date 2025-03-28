@@ -23,15 +23,15 @@
   if(path==="/swiper"){
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
       `<br><style>.swiperNextButton {
-        display:inline-block;
+        display:inline-flex;
         color:#fff;
         background-color:#111;
         padding-left:5px;
         padding-right:5px;
         height:100%;
-        overflow-y:hidden;
-      }</style><div class="swiperNextButtons" style="height:30px">` + [0,1,2,3,4,"swap"].map(i=>
-        `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-swap"></i>' : "Box "+(i-1)}</div>`
+        align-items:center;
+      }</style><div class="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
+        `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:15px"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")
     )
     

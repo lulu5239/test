@@ -32,7 +32,7 @@
         align-items:center;
       }</style><div id="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
-      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton">Back</div> Charisma:</div>`
+      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton">Back</div> <span>Charisma:</span></div>`
     )
     let swiperNextButtons = document.querySelector("#swiperNextButtons")
     
@@ -84,14 +84,16 @@
     
     let cardActions = localStorage["y_WG-cardActions"] ? JSON.parse(localStorage["y_WG-cardActions"]) : {}
     let formations = localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
+    let formation = Object.values(formations).find(team=>team.selected)
+    let charisma = formation?.charisma
     let switchingFormation = false
     for(let id in formations){
       let button = document.createElement("div")
       button.className = "swiperNextButton"
-      button.style.marginRight = "2px"
+      button.style.marginLeft = "2px"
       button.dataset.formation = id
-      let formation = formations[id]
-      if(formation.selected){
+      let thisFormation = formations[id]
+      if(thisFormation.selected){
         button.style.border = "solid 2px #4e4"
       }
       button.addEventListener("click", async ()=>{
@@ -104,19 +106,22 @@
         }).catch(e=>{
           showErrorToast("Couldn't switch party.")
           switchingFormation = false
+          throw e
         })
         switchingFormation = false
         let current = Object.keys(formations).find(team=>team.selected)
         if(current){
           swiperNextButtons.querySelector(`div[data-formation="${current}"]`).style.border = null
+          delete formations[current].selected
         }
         button.style.border = "solid 2px #4e4"
+        formation = thisFormation
+        formation.selected = true
+        localStorage["y_WG-formations"] = JSON.stringify(formations)
       })
-      button.innerText = formation.charisma==="undefined" ? "?" : formation.charisma
+      button.innerText = thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma
       swiperNextButtons.appendChild(button)
     }
-    let formation = Object.values(formations).find(team=>team.selected)
-    let charisma = formation?.charisma
     
     let originalPostServer = postServer
     postServer = (...args)=>{
@@ -138,7 +143,7 @@
           let words = data.result.split(" ")
           let xp = +words.slice(-3)[0]
           charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1)
-          if(charisma!==formation.charisma){
+          if(formation && charisma!==formation?.charisma){
             formation.charisma = charisma
             localStorage["y_WG-formations"] = JSON.stringify(formations)
           }

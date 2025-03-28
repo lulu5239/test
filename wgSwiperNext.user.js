@@ -30,10 +30,11 @@
         padding-right:5px;
         height:100%;
         align-items:center;
-      }</style><div class="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
-        `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:15px"></i>' : "Box "+(i-1)}</div>`
-      ).join(" ")
+      }</style><div id="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
+        `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
+      ).join(" ")+`<br><div data-nextcation="swap" class="swiperNextButton">Back</div> Charisma:</div>`
     )
+    let swiperNextButtons = document.querySelector("#swiperNextButtons")
     
     let selected = 1
     let selectedOnce = null
@@ -49,7 +50,7 @@
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){
         button.addEventListener("click", ()=>{
-          
+          swiperNextButtons.scrollTo(0,swiperNextButtons.scrollHeight<15 ? 30 : 0)
         })
       continue}
       let i = +button.dataset.nextaction
@@ -83,6 +84,27 @@
     
     let cardActions = localStorage["y_WG-cardActions"] ? JSON.parse(localStorage["y_WG-cardActions"]) : {}
     let formations = localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
+    let switchingFormation = false
+    for(let id in formations){
+      let button = document.createElement("div")
+      button.className = "swiperNextButton"
+      button.dataset.formation = id
+      let formation = formations[id]
+      if(formation.selected){
+        button.style.border = "solid 2px #4e4"
+      }
+      button.addEventListener("click", async ()=>{
+        if(switchingFormation){return}
+        switchingFormation = true
+        let r = fetch("/formation/change",{
+          method:"POST",
+          headers:{"content-type":"application/x-www-form-urlencoded"},
+          body:"_token="+token+"&selected_formation=f-"+id
+        })
+        switchingFormation = false
+      })
+      swiperNextButtons.appendElement(button)
+    }
     let formation = Object.values(formations).find(team=>team.selected)
     let charisma = formation?.charisma
     

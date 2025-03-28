@@ -32,7 +32,7 @@
         align-items:center;
       }</style><div id="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
-      ).join(" ")+`<br><div data-nextcation="swap" class="swiperNextButton">Back</div> Charisma:</div>`
+      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton">Back</div> Charisma:</div>`
     )
     let swiperNextButtons = document.querySelector("#swiperNextButtons")
     
@@ -50,7 +50,7 @@
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){
         button.addEventListener("click", ()=>{
-          swiperNextButtons.scrollTo(0,swiperNextButtons.scrollHeight<15 ? 30 : 0)
+          swiperNextButtons.scrollTo(0,swiperNextButtons.scrollTop<15 ? 30 : 0)
         })
       continue}
       let i = +button.dataset.nextaction
@@ -88,6 +88,7 @@
     for(let id in formations){
       let button = document.createElement("div")
       button.className = "swiperNextButton"
+      button.style.marginRight = "2px"
       button.dataset.formation = id
       let formation = formations[id]
       if(formation.selected){
@@ -96,14 +97,23 @@
       button.addEventListener("click", async ()=>{
         if(switchingFormation){return}
         switchingFormation = true
-        let r = fetch("/formation/change",{
+        let r = await fetch("/formation/change",{
           method:"POST",
           headers:{"content-type":"application/x-www-form-urlencoded"},
           body:"_token="+token+"&selected_formation=f-"+id
+        }).catch(e=>{
+          showErrorToast("Couldn't switch party.")
+          switchingFormation = false
         })
         switchingFormation = false
+        let current = Object.keys(formations).find(team=>team.selected)
+        if(current){
+          swiperNextButtons.querySelector(`div[data-formation="${current}"]`).style.border = null
+        }
+        button.style.border = "solid 2px #4e4"
       })
-      swiperNextButtons.appendElement(button)
+      button.innerText = formation.charisma==="undefined" ? "?" : formation.charisma
+      swiperNextButtons.appendChild(button)
     }
     let formation = Object.values(formations).find(team=>team.selected)
     let charisma = formation?.charisma

@@ -97,7 +97,7 @@
         button.style.border = "solid 2px #4e4"
       }
       button.addEventListener("click", async ()=>{
-        if(switchingFormation){return}
+        if(switchingFormation || thisFormation===formation){return}
         switchingFormation = true
         button.style.border = "solid 2px #ee4"
         let r = await fetch("/formation/change",{
@@ -119,6 +119,7 @@
         button.style.border = "solid 2px #4e4"
         formation = thisFormation
         formation.selected = true
+        charisma = formation.charisma
         localStorage["y_WG-formations"] = JSON.stringify(formations)
       })
       button.innerText = thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma

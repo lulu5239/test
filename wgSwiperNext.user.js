@@ -160,7 +160,7 @@
       if(data && charisma){
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.battlemode = charisma-7>data.card.rarity ? true : ""
-        button.innerText = button.dataset.battlemode ? document.querySelector(".btnBattle").innerText.slice(1) : "Disenchant"
+        button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : "Battle") : "Disenchant"
         updateFlirtButton()
       }
       return originalApplyEncounterStyle(...args)

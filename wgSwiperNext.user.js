@@ -115,7 +115,7 @@
         button.innerText = button.dataset.battlemode ? document.querySelector(".btnBattle").innerText.slice(1) : "Disenchant"
         updateFlirtButton()
       }
-      return applyEncounterStyle(...args)
+      return originalApplyEncounterStyle(...args)
     }
   return}
 
@@ -190,6 +190,7 @@
   if(path==="/home"){
     let formations = localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
     for(let formation of document.querySelector("#party").querySelector("optgroup").children){
+      if(formation.value==="default"){continue}
       let data = formations[formation.value.slice(2)]
       if(!data){
         data = formations[formation.value.slice(2)] = {}

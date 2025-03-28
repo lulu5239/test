@@ -51,6 +51,7 @@
             document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
             selectedOnce = null
             button.style.border = "solid 3px #"+colors.selected
+            updateFlirtButton()
           }
         return}
         if(selectedOnce===i){
@@ -86,7 +87,7 @@
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
         selectedOnce = null
       }
-      if(action==="0" && args[1]==="😘" && charisma-7>card.card.rarity){
+      if(action===0 && args[1]==="😘" && charisma-7>card.card.rarity){
         args[1] = "👊"
       }
       let originalSuccessFn = args[2]

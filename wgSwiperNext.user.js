@@ -145,8 +145,8 @@
           cardActions[data.result.split(" Card (\u2116 ")[1].split(")")[0]] = action
           localStorage["y_WG-cardActions"] = JSON.stringify(cardActions)
           let words = data.result.split(" ")
-          let xp = +words.slice(-3)[0]
-          charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1)
+          let xp = +words[words.findIndex(c=>c==="+")+1 || c==="and"]
+          charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1) /(data.result.endsWith(" (200% BOOST)") ? 2 : 1)
           if(formation && charisma!==formation?.charisma){
             formation.charisma = charisma
             localStorage["y_WG-formations"] = JSON.stringify(formations)

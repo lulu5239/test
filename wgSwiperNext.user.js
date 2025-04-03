@@ -147,7 +147,7 @@
         }
         if(!data.result.endsWith("...") && (!data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
-          let xp = +words[words.findIndex(c=>c==="+")+1 || c==="and"]
+          let xp = +words[words.findIndex(c=>c==="+" || c==="and")+1]
           charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1) /(data.result.endsWith(" (200% BOOST)") ? 2 : 1)
           if(formation && charisma!==formation?.charisma){
             formation.charisma = charisma

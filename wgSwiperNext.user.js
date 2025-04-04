@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-28
+// @version      2025-04-03
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -144,9 +144,11 @@
         if(data.result.includes(" Card (\u2116 ") && action!==1){
           cardActions[data.result.split(" Card (\u2116 ")[1].split(")")[0]] = action
           localStorage["y_WG-cardActions"] = JSON.stringify(cardActions)
+        }
+        if(!data.result.endsWith("...") && (!data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
-          let xp = +words.slice(-3)[0]
-          charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1)
+          let xp = +words[words.findIndex(c=>c==="+" || c==="and")+1]
+          charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1) /(data.result.endsWith(" (200% BOOST)") ? 2 : 1)
           if(formation && charisma!==formation?.charisma){
             formation.charisma = charisma
             localStorage["y_WG-formations"] = JSON.stringify(formations)

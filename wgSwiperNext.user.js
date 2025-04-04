@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-03
+// @version      2025-04-04
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -236,6 +236,16 @@
         button.innerText = "Done."
         document.querySelector("a.close-menu").click()
       })
+    })
+
+    let originalWaifuJoinsContent = document.querySelector("#waifuJoinsContent")
+    originalWaifuJoinsContent.id = "originalWaifuJoinsContent"
+    originalWaifuJoinsContent.insertAdjacentHTML("beforeend", `<div id="waifuJoinsContent"></div><button id="viewAnimuButton" class="btn btn-block">View Animu</button>`)
+    document.querySelector("#viewAnimuButton").addEventListener("click", ()=>{
+      showWaifuMenu({
+        id:document.querySelector("#waifuJoinsContent a").href.split("=").slice(-1)[0],
+        name:"", hpText:"", relHP:"0", xpText:"", relXP:"0", cardID:""
+      }, true)
     })
   return}
 

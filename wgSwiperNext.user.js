@@ -238,7 +238,9 @@
       })
     })
 
-    document.querySelector("#waifuJoinsContent").insertAdjacentHTML("beforeend", `<button id="viewAnimuButton" class="btn btn-block">View Animu</button>`)
+    let originalWaifuJoinsContent = document.querySelector("#waifuJoinsContent")
+    originalWaifuJoinsContent.id = "originalWaifuJoinsContent"
+    originalWaifuJoinsContent.insertAdjacentHTML("beforeend", `<div id="waifuJoinsContent"></div><button id="viewAnimuButton" class="btn btn-block">View Animu</button>`)
     document.querySelector("#viewAnimuButton").addEventListener("click", ()=>{
       showWaifuMenu({
         id:document.querySelector("#waifuJoinsContent a").href.split("=").slice(-1)[0],

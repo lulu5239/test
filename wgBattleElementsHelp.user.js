@@ -269,6 +269,7 @@
     if(!args[0].faked){lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]}
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       if(args[0].output){fullStats.p1.moves = currentCard.moves = args[0].output.move_data}
+      if(!fullStats.p1.element && fullStats.p1.card?.element){fullStats.p1.element=fullStats.p1.card.element.toLowerCase()}
       let noPP = true
       for(let m in fullStats.p1.moves){
         let move = fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}

@@ -335,6 +335,7 @@
   actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
     let card = document.querySelector("#swapForXPoption").dataset.card
     if(!card){return}
+    window.battleHelpVars.usingBest = false
     actionSwapList.querySelector(`button[data-swapto="${card}"]`).click()
   })
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_swapToBest" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Swap to best</button><div>`)

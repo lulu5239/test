@@ -195,7 +195,7 @@
         let lowest = Object.values(party).reduce((p,c)=>(c.level<p ? c.level : p),999)
         battles.reverse()
         let battle = battles.find(b=>b.level<=lowest) || battles.reduce((p,b)=>(b.level<p.level ? b : p),{level:999})
-        if(!battle){continue}
+        if(!battle?.element){continue}
         document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}, lv. ${battle.level}</p></button>`)
         document.querySelector("#btn_nextBattle").addEventListener("click", ()=>{
           if(window.battleHelpVars.auto){
@@ -344,7 +344,7 @@
     let max
     for(let card of Object.values(party)){
       if(!card.hp || card.noPP){continue}
-      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1)
+      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<120 ? 2 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
     let card = Object.values(party).filter(card=>card.goodATT===max && !card.noPP).sort((c1,c2)=>c2.hp-c1.hp)[0]

@@ -194,7 +194,7 @@
         }
         let lowest = Object.values(party).reduce((p,c)=>(c.level<p ? c.level : p),999)
         battles.reverse()
-        let battle = battles.find(b=>b.level<=lowest) || battles.reduce((p,b)=>(b.level<p.level ? b : p),{level:lowest})
+        let battle = battles.find(b=>b.level<=lowest) || battles.reduce((p,b)=>(b.level<p.level ? b : p),{level:999})
         if(!battle){continue}
         document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}, lv. ${battle.level}</p></button>`)
         document.querySelector("#btn_nextBattle").addEventListener("click", ()=>{

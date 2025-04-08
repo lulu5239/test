@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-26
+// @version      2025-04-08
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -178,6 +178,7 @@
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = window.battleHelpVars.fullStats = {}
+  let winText
   let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
@@ -199,7 +200,7 @@
           }
           document.location.href = "/battle/"+battle.id
         })
-        if(localStorage["y_WG-autoBattle"]==="all"){
+        if(localStorage["y_WG-autoBattle"]==="all" && winText?.includes("<br")){
           setTimeout(()=>{
             document.location.href = "/battle/"+battle.id
           }, 3000)
@@ -210,13 +211,19 @@
       continue}
       if(e.a==="faint"){
         window.battleHelpVars.usingBest = false
-      }
+      continue}
+      if(e.a==="narate" && winText===true){
+        winText = e.p.text
+      continue}
       if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
           if(!party[c]){continue}
           party[c].receivingXP = true
         }
+      }
+      if(e.p.text==="Found next opponent: null"){
+        winText = true
       }
       if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {") || e.p.text.startsWith("Found next opponent: {")){
         let stats = fullStats[e.p.text.startsWith("p1") ? "p1" : "p2"] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
@@ -267,8 +274,7 @@
         let move = fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
         if(move.pp>0){noPP=false}
         let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1]
-        let multiplier = !effect ? 1 : effect.startsWith(">") ? 2 : 0.5
-        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * (move.elemental_type===card.element ? 1.2 : 0.87) /2 * multiplier
+        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * (move.elemental_type===fullStats.p1.element ? 1.2 : 0.87) * (!effect ? 1 : effect.startsWith(">") ? 2 : 0.5) /2
       }
       if(noPP){currentCard.noPP = true}
     }

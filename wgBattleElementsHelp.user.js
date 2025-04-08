@@ -102,7 +102,7 @@
    
   if(path==="/battle"){
     let list = []
-    for(let card of document.querySelectorAll(".battle-card")){
+    for(let card of document.querySelectorAll("img.battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()
       card.parentElement.querySelector("p").style.marginBottom="0px"
       let text = document.createElement("p")
@@ -130,6 +130,7 @@
       list.push({
         id:battleID,
         element,
+        level:+card.parentElement.querySelector("span.bg-highlight").innerText.slice(3)
       })
       if(localStorage["y_WG-autoBattle"]){ // Experimental, enable if you want
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
@@ -191,9 +192,10 @@
           battles.splice(i,1)
           localStorage["y_WG-battles"] = JSON.stringify(battles)
         }
-        let battle = battles.slice(-1)[0]
+        let lowest = Object.values(party).reduce((p,c)=>(c.level<p ? c.level : p),999)
+        let battle = battles.filter(b=>b.level<lowest).slice(-1)[0] || battles.slice(-1)[0]
         if(!battle){continue}
-        document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}</p></button>`)
+        document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}, lv. ${battle.level}</p></button>`)
         document.querySelector("#btn_nextBattle").addEventListener("click", ()=>{
           if(window.battleHelpVars.auto){
             localStorage["y_WG-autoBattle"] = battle.id

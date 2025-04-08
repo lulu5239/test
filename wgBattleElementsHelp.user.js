@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-26
+// @version      2025-04-08
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -102,7 +102,7 @@
    
   if(path==="/battle"){
     let list = []
-    for(let card of document.querySelectorAll(".battle-card")){
+    for(let card of document.querySelectorAll("img.battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()
       card.parentElement.querySelector("p").style.marginBottom="0px"
       let text = document.createElement("p")
@@ -130,6 +130,7 @@
       list.push({
         id:battleID,
         element,
+        level:+card.parentElement.querySelector("span.bg-highlight").innerText.slice(3)
       })
       if(localStorage["y_WG-autoBattle"]){ // Experimental, enable if you want
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
@@ -178,6 +179,7 @@
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = window.battleHelpVars.fullStats = {}
+  let winText
   let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
@@ -190,16 +192,18 @@
           battles.splice(i,1)
           localStorage["y_WG-battles"] = JSON.stringify(battles)
         }
-        let battle = battles.slice(-1)[0]
-        if(!battle){continue}
-        document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}</p></button>`)
+        let lowest = Object.values(party).reduce((p,c)=>(c.level<p ? c.level : p),999)
+        battles.reverse()
+        let battle = battles.find(b=>b.level<=lowest) || battles.reduce((p,b)=>(b.level<p.level ? b : p),{level:999})
+        if(!battle?.element){continue}
+        document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}, lv. ${battle.level}</p></button>`)
         document.querySelector("#btn_nextBattle").addEventListener("click", ()=>{
           if(window.battleHelpVars.auto){
             localStorage["y_WG-autoBattle"] = battle.id
           }
           document.location.href = "/battle/"+battle.id
         })
-        if(localStorage["y_WG-autoBattle"]==="all"){
+        if(localStorage["y_WG-autoBattle"]==="all" && winText?.includes("<br")){
           setTimeout(()=>{
             document.location.href = "/battle/"+battle.id
           }, 3000)
@@ -210,13 +214,19 @@
       continue}
       if(e.a==="faint"){
         window.battleHelpVars.usingBest = false
-      }
+      continue}
+      if(e.a==="narate" && winText===true){
+        winText = e.p.text
+      continue}
       if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
           if(!party[c]){continue}
           party[c].receivingXP = true
         }
+      }
+      if(e.p.text==="Found next opponent: null"){
+        winText = true
       }
       if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {") || e.p.text.startsWith("Found next opponent: {")){
         let stats = fullStats[e.p.text.startsWith("p1") ? "p1" : "p2"] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
@@ -262,13 +272,13 @@
     if(!args[0].faked){lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]}
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       if(args[0].output){fullStats.p1.moves = currentCard.moves = args[0].output.move_data}
+      if(!fullStats.p1.element && fullStats.p1.card?.element){fullStats.p1.element=fullStats.p1.card.element.toLowerCase()}
       let noPP = true
       for(let m in fullStats.p1.moves){
         let move = fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
         if(move.pp>0){noPP=false}
         let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1]
-        let multiplier = !effect ? 1 : effect.startsWith(">") ? 2 : 0.5
-        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * 0.615 * multiplier
+        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * (move.elemental_type===fullStats.p1.element || move.elemental_type==="normal" ? 1.2 : 1) * (!effect ? 1 : effect.startsWith(">") ? 2 : 0.5) *0.52
       }
       if(noPP){currentCard.noPP = true}
     }
@@ -326,6 +336,7 @@
   actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
     let card = document.querySelector("#swapForXPoption").dataset.card
     if(!card){return}
+    window.battleHelpVars.usingBest = false
     actionSwapList.querySelector(`button[data-swapto="${card}"]`).click()
   })
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_swapToBest" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Swap to best</button><div>`)
@@ -333,7 +344,7 @@
     let max
     for(let card of Object.values(party)){
       if(!card.hp || card.noPP){continue}
-      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || 1)
+      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<120 ? 2 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
     let card = Object.values(party).filter(card=>card.goodATT===max && !card.noPP).sort((c1,c2)=>c2.hp-c1.hp)[0]

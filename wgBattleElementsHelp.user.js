@@ -275,7 +275,7 @@
         let move = fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
         if(move.pp>0){noPP=false}
         let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1]
-        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * (move.elemental_type===fullStats.p1.element || move.elemental_type==="normal" ? 1.2 : 0.87) * (!effect ? 1 : effect.startsWith(">") ? 2 : 0.5) *0.52
+        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * (move.elemental_type===fullStats.p1.element || move.elemental_type==="normal" ? 1.2 : 1) * (!effect ? 1 : effect.startsWith(">") ? 2 : 0.5) *0.52
       }
       if(noPP){currentCard.noPP = true}
     }

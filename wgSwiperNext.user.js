@@ -25,7 +25,7 @@
       `<br><style>.swiperNextButton {
         display:inline-flex;
         color:#fff;
-        background-color:#111;
+        background-color:#111a;
         padding-left:5px;
         padding-right:5px;
         height:100%;

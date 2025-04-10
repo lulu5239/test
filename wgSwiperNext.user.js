@@ -37,6 +37,7 @@
         padding-right:5px;
         height:100%;
         align-items:center;
+        min-width:30px;
       }</style><div id="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
@@ -185,6 +186,7 @@
   if(path==="/cards"){
     let cards = JSON.parse(localStorage["y_WG-cardActions"])
 
+    let selectedCard
     let createNextAction = card=>{
       if(card.querySelector(".nextAction")){card.querySelector(".nextAction").remove()}
       let id = card.dataset.cardid
@@ -195,10 +197,13 @@
         `<strong class="nextAction" style="margin-top:30px" data-action="${action}">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
       )
       card.querySelector(".cancelNext").addEventListener("click", event=>{
+        event.preventDefault()
+        if(card===selectedCard){
+          return document.querySelector(`#swiperNextButtons div[data-nextaction="nothing"]`).click()
+        }
         delete cards[id]
         localStorage["y_WG-cardActions"] = JSON.stringify(cards)
         card.querySelector(".nextAction").remove()
-        event.preventDefault()
       })
     }
     for(let card of document.querySelectorAll("a.selectCard")){
@@ -215,11 +220,12 @@
         height:100%;
         align-items:center;
         text-align:center;
-      }</style><div id="swiperNextButtons" style="height:40px; width:100%">` + ["nothing",0,1,2,3,4,"next"].map(i=>
+        min-width:30px;
+      }</style><div id="swiperNextButtons" style="height:40px; width:100%; margin-left:10px;">` + ["nothing",0,1,2,3,4,"next"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="nothing" ? "Nothing" : i==="next" ? '<i class="fa fa-angle-right"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")
     )
-    let selected; let selectedCard
+    let selected
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="next"){
         button.addEventListener("click", ()=>{
@@ -252,6 +258,9 @@
       let action = cards[args[0].data("card").id]
       document.querySelector(`#swiperNextButtons div[data-nextaction="${(""+action) || "nothing"}"]`).click()
       return originalNextCard(...args)
+    }
+    if(!$nextCard){
+      nextCard(document.querySelector("a.selectCard"))
     }
     
     var processCardActions = async ()=>{

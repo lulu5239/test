@@ -247,8 +247,7 @@
 
     let originalNextCard = nextCard
     nextCard = (...args)=>{
-      let id = JSON.parse(args[0].dataset.card).id
-      let action = cards[id]
+      let action = cards[args[0].data("card").id]
       document.querySelector(`#swiperNextButtons div[data-action="${(""+action) || "nothing"}"]`).click()
       return originalNextCard(...args)
     }

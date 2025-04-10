@@ -213,26 +213,44 @@
         padding-right:5px;
         height:100%;
         align-items:center;
+        font-size:18px;
       }</style><div id="swiperNextButtons" style="height:40px; overflow-y:hidden">` + ["nothing",0,1,2,3,4,"next"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="nothing" ? "Nothing" : i==="next" ? '<i class="fa fa-angle-right"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")
     )
-    let selected
+    let selected; let selectedCard
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="next"){
         button.addEventListener("click", ()=>{
-          
+          $nextCard.click()
         })
       continue}
-      let i = button.dataset.nextaction==="nothing" ? undefined : button.dataset.nextaction
+      let i = button.dataset.nextaction
       button.addEventListener("click", ()=>{
-        if(selected===i){return}
+        if(selected===i || !selectedCard){return}
         if(selected!==undefined){
           document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = null
         }
         selected = i
         button.style.border = "solid 2px #"+colors.selected
+        if(i==="nothing"){
+          delete cards[selectedCard.dataset.cardid]
+        }else{
+          cards[selectedCard.dataset.cardid] = i
+        }
+        localStorage["y_WG-cardActions"] = JSON.stringify(cards)
+        for(let card of document.querySelectorAll(`a.selectCard[data-cardid="${selectedCard.dataset.cardid}"]`)){
+          createNextAction(card)
+        }
       })
+    }
+
+    let originalNextCard = nextCard
+    nextCard = (...args)=>{
+      let id = JSON.parse(args[0].dataset.card).id
+      let action = cards[id]
+      document.querySelector(`#swiperNextButtons div[data-action="${(""+action) || "nothing"}"]`).click()
+      return originalNextCard(...args)
     }
     
     var processCardActions = async ()=>{

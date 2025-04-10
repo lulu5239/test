@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-08
+// @version      2025-04-10
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -20,6 +20,13 @@
     path = path.slice(10)
   }
 
+  var colors = {
+    selected:"7fa",
+    selectedNotNow:"69b",
+    selectedOnce:"c42",
+    selectedCharisma:"4e4",
+  }
+
   if(path==="/swiper"){
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
       `<br><style>.swiperNextButton {
@@ -30,6 +37,7 @@
         padding-right:5px;
         height:100%;
         align-items:center;
+        min-width:30px;
       }</style><div id="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
@@ -41,11 +49,6 @@
     let getSelected = ()=>(selectedOnce===null ? selected : selectedOnce)
     let updateFlirtButton = ()=>{
       document.querySelector("#love .fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : "heart")
-    }
-    var colors = {
-      selected:"7fa",
-      selectedNotNow:"69b",
-      selectedOnce:"c42",
     }
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){
@@ -116,7 +119,7 @@
           swiperNextButtons.querySelector(`div[data-formation="${current}"]`).style.border = null
           delete formations[current].selected
         }
-        button.style.border = "solid 2px #4e4"
+        button.style.border = "solid 2px #"+colors.selectedCharisma
         formation = thisFormation
         formation.selected = true
         charisma = formation.charisma
@@ -129,11 +132,19 @@
     
     let originalPostServer = postServer
     postServer = (...args)=>{
-      let card = $($('.tinder--card[data-encounterid=' + args[0] + ']')).data("data")
+      let card = $('.tinder--card[data-encounterid=' + args[0] + ']').data("data")
       let action = getSelected()
       if(selectedOnce!==null){
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
+      }
+      let nextCard = document.querySelector(".tinder--cards :nth-child(2 of div.tinder--card)")
+      let nextCardData = nextCard && $(nextCard).data("data")
+      if(nextCardData && cardActions[""+nextCardData.card_id] && cardActions[""+nextCardData.card_id]!==selected){
+        selectedOnce = cardActions[""+nextCardData.card_id]
+        document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
+        document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = "solid 3px #"+colors.selectedOnce
+      }else{
         selectedOnce = null
       }
       if(action===0 && args[1]==="😘" && charisma-7>card.card.rarity){
@@ -152,6 +163,7 @@
           if(formation && charisma!==formation?.charisma){
             formation.charisma = charisma
             localStorage["y_WG-formations"] = JSON.stringify(formations)
+            swiperNextButtons.querySelector(`div[data-formation="${formation.id}"]`).innerText = charisma
           }
         }
         if(originalSuccessFn){return originalSuccessFn(data)}
@@ -172,29 +184,95 @@
   return}
 
   if(path==="/cards"){
-    let actions = {}
     let cards = JSON.parse(localStorage["y_WG-cardActions"])
-    for(let card of document.querySelectorAll("a.selectCard")){
-      let id = JSON.parse(card.dataset.card).id
-      if(cards[id]===undefined){continue}
+
+    let selectedCard
+    let createNextAction = card=>{
+      if(card.querySelector(".nextAction")){card.querySelector(".nextAction").remove()}
+      let id = card.dataset.cardid
+      if(!id){id = card.dataset.cardid = JSON.parse(card.dataset.card).id}
+      if(cards[id]===undefined){return}
       let action = cards[id]
-      if(!actions[action]){actions[action]=[card.dataset.pivotselect]}
-      else{actions[action].push(card.dataset.pivotselect)}
       card.querySelector(".fa-angle-right").insertAdjacentHTML("beforebegin",
-        `<strong class="nextAction" style="margin-top:30px">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
+        `<strong class="nextAction" style="margin-top:30px" data-action="${action}">${action==0 ? "To disenchant" : action==1 ? "To move to portfolio" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
       )
       card.querySelector(".cancelNext").addEventListener("click", event=>{
+        event.preventDefault()
+        if(card===selectedCard){
+          return document.querySelector(`#swiperNextButtons div[data-nextaction="nothing"]`).click()
+        }
         delete cards[id]
         localStorage["y_WG-cardActions"] = JSON.stringify(cards)
-        actions[action].splice(actions[action].findIndex(c=>c===id),1)
         card.querySelector(".nextAction").remove()
-        event.preventDefault()
       })
+    }
+    for(let card of document.querySelectorAll("a.selectCard")){
+      createNextAction(card)
+    }
+
+    document.querySelector("#cardActionBlock").children[1].insertAdjacentHTML("afterbegin",
+      `<style>.swiperNextButton {
+        display:inline-flex;
+        color:#fff;
+        background-color:#111;
+        padding-left:5px;
+        padding-right:5px;
+        height:100%;
+        align-items:center;
+        text-align:center;
+        min-width:30px;
+      }</style><div id="swiperNextButtons" style="height:40px; width:100%; margin-left:10px; margin-bottom:10px">` + ["nothing",0,1,2,3,4,"next"].map(i=>
+        `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="nothing" ? "Nothing" : i==="next" ? '<i class="fa fa-angle-right"></i>' : "Box "+(i-1)}</div>`
+      ).join(" ")
+    )
+    let selected
+    for(let button of document.querySelectorAll(".swiperNextButton")){
+      if(button.dataset.nextaction==="next"){
+        button.addEventListener("click", ()=>{
+          nextCard($nextCard)
+        })
+      continue}
+      let i = button.dataset.nextaction
+      button.addEventListener("click", ()=>{
+        if(selected===i || !selectedCard){return}
+        if(selected!==undefined){
+          document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = null
+        }
+        selected = i
+        button.style.border = "solid 2px #"+colors.selected
+        if(i==="nothing"){
+          delete cards[selectedCard.dataset.cardid]
+        }else{
+          cards[selectedCard.dataset.cardid] = i
+        }
+        localStorage["y_WG-cardActions"] = JSON.stringify(cards)
+        for(let card of document.querySelectorAll(`a.selectCard[data-cardid="${selectedCard.dataset.cardid}"]`)){
+          createNextAction(card)
+        }
+      })
+    }
+
+    let originalNextCard = nextCard
+    nextCard = (...args)=>{
+      selectedCard = args[0][0]
+      let action = cards[args[0].data("card").id]
+      document.querySelector(`#swiperNextButtons div[data-nextaction="${action!==undefined ? ""+action : "nothing"}"]`).click()
+      return originalNextCard(...args)
+    }
+    if(!$nextCard){
+      nextCard($("a.selectCard").first())
     }
     
     var processCardActions = async ()=>{
+      let actions = {}
+      for(let action of document.querySelectorAll("a.selectCard .nextAction")){
+        if(!actions[action.dataset.action]){actions[action.dataset.action]=[]}
+        actions[action.dataset.action].push(action.parentElement.dataset.pivotselect)
+        delete cards[action.parentElement.dataset.cardid]
+      }
+      let promises = []
       for(let action in actions){
-        fetch('https://waifugame.com/json/multi_'+(action==0 ? "disenchant" : "move"), {
+        promises.push(fetch('https://waifugame.com/json/multi_'+(action==0 ? "disenchant" : "move"), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -205,9 +283,10 @@
             'pivots': actions[action],
             destination:action==0 ? undefined : "box"+(action-1)
           })
-        });
+        }))
       }
-      localStorage["y_WG-cardActions"] = "{}"
+      localStorage["y_WG-cardActions"] = JSON.stringify(cards)
+      if(Promise.all){await Promise.all(promises)}
     }
     window.processCardActions = processCardActions
 

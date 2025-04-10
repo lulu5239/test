@@ -187,11 +187,12 @@
 
     let createNextAction = card=>{
       if(card.querySelector(".nextAction")){card.querySelector(".nextAction").remove()}
-      let id = JSON.parse(card.dataset.card).id
+      let id = card.dataset.cardid
+      if(!id){id = card.dataset.cardid = JSON.parse(card.dataset.card).id}
       if(cards[id]===undefined){return}
       let action = cards[id]
       card.querySelector(".fa-angle-right").insertAdjacentHTML("beforebegin",
-        `<strong class="nextAction" style="margin-top:30px" data-action="${action}" data-cardid="${id}">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
+        `<strong class="nextAction" style="margin-top:30px" data-action="${action}">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
       )
       card.querySelector(".cancelNext").addEventListener("click", event=>{
         delete cards[id]
@@ -213,6 +214,7 @@
         padding-right:5px;
         height:100%;
         align-items:center;
+        text-align:center;
       }</style><div id="swiperNextButtons" style="height:40px; width:100%">` + ["nothing",0,1,2,3,4,"next"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="nothing" ? "Nothing" : i==="next" ? '<i class="fa fa-angle-right"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")
@@ -246,8 +248,9 @@
 
     let originalNextCard = nextCard
     nextCard = (...args)=>{
+      selectedCard = args[0][0]
       let action = cards[args[0].data("card").id]
-      document.querySelector(`#swiperNextButtons div[data-action="${(""+action) || "nothing"}"]`).click()
+      document.querySelector(`#swiperNextButtons div[data-nextaction="${(""+action) || "nothing"}"]`).click()
       return originalNextCard(...args)
     }
     
@@ -256,7 +259,7 @@
       for(let action of document.querySelectorAll("a.selectCard .nextAction")){
         if(!actions[action.dataset.action]){actions[action.dataset.action]=[]}
         actions[action.dataset.action].push(action.parentElement.dataset.pivotselect)
-        delete cards[action.dataset.cardid]
+        delete cards[action.parentElement.dataset.cardid]
       }
       let promises = []
       for(let action in actions){

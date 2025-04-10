@@ -194,7 +194,7 @@
       if(cards[id]===undefined){return}
       let action = cards[id]
       card.querySelector(".fa-angle-right").insertAdjacentHTML("beforebegin",
-        `<strong class="nextAction" style="margin-top:30px" data-action="${action}">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
+        `<strong class="nextAction" style="margin-top:30px" data-action="${action}">${action==0 ? "To disenchant" : action==1 ? "To move to portfolio" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
       )
       card.querySelector(".cancelNext").addEventListener("click", event=>{
         event.preventDefault()
@@ -256,7 +256,7 @@
     nextCard = (...args)=>{
       selectedCard = args[0][0]
       let action = cards[args[0].data("card").id]
-      document.querySelector(`#swiperNextButtons div[data-nextaction="${(""+action) || "nothing"}"]`).click()
+      document.querySelector(`#swiperNextButtons div[data-nextaction="${action!==undefined ? ""+action : "nothing"}"]`).click()
       return originalNextCard(...args)
     }
     if(!$nextCard){

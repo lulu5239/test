@@ -221,7 +221,7 @@
         align-items:center;
         text-align:center;
         min-width:30px;
-      }</style><div id="swiperNextButtons" style="height:40px; width:100%; margin-left:10px;">` + ["nothing",0,1,2,3,4,"next"].map(i=>
+      }</style><div id="swiperNextButtons" style="height:40px; width:100%; margin-left:10px; margin-bottom:10px">` + ["nothing",0,1,2,3,4,"next"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="nothing" ? "Nothing" : i==="next" ? '<i class="fa fa-angle-right"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")
     )

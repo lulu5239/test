@@ -213,8 +213,7 @@
         padding-right:5px;
         height:100%;
         align-items:center;
-        font-size:18px;
-      }</style><div id="swiperNextButtons" style="height:40px; overflow-y:hidden">` + ["nothing",0,1,2,3,4,"next"].map(i=>
+      }</style><div id="swiperNextButtons" style="height:40px; width:100%">` + ["nothing",0,1,2,3,4,"next"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="nothing" ? "Nothing" : i==="next" ? '<i class="fa fa-angle-right"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")
     )

@@ -229,7 +229,7 @@
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="next"){
         button.addEventListener("click", ()=>{
-          $nextCard.click()
+          nextCard($nextCard)
         })
       continue}
       let i = button.dataset.nextaction
@@ -260,7 +260,7 @@
       return originalNextCard(...args)
     }
     if(!$nextCard){
-      nextCard(document.querySelector("a.selectCard"))
+      nextCard($("a.selectCard").first())
     }
     
     var processCardActions = async ()=>{

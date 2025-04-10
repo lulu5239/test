@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-08
+// @version      2025-04-10
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -134,6 +134,14 @@
       if(selectedOnce!==null){
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
+      }
+      let nextCard = document.querySelector(".tinder--cards :nth-child(2 of div.tinder--card)")
+      let nextCardData = nextCard && $(nextCard).data("data")
+      if(nextCardData && cardActions[""+nextCardData.card_id] && cardActions[""+nextCardData.card_id]!==selected){
+        selectedOnce = cardActions[""+nextCardData.card_id]
+        document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
+        document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = "solid 3px #"+colors.selectedOnce
+      }else{
         selectedOnce = null
       }
       if(action===0 && args[1]==="😘" && charisma-7>card.card.rarity){
@@ -152,6 +160,7 @@
           if(formation && charisma!==formation?.charisma){
             formation.charisma = charisma
             localStorage["y_WG-formations"] = JSON.stringify(formations)
+            swiperNextButtons.querySelector(`div[data-formation="${formation.id}"]`).innerText = charisma
           }
         }
         if(originalSuccessFn){return originalSuccessFn(data)}

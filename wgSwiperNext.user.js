@@ -20,6 +20,13 @@
     path = path.slice(10)
   }
 
+  var colors = {
+    selected:"7fa",
+    selectedNotNow:"69b",
+    selectedOnce:"c42",
+    selectedCharisma:"4e4",
+  }
+
   if(path==="/swiper"){
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
       `<br><style>.swiperNextButton {
@@ -41,11 +48,6 @@
     let getSelected = ()=>(selectedOnce===null ? selected : selectedOnce)
     let updateFlirtButton = ()=>{
       document.querySelector("#love .fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : "heart")
-    }
-    var colors = {
-      selected:"7fa",
-      selectedNotNow:"69b",
-      selectedOnce:"c42",
     }
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){
@@ -116,7 +118,7 @@
           swiperNextButtons.querySelector(`div[data-formation="${current}"]`).style.border = null
           delete formations[current].selected
         }
-        button.style.border = "solid 2px #4e4"
+        button.style.border = "solid 2px #"+colors.selectedCharisma
         formation = thisFormation
         formation.selected = true
         charisma = formation.charisma
@@ -129,7 +131,7 @@
     
     let originalPostServer = postServer
     postServer = (...args)=>{
-      let card = $($('.tinder--card[data-encounterid=' + args[0] + ']')).data("data")
+      let card = $('.tinder--card[data-encounterid=' + args[0] + ']').data("data")
       let action = getSelected()
       if(selectedOnce!==null){
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
@@ -181,27 +183,35 @@
   return}
 
   if(path==="/cards"){
-    let actions = {}
     let cards = JSON.parse(localStorage["y_WG-cardActions"])
-    for(let card of document.querySelectorAll("a.selectCard")){
+
+    let createNextAction = card=>{
+      if(card.querySelector(".nextAction")){card.querySelector(".nextAction").remove()}
       let id = JSON.parse(card.dataset.card).id
       if(cards[id]===undefined){continue}
       let action = cards[id]
-      if(!actions[action]){actions[action]=[card.dataset.pivotselect]}
-      else{actions[action].push(card.dataset.pivotselect)}
       card.querySelector(".fa-angle-right").insertAdjacentHTML("beforebegin",
-        `<strong class="nextAction" style="margin-top:30px">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
+        `<strong class="nextAction" style="margin-top:30px" data-action="${action}" data-cardid="${id}">${action==0 ? "To disenchant" : "To move to box "+(action-1)} <div class="cancelNext" style="display:inline; color:#fff; background-color:#333; padding:5px; z-index:50">Cancel</div></strong>`
       )
       card.querySelector(".cancelNext").addEventListener("click", event=>{
         delete cards[id]
         localStorage["y_WG-cardActions"] = JSON.stringify(cards)
-        actions[action].splice(actions[action].findIndex(c=>c===id),1)
         card.querySelector(".nextAction").remove()
         event.preventDefault()
       })
     }
     
+    for(let card of document.querySelectorAll("a.selectCard")){
+      createNextAction(card)
+    }
+    
     var processCardActions = async ()=>{
+      let actions = {}
+      for(let action of document.querySelectorAll("a.selectCard .nextAction")){
+        if(!actions[action.dataset.action]){actions[action.dataset.action]=[]}
+        actions[action.dataset.action].push(action.parentElement.dataset.pivotselect)
+        delete cards[action.dataset.cardid]
+      }
       for(let action in actions){
         fetch('https://waifugame.com/json/multi_'+(action==0 ? "disenchant" : "move"), {
           method: 'POST',
@@ -216,7 +226,7 @@
           })
         });
       }
-      localStorage["y_WG-cardActions"] = "{}"
+      localStorage["y_WG-cardActions"] = JSON.stringify(cards)
     }
     window.processCardActions = processCardActions
 

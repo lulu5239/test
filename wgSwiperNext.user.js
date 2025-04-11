@@ -138,7 +138,7 @@
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
       }
-      let nextCard = document.querySelector(".tinder--cards :nth-child(2 of div.tinder--card:not(.removed))")
+      let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
       if(nextCardData && +cardActions[""+nextCardData.card_id] && +cardActions[""+nextCardData.card_id]!==selected){
         selectedOnce = +cardActions[""+nextCardData.card_id]

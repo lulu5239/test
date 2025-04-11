@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-10
+// @version      2025-04-11
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -38,6 +38,7 @@
         height:100%;
         align-items:center;
         min-width:30px;
+        user-select:none;
       }</style><div id="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
@@ -221,6 +222,7 @@
         align-items:center;
         text-align:center;
         min-width:30px;
+        user-select:none;
       }</style><div id="swiperNextButtons" style="height:40px; width:100%; margin-left:10px; margin-bottom:10px">` + ["nothing",0,1,2,3,4,"next"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="nothing" ? "Nothing" : i==="next" ? '<i class="fa fa-angle-right"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")
@@ -265,10 +267,11 @@
     
     var processCardActions = async ()=>{
       let actions = {}
+      let ids = []
       for(let action of document.querySelectorAll("a.selectCard .nextAction")){
         if(!actions[action.dataset.action]){actions[action.dataset.action]=[]}
         actions[action.dataset.action].push(action.parentElement.dataset.pivotselect)
-        delete cards[action.parentElement.dataset.cardid]
+        ids.push(action.parentElement.dataset.cardid)
       }
       let promises = []
       for(let action in actions){
@@ -285,6 +288,7 @@
           })
         }))
       }
+      for(let id of ids){delete cards[id]}
       localStorage["y_WG-cardActions"] = JSON.stringify(cards)
       if(Promise.all){await Promise.all(promises)}
     }

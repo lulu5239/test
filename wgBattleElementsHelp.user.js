@@ -253,6 +253,25 @@
       }
     }
     setTimeout(()=>{
+      if(fullStats.p2?.card.shard_sponsor_user_id==403880 && !localStorage["y_WG-autoBattle"] && !document.querySelectorAll("#unlockAutoBattle").length){
+        narate("Oh, you are battling against one of <span>my developer's cards</span>;<br>I <i>(the user-script)</i> don't want to see that...<br>Please do it <span>fast</span>!")
+        document.querySelector("#battle_view_player").insertAdjacentHTML("afterbegin", `<div style="width:100%; text-align:center; overflow:hidden; padding:10px;"><button id="unlockAutoBattle" class="btn" style="margin-top:-150px; background-color:#000; filter:drop-shadow(0 0 10px #ff0); display:inline-flex; align-items:center">Unlock auto-battle</button></div>`)
+        setTimeout(()=>{
+          let button = document.querySelector("#unlockAutoBattle")
+          button.addEventListener("click", ()=>{
+            if(localStorage["y_WG-autoBattle"]){
+              button.style.marginTop = "-150px"
+              window.battleHelpVars.auto = true
+              showSuccessToast("Use a move to start the auto-battle.")
+            }else{
+              localStorage["y_WG-autoBattle"] = true
+              button.innerText = "Auto-battle"
+              showSuccessToast("Unlocked auto-battle!")
+            }
+          })
+          button.style.marginTop = "10px"
+        },5000)
+      }
       if(busy){return}
       window.scrollTo(0, 185)
       if(!battleHelpVars.auto || document.querySelector("#action_block").style.display==="none"){return}

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-08
+// @version      2025-04-11
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -237,7 +237,6 @@
           currentCard = party[stats.id]
           currentCard.receivingXP = true
           currentCard.stats = stats.stats
-          handleSwapParty()
           // Store stats in party
           let previous = JSON.parse(localStorage["y_WG-party"])
           previous[stats.id].stats = stats.stats
@@ -250,6 +249,7 @@
             faked:true,
           })
         }
+        handleSwapParty()
       }
     }
     setTimeout(()=>{

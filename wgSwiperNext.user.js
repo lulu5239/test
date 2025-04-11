@@ -138,10 +138,10 @@
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
       }
-      let nextCard = document.querySelector(".tinder--cards :nth-child(2 of div.tinder--card)")
+      let nextCard = document.querySelector(".tinder--cards :nth-child(2 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
-      if(nextCardData && cardActions[""+nextCardData.card_id] && cardActions[""+nextCardData.card_id]!==selected){
-        selectedOnce = cardActions[""+nextCardData.card_id]
+      if(nextCardData && +cardActions[""+nextCardData.card_id] && +cardActions[""+nextCardData.card_id]!==selected){
+        selectedOnce = +cardActions[""+nextCardData.card_id]
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = "solid 3px #"+colors.selectedOnce
       }else{

@@ -164,7 +164,7 @@
           if(formation && charisma!==formation?.charisma){
             formation.charisma = charisma
             localStorage["y_WG-formations"] = JSON.stringify(formations)
-            swiperNextButtons.querySelector(`div[data-formation="${formation.id}"]`).innerText = charisma
+            swiperNextButtons.querySelector(`div[data-formation="${Object.keys(formations).find(k=>(formations[k]===formation))}"]`).innerText = charisma
           }
         }
         if(originalSuccessFn){return originalSuccessFn(data)}

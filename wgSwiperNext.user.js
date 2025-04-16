@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-12
+// @version      2025-04-16
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -186,6 +186,7 @@
 
   if(path==="/cards"){
     let cards = JSON.parse(localStorage["y_WG-cardActions"])
+    let showTopSimps = !!localStorage["y_WG-showTopSimps"]
 
     let selectedCard
     let createNextAction = card=>{
@@ -223,7 +224,11 @@
         text-align:center;
         min-width:30px;
         user-select:none;
-      }</style><div id="swiperNextButtons" style="height:40px; width:100%; margin-left:10px; margin-bottom:10px">` + ["nothing",0,1,2,3,4,"next"].map(i=>
+      }
+      table.smallerTable th, table.smallerTable td {
+        padding: 5px;
+      }
+      </style><div id="swiperNextButtons" style="height:40px; width:100%; margin-left:10px; margin-bottom:10px">` + ["nothing",0,1,2,3,4,"next"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="nothing" ? "Nothing" : i==="next" ? '<i class="fa fa-angle-right"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")
     )
@@ -253,12 +258,50 @@
         }
       })
     }
+    let table = document.querySelector("#cardName").parentElement.querySelector("table")
+    if(showTopSimps){
+      table.classList.add("smallerTable")
+      table.querySelector("tbody").insertAdjacentHTML("beforeend",
+        `<tr class="bg-dark-light"><th>Top simps</th><td id="topSimps"><button class="btn">Load...</button><div></div></td></tr>`
+      )
+      document.querySelector("#topSimps button").addEventListener("click", async ()=>{
+        document.querySelector("#topSimps button").style.display = "none"
+        let req1 = await fetch('https://waifugame.com/json/card/'+selectedCard.dataset.cardid, {
+          headers: {
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+          }
+        }).catch(e=>{
+          showErrorToast("Couldn't fetch card data.")
+          throw e
+        });
+        let fullCard = await req1.json()
+        let req2 = await fetch("https://waifugame.com/search?q=ch:"+fullCard.characterId).catch(e=>{
+          showErrorToast("Couldn't fetch card search.")
+          throw e
+        })
+        let fullPage = await req2.text()
+        let leaderboards = fullPage.split(`<th>Rank</th>`)
+          .slice(1).map(l=>l.slice(l.indexOf("<tbody>")+6, l.indexOf("</tbody>")))
+        document.querySelector("#topSimps div").innerHTML = leaderboards
+          .map((l,i)=>{
+            let top = l.indexOf(`href='/profile/`)
+            if(top===-1){return null}
+            top = l.slice(top+15)
+            top = top.slice(0, top.indexOf("'"))
+            return `<a href="/profile/${top}" target="_blank">${i===0 ? "Monthly" : "All-time"}</a>`
+          }).filter(l=>l).join("; ") || "None!"
+      })
+    }
 
     let originalNextCard = nextCard
     nextCard = (...args)=>{
       selectedCard = args[0][0]
       let action = cards[args[0].data("card").id]
       document.querySelector(`#swiperNextButtons div[data-nextaction="${action!==undefined ? ""+action : "nothing"}"]`).click()
+      if(showTopSimps){
+        document.querySelector("#topSimps button").style.display = null
+        document.querySelector("#topSimps div").innerHTML = ""
+      }
       return originalNextCard(...args)
     }
     if(!$nextCard){

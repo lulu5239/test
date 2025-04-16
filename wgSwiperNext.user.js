@@ -225,7 +225,7 @@
         min-width:30px;
         user-select:none;
       }
-      .smallerTable table th, .smallerTable table td {
+      table.smallerTable th, table.smallerTable td {
         padding: 5px;
       }
       </style><div id="swiperNextButtons" style="height:40px; width:100%; margin-left:10px; margin-bottom:10px">` + ["nothing",0,1,2,3,4,"next"].map(i=>
@@ -262,11 +262,11 @@
     if(showTopSimps){
       table.classList.add("smallerTable")
       table.querySelector("tbody").insertAdjacentHTML("beforeend",
-        `<tr class="bg-dark-light"><th>Top simps</th><td id="topSimps"><button>Load...</button><div></div></td></tr>`
+        `<tr class="bg-dark-light"><th>Top simps</th><td id="topSimps"><button class="btn">Load...</button><div></div></td></tr>`
       )
       document.querySelector("#topSimps button").addEventListener("click", async ()=>{
         document.querySelector("#topSimps button").style.display = "none"
-        let req1 = await fetch('https://waifugame.com/json/card/1355086', {
+        let req1 = await fetch('https://waifugame.com/json/card/'+selectedCard.id, {
           headers: {
             'Accept': 'application/json, text/javascript, */*; q=0.01',
           }
@@ -289,7 +289,7 @@
             top = l.slice(top+15)
             top = top.slice(0, top.indexOf('"'))
             return `<a href="/profile/${top}">${i===0 ? "Monthly" : "All-time"}</a>`
-          }).filter(l=>l).join("; ")
+          }).filter(l=>l).join("; ") || "None!"
       })
     }
 
@@ -301,7 +301,6 @@
       if(showTopSimps){
         document.querySelector("#topSimps button").style.display = null
         document.querySelector("#topSimps div").innerHTML = ""
-        
       }
       return originalNextCard(...args)
     }

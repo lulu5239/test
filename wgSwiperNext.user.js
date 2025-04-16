@@ -266,7 +266,7 @@
       )
       document.querySelector("#topSimps button").addEventListener("click", async ()=>{
         document.querySelector("#topSimps button").style.display = "none"
-        let req1 = await fetch('https://waifugame.com/json/card/'+selectedCard.id, {
+        let req1 = await fetch('https://waifugame.com/json/card/'+selectedCard.dataset.card, {
           headers: {
             'Accept': 'application/json, text/javascript, */*; q=0.01',
           }
@@ -280,15 +280,15 @@
           throw e
         })
         let fullPage = await req2.text()
-        let leaderboards = fullPage.split(`<th>Rank</th>${" ".repeat(44)}<th>Player</th>${" ".repeat(44)}<th>Score</th>`)
+        let leaderboards = fullPage.split(`<th>Rank</th>`)
           .slice(1).map(l=>l.slice(l.indexOf("<tbody>")+6, l.indexOf("</tbody>")))
         document.querySelector("#topSimps div").innerHTML = leaderboards
           .map((l,i)=>{
-            let top = l.indexOf(`href="/profile/`)
+            let top = l.indexOf(`href='/profile/`)
             if(top===-1){return null}
             top = l.slice(top+15)
-            top = top.slice(0, top.indexOf('"'))
-            return `<a href="/profile/${top}">${i===0 ? "Monthly" : "All-time"}</a>`
+            top = top.slice(0, top.indexOf("'"))
+            return `<a href="/profile/${top}" target="_blank">${i===0 ? "Monthly" : "All-time"}</a>`
           }).filter(l=>l).join("; ") || "None!"
       })
     }

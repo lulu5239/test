@@ -186,7 +186,7 @@
 
   if(path==="/cards"){
     let cards = JSON.parse(localStorage["y_WG-cardActions"])
-    let showTopSimps = true
+    let showTopSimps = !!localStorage["y_WG-showTopSimps"]
 
     let selectedCard
     let createNextAction = card=>{
@@ -266,7 +266,7 @@
       )
       document.querySelector("#topSimps button").addEventListener("click", async ()=>{
         document.querySelector("#topSimps button").style.display = "none"
-        let req1 = await fetch('https://waifugame.com/json/card/'+selectedCard.dataset.card, {
+        let req1 = await fetch('https://waifugame.com/json/card/'+selectedCard.dataset.cardid, {
           headers: {
             'Accept': 'application/json, text/javascript, */*; q=0.01',
           }

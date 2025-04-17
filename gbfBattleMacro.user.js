@@ -15,7 +15,8 @@ var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true}))
 
 var onPage = async ()=>{
   if(!document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
-  document.querySelector(".ctn-raid").style.paddingBottom = null
+  while(!document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
+  document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
     `<div id="macros-list">${macros.map(macro=>(
@@ -24,7 +25,7 @@ var onPage = async ()=>{
     <style>
       .listed-macro {
         display:block;
-        width:100%;
+        width:calc(100% - 10px);
         padding:5px;
         background:#222;
         color:#fff;

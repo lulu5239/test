@@ -66,11 +66,12 @@ var onPage = async ()=>{
     recording.style.display = null
     recordFunction = original=>{
       let usefulParent = original
-      while(usefulParent && !usefulParent.dataset["ability-id"]){
+      while(usefulParent && !usefulParent.classList.contains("lis-ability")){
         usefulParent = usefulParent.parentElement
       }
       if(!usefulParent){return}
-      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-abillty="${usefulParent.dataset["ability-id"]}">${usefulParent.dataset["ability-name"]}</div>`)
+      usefulParent = usefulParent.querySelector("[ability-id]")
+      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-type="skill" data-abillty="${usefulParent.getAttribute("ability-id")}">${usefulParent.getAttribute("ability-name")}</div>`)
     }
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).addEventListener("click", ()=>{

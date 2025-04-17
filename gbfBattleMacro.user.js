@@ -35,7 +35,7 @@ var onPage = async ()=>{
   )
   let list = document.querySelector("#macros-list")
   let observer = new MutationObserver(onPage)
-  observer.observe(list, {
+  observer.observe(list.parentElement, {
     childList:true,
   })
 }

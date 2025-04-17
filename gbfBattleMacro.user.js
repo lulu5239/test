@@ -12,6 +12,10 @@
 // ==/UserScript==
 
 var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true}))
+var recordFunction
+document.addEventListener("click", ev=>{
+  if(recordFunction){recordFunction(ev.target)}
+})
 
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
@@ -45,7 +49,7 @@ var onPage = async ()=>{
 
   let createListedMacro = i=>{
     let macro = macros[i]
-    list.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-id="${macro.id}"><button>⚙️</button> ${macro.name}</div>`)
+    list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${macro.id}"><button>⚙️</button> ${macro.name}</div>`)
     list.querySelector(`.listed-macro[data-id="${macro.id}"]`).addEventListener("click", ()=>{
       playMacro(macro)
     })
@@ -60,6 +64,14 @@ var onPage = async ()=>{
   list.querySelector(`.listed-macro[data-id="new"]`).addEventListener("click", ()=>{
     list.style.display = "none"
     recording.style.display = null
+    recordFunction = original=>{
+      let usefulParent = original
+      while(usefulParent && !usefulParent.dataset["ability-id"]){
+        usefulParent = usefulParent.parentElement
+      }
+      if(!usefulParent){return}
+      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-abillty="${usefulParent.dataset["ability-id"]}">${usefulParent.dataset["ability-name"]}</div>`)
+    }
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).addEventListener("click", ()=>{
     let name = prompt("Macro name?")
@@ -68,8 +80,12 @@ var onPage = async ()=>{
       name,
       actions:[],
     }
-    for(let action of recording.querySelectorAll(".listed-macro")){
-      // Add action to macro
+    for(let action of recording.querySelectorAll(".listed-macro[data-ability]")){
+      macro.actions.push({
+        type:action.dataset.type,
+        ability:action.dataset.ability,
+        name:action.innerText,
+      })
     }
     macros.push(macro)
     createListedMacro(macros.length-1)

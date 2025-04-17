@@ -47,7 +47,14 @@ var onPage = async ()=>{
     for(let action of macro.actions){
       if(action.type==="skill"){
         let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
-        if(button){click(button)}
+        if(button){
+          if(document.querySelector(`.prt-command-chara[pos="${+button.getAttribute("character-num")+1}"]`).style.display==="none"){
+            click(document.querySelector(`.btn-command-back`))
+            await new Promise(ok=>setTimeout(ok,100))
+            click(document.querySelector(`.btn-command-character[pos="${+button.getAttribute("character-num")}"]`))
+          }
+          click(button)
+        }
       }
     }
   }

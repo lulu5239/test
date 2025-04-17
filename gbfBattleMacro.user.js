@@ -43,18 +43,34 @@ var onPage = async ()=>{
   })
   let recording = document.querySelector("#macro-recording")
 
+  let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
   let playMacro = async macro=>{
+    let wait = ()=>new Promise(ok=>setTimeout(ok,macro.speed==="slow" ? 2000 : 500))
     for(let action of macro.actions){
       if(action.type==="skill"){
         let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
         if(button){
           if(document.querySelector(`.prt-command-chara[pos="${+button.getAttribute("ability-character-num")+1}"]`).style.display!=="block"){
             click(document.querySelector(`.btn-command-back`))
-            await new Promise(ok=>setTimeout(ok,000))
+            await wait()
             click(document.querySelector(`.btn-command-character[pos="${+button.getAttribute("ability-character-num")}"]`))
-            await new Promise(ok=>setTimeout(ok,500))
+            await wait()
           }
           click(button)
+          if(action.character){
+            await wait()
+            let character
+            for(let c of document.querySelectorAll(`.pop-select-member .prt-character .btn-command-character img`)){
+              if(characterByImage(c.src)===action.character){
+                character = c
+              }
+            }
+            if(character){
+              click(character)
+              await wait()
+            }
+          }
+          if(macro.speed==="slow"){await wait()}
         }
       }
     }
@@ -77,17 +93,25 @@ var onPage = async ()=>{
     createListedMacro(i)
   }
 
+  let skillByImage = url=>document.querySelector(`.prt-ability-list img[src="${url}"`).parentElement
   list.querySelector(`.listed-macro[data-id="new"]`).addEventListener("click", ()=>{
     list.style.display = "none"
     recording.style.display = null
     recordFunction = original=>{
       let usefulParent = original
-      while(usefulParent && !usefulParent.classList.contains("lis-ability")){
+      let character
+      while(usefulParent && !usefulParent.classList.contains("lis-ability") && !usefulParent.classList.contains("prt-popup-body")){
+        if(usefulParent.classList.contains("btn-command-character")){character = usefulParent}
         usefulParent = usefulParent.parentElement
       }
       if(!usefulParent){return}
+      let extra = {type:"skill"}
+      if(usefulParent.parentElement.classList.contains("pop-usual") && character){
+        extra.character = characterByImage(character.querySelector("img.img-chara-command").src)
+        usefulParent = skillByImage(usefulParent.querySelector("img.img-ability-icon"))
+      }
       usefulParent = usefulParent.querySelector("[ability-id]")
-      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-type="skill" data-ability="${usefulParent.getAttribute("ability-id")}">${usefulParent.getAttribute("ability-name")}</div>`)
+      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-ability="${usefulParent.getAttribute("ability-id")}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${usefulParent.getAttribute("ability-name")}</div>`)
     }
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).addEventListener("click", ()=>{

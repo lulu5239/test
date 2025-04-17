@@ -43,17 +43,25 @@ var onPage = async ()=>{
   })
   let recording = document.querySelector("#macro-recording")
 
-  let playMacro = macro=>{
-    
+  let playMacro = async macro=>{
+    for(let action of macro.actions){
+      if(action.type==="skill"){
+        let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
+        if(button){click(button)}
+      }
+    }
   }
 
   let createListedMacro = i=>{
     let macro = macros[i]
     list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${macro.id}"><button>⚙️</button> ${macro.name}</div>`)
-    list.querySelector(`.listed-macro[data-id="${macro.id}"]`).addEventListener("click", ()=>{
-      playMacro(macro)
+    let line = list.querySelector(`.listed-macro[data-id="${macro.id}"]`)
+    line.addEventListener("click", async ()=>{
+      line.style.backgroundColor = "#922"
+      await playMacro(macro)
+      line.style.backgroundColor = null
     })
-    list.querySelector(`.listed-macro[data-id="${macro.id}"] button`).addEventListener("click", ()=>{
+    line.querySelector(`button`).addEventListener("click", ()=>{
       // Macro settings
     })
   }
@@ -92,6 +100,7 @@ var onPage = async ()=>{
     createListedMacro(macros.length-1)
     list.style.display = null
     recording.style.display = "none"
+    GM_setValue("macros", macros)
   })
 }
 

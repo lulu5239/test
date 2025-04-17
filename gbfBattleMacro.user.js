@@ -14,7 +14,7 @@
 var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true}))
 
 var onPage = async ()=>{
-  if(!document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
+  if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   while(!document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   let macros = GM_getValue("macros") || []
@@ -33,6 +33,11 @@ var onPage = async ()=>{
       }
     </style>`
   )
+  let list = document.querySelector("#macros-list")
+  let observer = new MutationObserver(onPage)
+  observer.observe(list, {
+    childList:true,
+  })
 }
 
 window.addEventListener("hashchange", onPage)

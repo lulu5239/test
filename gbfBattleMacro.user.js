@@ -79,7 +79,7 @@ var onPage = async ()=>{
       }
       if(!usefulParent){return}
       usefulParent = usefulParent.querySelector("[ability-id]")
-      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-type="skill" data-abillty="${usefulParent.getAttribute("ability-id")}">${usefulParent.getAttribute("ability-name")}</div>`)
+      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-type="skill" data-ability="${usefulParent.getAttribute("ability-id")}">${usefulParent.getAttribute("ability-name")}</div>`)
     }
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).addEventListener("click", ()=>{

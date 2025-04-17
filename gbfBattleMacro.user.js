@@ -20,7 +20,7 @@ var onPage = async ()=>{
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
     `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div></div>
-    <div id="macro-recording" style="display:none"><div class="listed-macro" id="stop">Stop recording</div></div>
+    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop">Stop recording</div></div>
     <style>
       .listed-macro {
         display:block;
@@ -46,10 +46,10 @@ var onPage = async ()=>{
   let createListedMacro = i=>{
     let macro = macros[i]
     list.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-id="${macro.id}"><button>⚙️</button> ${macro.name}</div>`)
-    list.querySelector(`listed-macro[data-id="${macro.id}"]`).addEventListener("click", ()=>{
+    list.querySelector(`.listed-macro[data-id="${macro.id}"]`).addEventListener("click", ()=>{
       playMacro(macro)
     })
-    list.querySelector(`listed-macro[data-id="${macro.id}"] button`).addEventListener("click", ()=>{
+    list.querySelector(`.listed-macro[data-id="${macro.id}"] button`).addEventListener("click", ()=>{
       // Macro settings
     })
   }
@@ -57,18 +57,18 @@ var onPage = async ()=>{
     createListedMacro(i)
   }
 
-  list.querySelector(`listed-macro[data-id="new"]`).addEventListener("click", ()=>{
+  list.querySelector(`.listed-macro[data-id="new"]`).addEventListener("click", ()=>{
     list.style.display = "none"
     recording.style.display = null
   })
-  recording.querySelector(`listed-macro[data-id="stop"]`).addEventListener("click", ()=>{
+  recording.querySelector(`.listed-macro[data-id="stop"]`).addEventListener("click", ()=>{
     let name = prompt("Macro name?")
     if(!name){return}
     let macro = {
       name,
       actions:[],
     }
-    for(let action of recording.querySelector(".listed-element")){
+    for(let action of recording.querySelectorAll(".listed-macro")){
       // Add action to macro
     }
     macros.push(macro)

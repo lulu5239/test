@@ -19,9 +19,8 @@ var onPage = async ()=>{
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
-    `<div id="macros-list">${macros.map(macro=>(
-      `<div class="listed-macro" data-id="${macro.id}">${macro.name}</div>`
-    ))}<div class="listed-macro" data-id="new">New...</div></div>
+    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div></div>
+    <div id="macro-recording" style="display:none"><div class="listed-macro" id="stop">Stop recording</div></div>
     <style>
       .listed-macro {
         display:block;
@@ -37,6 +36,45 @@ var onPage = async ()=>{
   let observer = new MutationObserver(onPage)
   observer.observe(list.parentElement, {
     childList:true,
+  })
+  let recording = document.querySelector("#macro-recording")
+
+  let playMacro = macro=>{
+    
+  }
+
+  let createListedMacro = i=>{
+    let macro = macros[i]
+    list.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-id="${macro.id}"><button>⚙️</button> ${macro.name}</div>`)
+    list.querySelector(`listed-macro[data-id="${macro.id}"]`).addEventListener("click", ()=>{
+      playMacro(macro)
+    })
+    list.querySelector(`listed-macro[data-id="${macro.id}"] button`).addEventListener("click", ()=>{
+      // Macro settings
+    })
+  }
+  for(let i in macros){
+    createListedMacro(i)
+  }
+
+  list.querySelector(`listed-macro[data-id="new"]`).addEventListener("click", ()=>{
+    list.style.display = "none"
+    recording.style.display = null
+  })
+  recording.querySelector(`listed-macro[data-id="stop"]`).addEventListener("click", ()=>{
+    let name = prompt("Macro name?")
+    if(!name){return}
+    let macro = {
+      name,
+      actions:[],
+    }
+    for(let action of recording.querySelector(".listed-element")){
+      // Add action to macro
+    }
+    macros.push(macro)
+    createListedMacro(macros.length-1)
+    list.style.display = null
+    recording.style.display = "none"
   })
 }
 

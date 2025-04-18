@@ -103,7 +103,7 @@ var onPage = async ()=>{
 
   let createListedMacro = i=>{
     let macro = macros[i]
-    list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${i}"><button>⚙️</button> ${macro.name}</div>`)
+    list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${i}"><button style="padding:0px; font-size:8px; width:25px; display:inline-block">⚙️</button> ${macro.name}</div>`)
     let line = list.querySelector(`.listed-macro[data-id="${i}"]`)
     line.addEventListener("click", async ()=>{
       line.style.backgroundColor = "#922"
@@ -175,7 +175,7 @@ var onPage = async ()=>{
     for(let action of recording.querySelectorAll(".listed-macro[data-type]")){
       macro.actions.push({
         name:action.innerText,
-        ...action.dataset.character,
+        ...action.dataset,
       })
       action.remove()
     }

@@ -24,7 +24,7 @@ var onPage = async ()=>{
     <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
-      <div class="listed-macro"></div>
+      <div class="listed-macro" style="text-align:center"></div>
       <div class="listed-macro">Rename</div>
       <div class="listed-macro"></div>
       <div class="listed-macro"></div>
@@ -132,6 +132,7 @@ var onPage = async ()=>{
       createListedMacro(i)
     }
   }
+  listMacros()
   
   let skillByImage = url=>document.querySelector(`.prt-ability-list img[src="${url}"]`).parentElement
   if(!recordable){

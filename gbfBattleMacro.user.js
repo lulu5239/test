@@ -128,7 +128,7 @@ var onPage = async ()=>{
       ev.stopPropagation()
       list.style.display = "none"
       settings.style.display = null
-      settings.dataset.macro = ""+i
+      settings.dataset.macro = line.dataset.id
       settings.children[1].innerText = macro.name
       settings.children[3].innerText = macro.parties?.includes(partyHash) ? "Don't show for this party" : "Show for this party"
       settings.children[3].style.display = !macro.parties ? "none" : null

@@ -174,15 +174,15 @@ var onPage = async ()=>{
         text = usefulParent.getAttribute("summon-skill-name")
       }else{
         extra.type = "skill"
-        extra.ability = usefulParent.getAttribute("ability-id")
         if(usefulParent.parentElement.classList.contains("pop-usual") && character){
           extra.character = characterByImage(character.querySelector("img.img-chara-command").src)
           usefulParent = skillByImage(usefulParent.querySelector("img.img-ability-icon").src)
         }else{
           usefulParent = usefulParent.querySelector("[ability-id]")
         }
+        extra.ability = usefulParent.getAttribute("ability-id")
         text = usefulParent.getAttribute("ability-name")
-    }
+      }
       recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#{extra.type==="skill" ? "#141" : extra.type==="attack" ? "#411" : extra.type==="summon" ? "#441" : "#0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
     }
   })

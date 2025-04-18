@@ -90,7 +90,7 @@ var onPage = async ()=>{
     createListedMacro(i)
   }
 
-  let skillByImage = url=>document.querySelector(`.prt-ability-list img[src="${url}"`).parentElement
+  let skillByImage = url=>document.querySelector(`.prt-ability-list img[src="${url}"]`).parentElement
   if(!recordable){
     $(document.body).on("tap", ev=>{
       if(recordFunction){recordFunction(ev.target)}
@@ -111,9 +111,10 @@ var onPage = async ()=>{
       let extra = {type:"skill"}
       if(usefulParent.parentElement.classList.contains("pop-usual") && character){
         extra.character = characterByImage(character.querySelector("img.img-chara-command").src)
-        usefulParent = skillByImage(usefulParent.querySelector("img.img-ability-icon"))
+        usefulParent = skillByImage(usefulParent.querySelector("img.img-ability-icon").src)
+      }else{
+        usefulParent = usefulParent.querySelector("[ability-id]")
       }
-      usefulParent = usefulParent.querySelector("[ability-id]")
       recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-ability="${usefulParent.getAttribute("ability-id")}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${usefulParent.getAttribute("ability-name")}</div>`)
     }
   })
@@ -129,6 +130,7 @@ var onPage = async ()=>{
         type:action.dataset.type,
         ability:action.dataset.ability,
         name:action.innerText,
+        character:action.dataset.character || undefined,
       })
     }
     macros.push(macro)

@@ -158,7 +158,6 @@ var onPage = async ()=>{
         text = "Attack"
       }else{
         extra.type = "skill"
-        text = usefulParent.getAttribute("ability-name")
         extra.ability = usefulParent.getAttribute("ability-id")
         if(usefulParent.parentElement.classList.contains("pop-usual") && character){
           extra.character = characterByImage(character.querySelector("img.img-chara-command").src)
@@ -166,6 +165,7 @@ var onPage = async ()=>{
         }else{
           usefulParent = usefulParent.querySelector("[ability-id]")
         }
+        text = usefulParent.getAttribute("ability-name")
     }
       recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
     }
@@ -173,7 +173,7 @@ var onPage = async ()=>{
   list.querySelector(`.listed-macro[data-id="showAll"]`).addEventListener("click", ()=>{
     showAll = true
     list.querySelector(`.listed-macro[data-id="showAll"]`).style.display = "none"
-    for(let e of list.querySelector(`.listed-macro[data-id]`)){
+    for(let e of list.querySelectorAll(`.listed-macro[data-id]`)){
       if(+e.dataset.id>=0){e.remove()}
     }
     listMacros()
@@ -237,7 +237,7 @@ var onPage = async ()=>{
     }
     settings.children[3].innerText = "Don't show for this party"
     settings.children[3].style.display = !macro.parties ? "none" : null
-    settings.children[4].style.innerText = macro.parties ? "Don't always show" : "Always show"
+    settings.children[4].innerText = !macro.parties ? "Don't always show" : "Always show"
   GM_setValue("macros", macros)})
   settings.children[5].addEventListener("click", ()=>{
     list.insertAdjacentHTML("afterbegin", `<div class="listed-macro" data-id="moveAfter">Move macro after...</div>`)
@@ -247,7 +247,7 @@ var onPage = async ()=>{
       macros[+settings.dataset.macro] = null
       macros.splice(+element.dataset.id>=0 ? +element.dataset.id +1 : 0, 0, macro)
       macros.splice(macros.findIndex(m=>!m), 1)
-      for(let e of list.querySelector(`.listed-macro[data-id]`)){
+      for(let e of list.querySelectorAll(`.listed-macro[data-id]`)){
         if(+e.dataset.id>=0){e.remove()}
       }
       listMacros()

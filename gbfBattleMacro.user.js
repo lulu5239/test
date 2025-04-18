@@ -29,6 +29,7 @@ var onPage = async ()=>{
       <div class="listed-macro"></div>
       <div class="listed-macro"></div>
       <div class="listed-macro">Move...</div>
+      <div class="listed-macro">Speed: <select><option value="slow">Slow</option><<option value="normal">Normal</option></select></div>
       <div class="listed-macro" style="background-color:#411">Delete</div>
     </div>
     <style>
@@ -92,7 +93,8 @@ var onPage = async ()=>{
       await playMacro(macro)
       line.style.backgroundColor = null
     })
-    line.querySelector(`button`).addEventListener("click", ()=>{
+    line.querySelector(`button`).addEventListener("click", ev=>{
+      ev.stopPropagation()
       list.style.display = "none"
       settings.style.display = null
       settings.dataset.macro = ""+i
@@ -100,6 +102,7 @@ var onPage = async ()=>{
       settings.children[3].innerText = macro.parties?.includes(partyHash) ? "Don't show for this party" : "Show for this party"
       settings.children[3].style.display = !macro.parties ? "none" : null
       settings.children[4].innerText = !macro.parties ? "Don't always show" : "Always show"
+      settings.children[6].querySelector("select").value = macro.speed || "normal"
     })
   }
   for(let i in macros){
@@ -192,7 +195,10 @@ var onPage = async ()=>{
     settings.children[3].style.display = !macro.parties ? "none" : null
     settings.children[4].style.innerText = !macro.parties ? "Don't always show" : "Always show"
   })
-  settings.children[6].addEventListener("click", ()=>{
+  settings.children[6].querySelector("select").addEventListener("change", ()=>{
+    macros[+settings.dataset.macro].speed = settings.children[6].querySelector("select").value
+  })
+  settings.children[7].addEventListener("click", ()=>{
     if(!confirm("Delete the macro?")){return}
     let i = +settings.dataset.macro
     list.querySelector(`[data-id="${i}"]`).remove()

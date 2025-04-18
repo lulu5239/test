@@ -107,7 +107,7 @@ var onPage = async ()=>{
     list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${i}"><button style="padding:0px; font-size:8px; width:25px; display:inline-block">⚙️</button> <a>${macro.name}</a></div>`)
     let line = list.querySelector(`.listed-macro[data-id="${i}"]`)
     line.addEventListener("click", async ()=>{
-      if(moveMode!==undefined){return}
+      if(moveMode!==undefined){return moveMode(line)}
       line.style.backgroundColor = "#922"
       await playMacro(macro)
       line.style.backgroundColor = null
@@ -199,7 +199,7 @@ var onPage = async ()=>{
     recording.style.display = "none"
     GM_setValue("macros", macros)
   })
-  recording.querySelector(`.listed-macro[data-id="stop"]`).children[0].addEventListener("click", ()=>{
+  recording.querySelector(`.listed-macro[data-id="cancel"]`).children[0].addEventListener("click", ()=>{
     for(let action of recording.querySelectorAll(".listed-macro[data-type]")){
       action.remove()
     }
@@ -241,6 +241,7 @@ var onPage = async ()=>{
   GM_setValue("macros", macros)})
   settings.children[5].addEventListener("click", ()=>{
     list.insertAdjacentHTML("afterbegin", `<div class="listed-macro" data-id="moveAfter">Move macro after...</div>`)
+    let line = list.querySelector(`.listed-macro[data-id="moveAfter"]`)
     moveMode = element=>{
       let macro = macros[+settings.dataset.macro]
       macros[+settings.dataset.macro] = null
@@ -259,6 +260,9 @@ var onPage = async ()=>{
       }
     GM_setValue("macros", macros)}
     list.querySelector(`.listed-macro[data-id="showAll"]`).style.display = "none"
+    line.addEventListener("click", ()=>{
+      moveMode(line)
+    })
     settings.style.display = "none"
     list.style.display = null
   })

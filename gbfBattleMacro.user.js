@@ -17,7 +17,10 @@ var recordFunction; let recordable
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
+  
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
+  document.querySelector(".prt-raid-log.log-ability").style.pointerEvents = "none"
+  
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
     `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div></div>

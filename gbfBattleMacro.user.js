@@ -97,9 +97,9 @@ var onPage = async ()=>{
       settings.style.display = null
       settings.dataset.macro = ""+i
       settings.children[1].innerText = macro.name
-      settings.children[3].innerText = macro.parties.includes && macro.parties.includes(partyHash) ? "Don't show for this party" : "Show for this party"
+      settings.children[3].innerText = macro.parties?.includes(partyHash) ? "Don't show for this party" : "Show for this party"
       settings.children[3].style.display = !macro.parties ? "none" : null
-      settings.children[4].style.innerText = !macro.parties ? "Don't always show" : "Always show"
+      settings.children[4].innerText = !macro.parties ? "Don't always show" : "Always show"
     })
   }
   for(let i in macros){
@@ -107,7 +107,7 @@ var onPage = async ()=>{
     createListedMacro(i)
   }
 
-  let partyHash
+  let partyHash = [stage.pJsnData.player.param.map(e=>e.pid).join(","), stage.pJsnData.summon.map(s=>s.id).join(",")].join(";")
   let skillByImage = url=>document.querySelector(`.prt-ability-list img[src="${url}"]`).parentElement
   if(!recordable){
     $(document.body).on("tap", ev=>{

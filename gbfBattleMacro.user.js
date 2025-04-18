@@ -12,10 +12,7 @@
 // ==/UserScript==
 
 var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true}))
-var recordFunction
-document.addEventListener("click", ev=>{
-  if(recordFunction){recordFunction(ev.target)}
-})
+var recordFunction; let recordable
 
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
@@ -94,6 +91,12 @@ var onPage = async ()=>{
   }
 
   let skillByImage = url=>document.querySelector(`.prt-ability-list img[src="${url}"`).parentElement
+  if(!recordable){
+    $(document.body).on("tap", ev=>{
+      if(recordFunction){recordFunction(ev.target)}
+    })
+    recordable = true
+  }
   list.querySelector(`.listed-macro[data-id="new"]`).addEventListener("click", ()=>{
     list.style.display = "none"
     recording.style.display = null

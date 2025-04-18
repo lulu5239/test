@@ -22,12 +22,21 @@ var onPage = async ()=>{
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
     `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div></div>
     <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop">Stop recording</div></div>
+    <div id="macro-settings" style="display:none">
+      <div class="listed-macro" style="background-color:#111">Back</div>
+      <div class="listed-macro"></div>
+      <div class="listed-macro">Rename</div>
+      <div class="listed-macro"></div>
+      <div class="listed-macro"></div>
+      <div class="listed-macro">Move...</div>
+      <div class="listed-macro" style="background-color:#411">Delete</div>
+    </div>
     <style>
       .listed-macro {
         display:block;
         width:calc(100% - 10px);
         padding:5px;
-        background:#222;
+        background-color:#222;
         color:#fff;
         margin-bottom:2px;
       }
@@ -39,10 +48,11 @@ var onPage = async ()=>{
     childList:true,
   })
   let recording = document.querySelector("#macro-recording")
-
+  let settings = document.querySelector("#macro-settings")
+  
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
   let playMacro = async macro=>{
-    let wait = ()=>new Promise(ok=>setTimeout(ok,macro.speed==="slow" ? 2000 : 500))
+    let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : macro.speed==="slow" ? 2000 : 500))
     for(let action of macro.actions){
       if(action.type==="skill"){
         let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
@@ -67,7 +77,7 @@ var onPage = async ()=>{
               await wait()
             }
           }
-          if(macro.speed==="slow"){await wait()}
+          await wait(200)
         }
       }
     }
@@ -75,21 +85,29 @@ var onPage = async ()=>{
 
   let createListedMacro = i=>{
     let macro = macros[i]
-    list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${macro.id}"><button>⚙️</button> ${macro.name}</div>`)
-    let line = list.querySelector(`.listed-macro[data-id="${macro.id}"]`)
+    list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${i}"><button>⚙️</button> ${macro.name}</div>`)
+    let line = list.querySelector(`.listed-macro[data-id="${i}"]`)
     line.addEventListener("click", async ()=>{
       line.style.backgroundColor = "#922"
       await playMacro(macro)
       line.style.backgroundColor = null
     })
     line.querySelector(`button`).addEventListener("click", ()=>{
-      // Macro settings
+      list.style.display = "none"
+      settings.style.display = null
+      settings.dataset.macro = ""+i
+      settings.children[1].innerText = macro.name
+      settings.children[3].innerText = macro.parties.includes && macro.parties.includes(partyHash) ? "Don't show for this party" : "Show for this party"
+      settings.children[3].style.display = !macro.parties ? "none" : null
+      settings.children[4].style.innerText = !macro.parties ? "Don't always show" : "Always show"
     })
   }
   for(let i in macros){
+    if(macros[i].parties && !macros[i].parties.includes(partyHash)){continue}
     createListedMacro(i)
   }
 
+  let partyHash
   let skillByImage = url=>document.querySelector(`.prt-ability-list img[src="${url}"]`).parentElement
   if(!recordable){
     $(document.body).on("tap", ev=>{
@@ -124,6 +142,7 @@ var onPage = async ()=>{
     let macro = {
       name,
       actions:[],
+      parties:[partyHash],
     }
     for(let action of recording.querySelectorAll(".listed-macro[data-ability]")){
       macro.actions.push({
@@ -132,12 +151,59 @@ var onPage = async ()=>{
         name:action.innerText,
         character:action.dataset.character || undefined,
       })
+      action.remove()
     }
     macros.push(macro)
     createListedMacro(macros.length-1)
     list.style.display = null
     recording.style.display = "none"
     GM_setValue("macros", macros)
+  })
+
+  settings.children[0].addEventListener("click", ()=>{
+    settings.style.display = "none"
+    list.style.display = null
+  })
+  settings.children[2].addEventListener("click", ()=>{
+    let name = prompt("New macro name")
+    if(!name){return}
+    macros[+settings.dataset.macro].name = name
+    settings.children[1].innerText = name
+    list.querySelector(`[data-id="${+settings.dataset.macro}"]`).innerText = name
+  })
+  settings.children[3].addEventListener("click", ()=>{
+    let macro = macros[+settings.dataset.macro]
+    let i = macro.parties.findIndex(p=>p===partyHash)
+    if(i===-1){
+      macro.parties.push(partyHash)
+    }else{
+      macro.parties.splice(i,1)
+    }
+    settings.children[3].innerText = i===-1 ? "Don't show for this party" : "Show for this party"
+  })
+  settings.children[4].addEventListener("click", ()=>{
+    let macro = macros[+settings.dataset.macro]
+    if(macro.parties){
+      delete macro.parties
+    }else{
+      macro.parties = [partyHash]
+    }
+    settings.children[3].innerText = "Don't show for this party"
+    settings.children[3].style.display = !macro.parties ? "none" : null
+    settings.children[4].style.innerText = !macro.parties ? "Don't always show" : "Always show"
+  })
+  settings.children[6].addEventListener("click", ()=>{
+    if(!confirm("Delete the macro?")){return}
+    let i = +settings.dataset.macro
+    list.querySelector(`[data-id="${i}"]`).remove()
+    macros.splice(+settings.dataset.macro, 1)
+    for(let e of list.querySelectorAll("[data-id]")){
+      if(e.dataset.id>i){
+        e.dataset.id = +e.dataset.id -1
+      }
+    }
+    settings.style.display = "none"
+    list.style.display = null
   })
 }
 

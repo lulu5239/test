@@ -97,6 +97,17 @@ var onPage = async ()=>{
             })
           })
         }
+      }else if(action.type==="summon"){
+        let button = document.querySelectorAll(".btn-command-summon.summon-on.on")[0]
+        if(!button){continue}
+        click(button)
+        await wait()
+        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon}"]`)[0]
+        if(!button){continue}
+        click(button)
+        await wait(200)
+        click(document.querySelector(".btn-summon-use"))
+        await wait()
       }
     }
   }
@@ -147,7 +158,7 @@ var onPage = async ()=>{
     recordFunction = original=>{
       let usefulParent = original
       let character
-      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start"].find(c=>usefulParent.classList.contains(c))){
+      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start","btn-summon-use"].find(c=>usefulParent.classList.contains(c))){
         if(usefulParent.classList.contains("btn-command-character")){character = usefulParent}
         usefulParent = usefulParent.parentElement
       }
@@ -157,6 +168,10 @@ var onPage = async ()=>{
       if(usefulParent.classList.contains("btn-attack-start")){
         extra.type = "attack"
         text = "Attack"
+      }else if(usefulParent.classList.contains("btn-summon-use")){
+        extra.type = "summon"
+        extra.summon = usefulParent.getAttribute("summon-id")
+        text = usefulParent.getAttribute("summon-skill-name")
       }else{
         extra.type = "skill"
         extra.ability = usefulParent.getAttribute("ability-id")
@@ -168,7 +183,7 @@ var onPage = async ()=>{
         }
         text = usefulParent.getAttribute("ability-name")
     }
-      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
+      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#{extra.type==="skill" ? "#141" : extra.type==="attack" ? "#411" : extra.type==="summon" ? "#441" : "#0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
     }
   })
   list.querySelector(`.listed-macro[data-id="showAll"]`).addEventListener("click", ()=>{

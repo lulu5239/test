@@ -186,7 +186,7 @@ var onPage = async ()=>{
         extra.ability = usefulParent.getAttribute("ability-id")
         text = usefulParent.getAttribute("ability-name")
       }
-      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "#141" : extra.type==="attack" ? "#411" : extra.type==="summon" ? "#441" : "#0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
+      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "141" : extra.type==="attack" ? "411" : extra.type==="summon" ? "441" : "0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
     }
   })
   list.querySelector(`.listed-macro[data-id="showAll"]`).addEventListener("click", ()=>{

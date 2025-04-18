@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-04-17
+// @version      2025-04-18
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -20,8 +20,8 @@ var onPage = async ()=>{
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
-    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div data-id="showAll">Show all</div></div>
-    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>Stop recording</button> <button>Cancel</button></div></div>
+    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div></div>
+    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
       <div class="listed-macro"></div>
@@ -199,7 +199,7 @@ var onPage = async ()=>{
     recording.style.display = "none"
     GM_setValue("macros", macros)
   })
-  recording.querySelector(`.listed-macro[data-id="cancel"]`).children[0].addEventListener("click", ()=>{
+  recording.querySelector(`.listed-macro[data-id="stop"]`).children[1].addEventListener("click", ()=>{
     for(let action of recording.querySelectorAll(".listed-macro[data-type]")){
       action.remove()
     }

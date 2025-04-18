@@ -19,7 +19,7 @@ var onPage = async ()=>{
   while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
-  document.querySelector(".prt-raid-log.log-ability").style.pointerEvents = "none"
+  document.querySelector(".prt-raid-log").style.pointerEvents = "none"
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",

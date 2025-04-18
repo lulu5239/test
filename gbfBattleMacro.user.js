@@ -16,7 +16,7 @@ var recordFunction; let recordable
 
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
-  while(!typeof(stage)=="undefined" || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
+  while(typeof(stage)=="undefined" || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
@@ -50,6 +50,7 @@ var onPage = async ()=>{
   })
   let recording = document.querySelector("#macro-recording")
   let settings = document.querySelector("#macro-settings")
+  let partyHash = [stage.pJsnData.player.param.map(e=>e.pid).join(","), stage.pJsnData.summon.map(s=>s.id).join(",")].join(";")
   
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
   let cancel = 0
@@ -126,7 +127,6 @@ var onPage = async ()=>{
     createListedMacro(i)
   }
 
-  let partyHash = [stage.pJsnData.player.param.map(e=>e.pid).join(","), stage.pJsnData.summon.map(s=>s.id).join(",")].join(";")
   let skillByImage = url=>document.querySelector(`.prt-ability-list img[src="${url}"]`).parentElement
   if(!recordable){
     $(document.body).on("tap", ev=>{
@@ -172,12 +172,10 @@ var onPage = async ()=>{
       actions:[],
       parties:[partyHash],
     }
-    for(let action of recording.querySelectorAll(".listed-macro[data-ability]")){
+    for(let action of recording.querySelectorAll(".listed-macro[data-type]")){
       macro.actions.push({
-        type:action.dataset.type,
-        ability:action.dataset.ability,
         name:action.innerText,
-        character:action.dataset.character || undefined,
+        ...action.dataset.character,
       })
       action.remove()
     }

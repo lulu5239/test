@@ -16,7 +16,7 @@ var recordFunction; let recordable
 
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
-  while(!typeof(stage)=="undefined"){await new Promise(ok=>setTimeout(ok,100))}
+  while(!typeof(stage)=="undefined" || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
@@ -52,9 +52,12 @@ var onPage = async ()=>{
   let settings = document.querySelector("#macro-settings")
   
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
+  let cancel = 0
   let playMacro = async macro=>{
     let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : macro.speed==="slow" ? 2000 : 500))
+    let myCancel = cancel
     for(let action of macro.actions){
+      if(cancel>myCancel){break}
       if(action.type==="skill"){
         let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
         if(button){
@@ -79,6 +82,19 @@ var onPage = async ()=>{
             }
           }
           await wait(200)
+        }
+      }else if(action.type==="attack"){
+        let button = document.querySelectorAll(`.btn-attack-start.display-on`)[0]
+        if(button){
+          click(button)
+          await new Promise((ok,err)=>{
+            let observer = new MutationObserver(()=>{
+              if(cancel>myCancel || button.classList.contains("display-on")){ok()}
+            })
+            observer.observe(button, {
+              attributes:true,
+            })
+          })
         }
       }
     }
@@ -124,19 +140,28 @@ var onPage = async ()=>{
     recordFunction = original=>{
       let usefulParent = original
       let character
-      while(usefulParent && !usefulParent.classList.contains("lis-ability") && !usefulParent.classList.contains("prt-popup-body")){
+      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start"].find(c=>usefulParent.classList.contains(c))){
         if(usefulParent.classList.contains("btn-command-character")){character = usefulParent}
         usefulParent = usefulParent.parentElement
       }
       if(!usefulParent){return}
-      let extra = {type:"skill"}
-      if(usefulParent.parentElement.classList.contains("pop-usual") && character){
-        extra.character = characterByImage(character.querySelector("img.img-chara-command").src)
-        usefulParent = skillByImage(usefulParent.querySelector("img.img-ability-icon").src)
+      let extra = {}
+      let text
+      if(usefulParent.classList.contains("btn-attack-start")){
+        extra.type = "attack"
+        text = "Attack"
       }else{
-        usefulParent = usefulParent.querySelector("[ability-id]")
-      }
-      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" data-ability="${usefulParent.getAttribute("ability-id")}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${usefulParent.getAttribute("ability-name")}</div>`)
+        extra.type = "skill"
+        text = usefulParent.getAttribute("ability-name")
+        extra.ability = usefulParent.getAttribute("ability-id")
+        if(usefulParent.parentElement.classList.contains("pop-usual") && character){
+          extra.character = characterByImage(character.querySelector("img.img-chara-command").src)
+          usefulParent = skillByImage(usefulParent.querySelector("img.img-ability-icon").src)
+        }else{
+          usefulParent = usefulParent.querySelector("[ability-id]")
+        }
+    }
+      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
     }
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).addEventListener("click", ()=>{
@@ -193,7 +218,7 @@ var onPage = async ()=>{
     }
     settings.children[3].innerText = "Don't show for this party"
     settings.children[3].style.display = !macro.parties ? "none" : null
-    settings.children[4].style.innerText = !macro.parties ? "Don't always show" : "Always show"
+    settings.children[4].style.innerText = macro.parties ? "Don't always show" : "Always show"
   })
   settings.children[6].querySelector("select").addEventListener("change", ()=>{
     macros[+settings.dataset.macro].speed = settings.children[6].querySelector("select").value

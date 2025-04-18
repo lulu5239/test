@@ -98,7 +98,7 @@ var onPage = async ()=>{
           })
         }
       }else if(action.type==="summon"){
-        let button = document.querySelectorAll(".btn-command-summon.summon-on.on")[0]
+        let button = document.querySelectorAll(".btn-command-summon.summon-on")[0]
         if(!button){continue}
         click(button)
         await wait()

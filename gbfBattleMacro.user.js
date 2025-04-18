@@ -16,12 +16,12 @@ var recordFunction; let recordable
 
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
-  while(typeof(stage)=="undefined" || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
+  while(typeof(stage)=="undefined" || !stage || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
-    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div></div>
-    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop">Stop recording</div></div>
+    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div data-id="showAll">Show all</div></div>
+    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>Stop recording</button> <button>Cancel</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
       <div class="listed-macro"></div>
@@ -101,16 +101,19 @@ var onPage = async ()=>{
     }
   }
 
+  let moveMode; let showAll
   let createListedMacro = i=>{
     let macro = macros[i]
-    list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${i}"><button style="padding:0px; font-size:8px; width:25px; display:inline-block">⚙️</button> ${macro.name}</div>`)
+    list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${i}"><button style="padding:0px; font-size:8px; width:25px; display:inline-block">⚙️</button> <a>${macro.name}</a></div>`)
     let line = list.querySelector(`.listed-macro[data-id="${i}"]`)
     line.addEventListener("click", async ()=>{
+      if(moveMode!==undefined){return}
       line.style.backgroundColor = "#922"
       await playMacro(macro)
       line.style.backgroundColor = null
     })
     line.querySelector(`button`).addEventListener("click", ev=>{
+      if(moveMode!==undefined){return}
       ev.stopPropagation()
       list.style.display = "none"
       settings.style.display = null
@@ -120,13 +123,16 @@ var onPage = async ()=>{
       settings.children[3].style.display = !macro.parties ? "none" : null
       settings.children[4].innerText = !macro.parties ? "Don't always show" : "Always show"
       settings.children[6].querySelector("select").value = macro.speed || "normal"
+      window.scrollTo(0, window.innerHeight)
     })
   }
-  for(let i in macros){
-    if(macros[i].parties && !macros[i].parties.includes(partyHash)){continue}
-    createListedMacro(i)
+  let listMacros = ()=>{
+    for(let i in macros){
+      if(!showAll && macros[i].parties && !macros[i].parties.includes(partyHash)){continue}
+      createListedMacro(i)
+    }
   }
-
+  
   let skillByImage = url=>document.querySelector(`.prt-ability-list img[src="${url}"]`).parentElement
   if(!recordable){
     $(document.body).on("tap", ev=>{
@@ -164,7 +170,15 @@ var onPage = async ()=>{
       recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
     }
   })
-  recording.querySelector(`.listed-macro[data-id="stop"]`).addEventListener("click", ()=>{
+  list.querySelector(`.listed-macro[data-id="showAll"]`).addEventListener("click", ()=>{
+    showAll = true
+    list.querySelector(`.listed-macro[data-id="showAll"]`).style.display = "none"
+    for(let e of list.querySelector(`.listed-macro[data-id]`)){
+      if(+e.dataset.id>=0){e.remove()}
+    }
+    listMacros()
+  })
+  recording.querySelector(`.listed-macro[data-id="stop"]`).children[0].addEventListener("click", ()=>{
     let name = prompt("Macro name?")
     if(!name){return}
     let macro = {
@@ -185,18 +199,25 @@ var onPage = async ()=>{
     recording.style.display = "none"
     GM_setValue("macros", macros)
   })
+  recording.querySelector(`.listed-macro[data-id="stop"]`).children[0].addEventListener("click", ()=>{
+    for(let action of recording.querySelectorAll(".listed-macro[data-type]")){
+      action.remove()
+    }
+    list.style.display = null
+    recording.style.display = "none"
+  })
 
   settings.children[0].addEventListener("click", ()=>{
     settings.style.display = "none"
     list.style.display = null
-  })
+  GM_setValue("macros", macros)})
   settings.children[2].addEventListener("click", ()=>{
     let name = prompt("New macro name")
     if(!name){return}
     macros[+settings.dataset.macro].name = name
     settings.children[1].innerText = name
-    list.querySelector(`[data-id="${+settings.dataset.macro}"]`).innerText = name
-  })
+    list.querySelector(`[data-id="${+settings.dataset.macro}"] a`).innerText = name
+  GM_setValue("macros", macros)})
   settings.children[3].addEventListener("click", ()=>{
     let macro = macros[+settings.dataset.macro]
     let i = macro.parties.findIndex(p=>p===partyHash)
@@ -206,7 +227,7 @@ var onPage = async ()=>{
       macro.parties.splice(i,1)
     }
     settings.children[3].innerText = i===-1 ? "Don't show for this party" : "Show for this party"
-  })
+  GM_setValue("macros", macros)})
   settings.children[4].addEventListener("click", ()=>{
     let macro = macros[+settings.dataset.macro]
     if(macro.parties){
@@ -217,10 +238,33 @@ var onPage = async ()=>{
     settings.children[3].innerText = "Don't show for this party"
     settings.children[3].style.display = !macro.parties ? "none" : null
     settings.children[4].style.innerText = macro.parties ? "Don't always show" : "Always show"
+  GM_setValue("macros", macros)})
+  settings.children[5].addEventListener("click", ()=>{
+    list.insertAdjacentHTML("afterbegin", `<div class="listed-macro" data-id="moveAfter">Move macro after...</div>`)
+    moveMode = element=>{
+      let macro = macros[+settings.dataset.macro]
+      macros[+settings.dataset.macro] = null
+      macros.splice(+element.dataset.id>=0 ? +element.dataset.id +1 : 0, 0, macro)
+      macros.splice(macros.findIndex(m=>!m), 1)
+      for(let e of list.querySelector(`.listed-macro[data-id]`)){
+        if(+e.dataset.id>=0){e.remove()}
+      }
+      listMacros()
+      moveMode = undefined
+      settings.style.display = null
+      list.style.display = "none"
+      list.querySelector(`.listed-macro[data-id="moveAfter"]`).remove()
+      if(!showAll){
+        list.querySelector(`.listed-macro[data-id="showAll"]`).style.display = null
+      }
+    GM_setValue("macros", macros)}
+    list.querySelector(`.listed-macro[data-id="showAll"]`).style.display = "none"
+    settings.style.display = "none"
+    list.style.display = null
   })
   settings.children[6].querySelector("select").addEventListener("change", ()=>{
     macros[+settings.dataset.macro].speed = settings.children[6].querySelector("select").value
-  })
+  GM_setValue("macros", macros)})
   settings.children[7].addEventListener("click", ()=>{
     if(!confirm("Delete the macro?")){return}
     let i = +settings.dataset.macro
@@ -233,7 +277,7 @@ var onPage = async ()=>{
     }
     settings.style.display = "none"
     list.style.display = null
-  })
+  GM_setValue("macros", macros)})
 }
 
 window.addEventListener("hashchange", onPage)

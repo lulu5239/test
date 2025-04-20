@@ -154,7 +154,7 @@ var onPage = async ()=>{
         if(!button){continue}
         click(button)
         await wait()
-        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "support" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
+        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "supporter" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
         if(!button){continue}
         click(button)
         await wait(200)
@@ -231,7 +231,7 @@ var onPage = async ()=>{
         extra.type = "summon"
         if(usefulParent.classList.contains("btn-quick-summon")){
           usefulParent = document.querySelector(".lis-summon.is-quick")
-        }else if(usefulParent.getAttribute("summon-id")==="support"){
+        }else if(usefulParent.getAttribute("summon-id")==="supporter"){
           text = "Support summon"
           extra.summon = "support"
         }else{

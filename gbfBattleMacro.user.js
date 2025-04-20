@@ -154,7 +154,7 @@ var onPage = async ()=>{
         if(!button){continue}
         click(button)
         await wait()
-        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
+        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "support" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
         if(!button){continue}
         click(button)
         await wait(200)
@@ -231,12 +231,17 @@ var onPage = async ()=>{
         extra.type = "summon"
         if(usefulParent.classList.contains("btn-quick-summon")){
           usefulParent = document.querySelector(".lis-summon.is-quick")
+        }else if(usefulParent.getAttribute("summon-id")==="support"){
+          text = "Support summon"
+          extra.summon = "support"
         }else{
           usefulParent = document.querySelector(`.lis-summon[pos="${usefulParent.getAttribute("summon-id")}"]`)
         }
-        let summon = stage.pJsnData.summon[+usefulParent.getAttribute("pos") -1]
-        text = summon.name
-        extra.summon = summon.id
+        if(extra.summon){
+          let summon = stage.pJsnData.summon[+usefulParent.getAttribute("pos") -1]
+          text = summon.name
+          extra.summon = summon.id
+        }
       }else{
         extra.type = "skill"
         if(usefulParent.parentElement.classList.contains("pop-usual") && character){

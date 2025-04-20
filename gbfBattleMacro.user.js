@@ -44,10 +44,10 @@ var onPage = async ()=>{
         color:#fff;
         margin-bottom:2px;
       }
-      .listed-macro[running="now"] {
+      .listed-macro[data-playing="now"] {
         background-color:#922;
       }
-      .listed-macro[running="soon"] {
+      .listed-macro[data-playing="soon"] {
         background-color:#742;
       }
     </style>`
@@ -65,7 +65,7 @@ var onPage = async ()=>{
   let cancel = 0
   let playMacro = async id=>{
     let macro = macros[id]
-    let line = list.querySelector(`[data-id="${i}"]`)
+    let line = list.querySelector(`[data-id="${id}"]`)
     line.dataset.playing = "now"
     let actions = [...macro.actions]
     let next = {}
@@ -89,7 +89,7 @@ var onPage = async ()=>{
       if(cancel>myCancel){break}
       let action = actions.splice(0,1)[0]
       if(action.type==="macro"){
-        if(!macros[action.macro]){continue)
+        if(!macros[action.macro]){continue}
         next[action.macro]--
         list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = "soon"
         list.querySelector(`[data-id="${action.macro}"]`).dataset.playing = "now"

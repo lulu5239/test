@@ -24,7 +24,7 @@ var onPage = async ()=>{
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
     `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div></div>
-    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button></div></div>
+    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button></div> <button>Add macro</button></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
       <div class="listed-macro" style="text-align:center"></div>
@@ -322,12 +322,25 @@ var onPage = async ()=>{
     list.insertAdjacentHTML("afterbegin", `<div class="listed-macro" data-id="moveAfter">Move macro after...</div>`)
     let line = list.querySelector(`.listed-macro[data-id="moveAfter"]`)
     moveMode = element=>{
-      let macro = macros[+settings.dataset.macro]
-      macros[+settings.dataset.macro] = null
-      macros.splice(+element.dataset.id>=0 ? +element.dataset.id +1 : 0, 0, macro)
+      let before = +settings.dataset.macro; let after = +element.dataset.id
+      for(let m of macros){
+        for(let a of m.actions){
+          if(a.type!=="macro"){continue}
+          if(a.macro===before){
+            a.macro = after
+          }else if(a.macro<before && a.macro>=after){
+            a.action.goTo++
+          }else if(a.macro>before && a.macro<=after){
+            a.action.goTo--
+          }
+        }
+      }
+      let macro = macros[before]
+      macros[before] = null
+      macros.splice(+element.dataset.id>=0 ? after +1 : 0, 0, macro)
       macros.splice(macros.findIndex(m=>!m), 1)
       for(let e of list.querySelectorAll(`.listed-macro[data-id]`)){
-        if(+e.dataset.id>=0){e.remove()}
+        e.remove()
       }
       listMacros()
       moveMode = undefined

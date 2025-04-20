@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-04-18
+// @version      2025-04-20
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -44,6 +44,12 @@ var onPage = async ()=>{
         color:#fff;
         margin-bottom:2px;
       }
+      .listed-macro[running="now"] {
+        background-color:#922;
+      }
+      .listed-macro[running="soon"] {
+        background-color:#742;
+      }
     </style>`
   )
   let list = document.querySelector("#macros-list")
@@ -57,11 +63,45 @@ var onPage = async ()=>{
   
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
   let cancel = 0
-  let playMacro = async macro=>{
+  let playMacro = async id=>{
+    let macro = macros[id]
+    let line = list.querySelector(`[data-id="${i}"]`)
+    line.dataset.playing = "now"
+    let actions = [...macro.actions]
+    let next = {}
+    let check; check = (n,rec)=>{
+      if(rec && !next[n]){
+        list.querySelector(`[data-id="${n}"]`).dataset.playing = "soon"
+        next[n] = 1
+      }else{next[n]++}
+      if(rec>10){return}
+      for(let action of macros[n].actions){
+        if(action.type!=="macro"){continue}
+        check(action.macro, rec+1)
+      }
+    }
+    next[id] = 1
+    check(id,0)
+    let playing = [id]
     let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : macro.speed==="slow" ? 2000 : 500))
     let myCancel = cancel
-    for(let action of macro.actions){
+    while(actions.length){
       if(cancel>myCancel){break}
+      let action = actions.splice(0,1)[0]
+      if(action.type==="macro"){
+        if(!macros[action.macro]){continue)
+        next[action.macro]--
+        list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = "soon"
+        list.querySelector(`[data-id="${action.macro}"]`).dataset.playing = "now"
+        playing.push(action.macro)
+        actions.splice(0, 0, ...macros[action.macro], {type:"leaveMacro"})
+      continue}
+      if(action.type==="leaveMacro"){
+        let last = playing.splice(-1, 1)[0]
+        list.querySelector(`[data-id="${last}"]`).dataset.playing = next[last]>0 ? "soon" : null
+        list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = "now"
+      continue}
+      
       if(action.type==="skill"){
         let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
         if(button){
@@ -113,6 +153,10 @@ var onPage = async ()=>{
         await wait()
       }
     }
+    list.querySelector(`[data-id="${id}"]`).dataset.playing = null
+    for(let i in next){
+      list.querySelector(`[data-id="${i}"]`).dataset.playing = null
+    }
   }
 
   let moveMode; let showAll
@@ -122,9 +166,7 @@ var onPage = async ()=>{
     let line = list.querySelector(`.listed-macro[data-id="${i}"]`)
     line.addEventListener("click", async ()=>{
       if(moveMode!==undefined){return moveMode(line)}
-      line.style.backgroundColor = "#922"
-      await playMacro(macro)
-      line.style.backgroundColor = null
+      await playMacro(line.dataset.id)
     })
     line.querySelector(`button`).addEventListener("click", ev=>{
       if(moveMode!==undefined){return}

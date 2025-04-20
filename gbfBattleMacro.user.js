@@ -350,7 +350,7 @@ var onPage = async ()=>{
       macros.splice(+element.dataset.id>=0 ? after +1 : 0, 0, macro)
       macros.splice(macros.findIndex(m=>!m), 1)
       for(let e of list.querySelectorAll(`.listed-macro[data-id]`)){
-        e.remove()
+        if(+e.dataset.id>=0){e.remove()}
       }
       listMacros()
       moveMode = undefined

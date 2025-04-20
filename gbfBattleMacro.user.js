@@ -50,6 +50,9 @@ var onPage = async ()=>{
       .listed-macro[data-playing="soon"] {
         background-color:#742;
       }
+      .listed-macro[data-playing="original"] {
+        background-color:#472;
+      }
     </style>`
   )
   let list = document.querySelector("#macros-list")
@@ -91,14 +94,18 @@ var onPage = async ()=>{
       if(action.type==="macro"){
         if(!macros[action.macro]){continue}
         next[action.macro]--
-        list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = "soon"
+        list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = playing.slice(-1)[0]===id ? "original" : "soon"
         list.querySelector(`[data-id="${action.macro}"]`).dataset.playing = "now"
         playing.push(action.macro)
         actions.splice(0, 0, ...macros[action.macro], {type:"leaveMacro"})
       continue}
       if(action.type==="leaveMacro"){
         let last = playing.splice(-1, 1)[0]
-        list.querySelector(`[data-id="${last}"]`).dataset.playing = next[last]>0 ? "soon" : null
+        if(next[last]>0){
+          list.querySelector(`[data-id="${last}"]`).dataset.playing = "soon"
+        }else{
+          list.querySelector(`[data-id="${last}"]`).removeAttribute("data-playing")
+        }
         list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = "now"
       continue}
       
@@ -153,9 +160,9 @@ var onPage = async ()=>{
         await wait()
       }
     }
-    list.querySelector(`[data-id="${id}"]`).dataset.playing = null
+    list.querySelector(`[data-id="${id}"]`).removeAttribute("data-playing")
     for(let i in next){
-      list.querySelector(`[data-id="${i}"]`).dataset.playing = null
+      list.querySelector(`[data-id="${i}"]`).removeAttribute("data-playing")
     }
   }
 
@@ -165,6 +172,7 @@ var onPage = async ()=>{
     list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${i}"><button style="padding:0px; font-size:8px; width:25px; display:inline-block">⚙️</button> <a>${macro.name}</a></div>`)
     let line = list.querySelector(`.listed-macro[data-id="${i}"]`)
     line.addEventListener("click", async ()=>{
+      if(line.dataset.playing){return}
       if(moveMode!==undefined){return moveMode(line)}
       await playMacro(line.dataset.id)
     })
@@ -248,11 +256,12 @@ var onPage = async ()=>{
       parties:[partyHash],
     }
     for(let action of recording.querySelectorAll(".listed-macro[data-type]")){
+      action.remove()
+      if(action.dataset.type==="macro" && action.dataset.macro===undefined){continue}
       macro.actions.push({
         name:action.innerText,
         ...action.dataset,
       })
-      action.remove()
     }
     macros.push(macro)
     createListedMacro(macros.length-1)
@@ -266,6 +275,15 @@ var onPage = async ()=>{
     }
     list.style.display = null
     recording.style.display = "none"
+  })
+  recording.querySelector(`.listed-macro[data-id="stop"]`).children[2].addEventListener("click", ()=>{
+    recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#437" data-type="macro"><select class="new-select-thing">${macros.map((m,i)=>`<option value="${i}">${m.name}</option>`)}</select></div>`)
+    let select = recording.querySelector(".new-select-thing")
+    select.className = null
+    select.addEventListener("change", ()=>{
+      select.parentElement.dataset.macro = select.value
+      select.parentElement.innerText = macros[+select.value].name
+    })
   })
 
   settings.children[0].addEventListener("click", ()=>{
@@ -338,6 +356,11 @@ var onPage = async ()=>{
     for(let e of list.querySelectorAll("[data-id]")){
       if(e.dataset.id>i){
         e.dataset.id = +e.dataset.id -1
+      }
+    }
+    for(let m of macros){
+      for(let a of m.actions){
+        if(a.type==="macro" && a.macro>i){a.macro--}
       }
     }
     settings.style.display = "none"

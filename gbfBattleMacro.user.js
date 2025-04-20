@@ -13,6 +13,7 @@
 
 var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true}))
 var recordFunction; let recordable
+let cancel = 0
 
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
@@ -20,10 +21,11 @@ var onPage = async ()=>{
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"
+  cancel++
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
-    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div></div>
+    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div></div>
     <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button> <button>Add macro</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
@@ -65,11 +67,11 @@ var onPage = async ()=>{
   let partyHash = [stage.pJsnData.player.param.map(e=>e.pid).join(","), stage.pJsnData.summon.map(s=>s.id).join(",")].join(";")
   
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
-  let cancel = 0
   let playMacro = async id=>{
     let macro = macros[id]
     let line = list.querySelector(`[data-id="${id}"]`)
     line.dataset.playing = "now"
+    list.querySelector(`.listed-macro[data-id="cancel"]`).style.display = null
     let actions = [...macro.actions]
     let next = {}
     let check; check = (n,rec)=>{
@@ -164,6 +166,10 @@ var onPage = async ()=>{
     for(let i in next){
       list.querySelector(`[data-id="${i}"]`).removeAttribute("data-playing")
     }
+    if(!list.querySelectorAll("[data-playing]").length){
+      list.querySelector(`.listed-macro[data-id="cancel"]`).style.backgroundColor = null
+      list.querySelector(`.listed-macro[data-id="cancel"]`).style.display = "none"
+    }
   }
 
   let moveMode; let showAll
@@ -247,6 +253,10 @@ var onPage = async ()=>{
     }
     listMacros()
   })
+  list.querySelector(`.listed-macro[data-id="cancel"]`).addEventListener("click", ()=>{
+    cancel++
+    list.querySelector(`.listed-macro[data-id="cancel"]`).style.backgroundColor = "#422"
+  })
   recording.querySelector(`.listed-macro[data-id="stop"]`).children[0].addEventListener("click", ()=>{
     let name = prompt("Macro name?")
     if(!name){return}
@@ -329,9 +339,9 @@ var onPage = async ()=>{
           if(a.macro===before){
             a.macro = after
           }else if(a.macro<before && a.macro>=after){
-            a.action.goTo++
+            a.action++
           }else if(a.macro>before && a.macro<=after){
-            a.action.goTo--
+            a.action--
           }
         }
       }

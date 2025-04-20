@@ -339,9 +339,9 @@ var onPage = async ()=>{
           if(a.macro===before){
             a.macro = after
           }else if(a.macro<before && a.macro>=after){
-            a.action++
+            a.macro++
           }else if(a.macro>before && a.macro<=after){
-            a.action--
+            a.macro--
           }
         }
       }

@@ -24,7 +24,7 @@ var onPage = async ()=>{
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
     `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div></div>
-    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button></div> <button>Add macro</button></div>
+    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button> <button>Add macro</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
       <div class="listed-macro" style="text-align:center"></div>
@@ -97,7 +97,7 @@ var onPage = async ()=>{
         list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = playing.slice(-1)[0]===id ? "original" : "soon"
         list.querySelector(`[data-id="${action.macro}"]`).dataset.playing = "now"
         playing.push(action.macro)
-        actions.splice(0, 0, ...macros[action.macro], {type:"leaveMacro"})
+        actions.splice(0, 0, ...macros[action.macro].actions, {type:"leaveMacro"})
       continue}
       if(action.type==="leaveMacro"){
         let last = playing.splice(-1, 1)[0]

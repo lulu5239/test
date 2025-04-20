@@ -154,7 +154,7 @@ var onPage = async ()=>{
         if(!button){continue}
         click(button)
         await wait()
-        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon}"]`)[0]
+        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
         if(!button){continue}
         click(button)
         await wait(200)
@@ -217,7 +217,7 @@ var onPage = async ()=>{
     recordFunction = original=>{
       let usefulParent = original
       let character
-      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start","btn-summon-use"].find(c=>usefulParent.classList.contains(c))){
+      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start","btn-summon-use","btn-quick-summon"].find(c=>usefulParent.classList.contains(c))){
         if(usefulParent.classList.contains("btn-command-character")){character = usefulParent}
         usefulParent = usefulParent.parentElement
       }
@@ -227,10 +227,17 @@ var onPage = async ()=>{
       if(usefulParent.classList.contains("btn-attack-start")){
         extra.type = "attack"
         text = "Attack"
-      }else if(usefulParent.classList.contains("btn-summon-use")){
+      }else if(usefulParent.classList.contains("btn-summon-use") || usefulParent.classList.contains("btn-quick-summon")){
         extra.type = "summon"
-        extra.summon = usefulParent.getAttribute("summon-id")
-        text = usefulParent.getAttribute("summon-skill-name")
+        let summon
+        if(usefulParent.classList.contains("btn-quick-summon")){
+          usefulParent = document.querySelector(".lis-summon.is-quick")
+        }else{
+          usefulParent = document.querySelector(`.lis-summon[pos="${usefulParent.getAttribute("summon-id")}"]`)
+        }
+        let summon = stage.pJsnData.summon[+usefulParent.getAttribute("pos") -1]
+        text = summon.name
+        extra.summon = summon.id
       }else{
         extra.type = "skill"
         if(usefulParent.parentElement.classList.contains("pop-usual") && character){
@@ -337,7 +344,7 @@ var onPage = async ()=>{
     list.insertAdjacentHTML("afterbegin", `<div class="listed-macro" data-id="moveAfter">Move macro after...</div>`)
     let line = list.querySelector(`.listed-macro[data-id="moveAfter"]`)
     moveMode = element=>{
-      let before = +settings.dataset.macro; let after = +element.dataset.id
+      let before = +settings.dataset.macro; let after = +element.dataset.id || 0
       for(let m of macros){
         for(let a of m.actions){
           if(a.type!=="macro"){continue}

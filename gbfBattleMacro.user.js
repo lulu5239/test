@@ -273,11 +273,15 @@ var onPage = async ()=>{
         ...action.dataset,
       })
     }
+    for(let a of macro.actions){
+      if(a.type==="macro"){a.macro = +a.macro}
+    }
     macros.push(macro)
     createListedMacro(macros.length-1)
     list.style.display = null
     recording.style.display = "none"
     GM_setValue("macros", macros)
+    recordFunction = null
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).children[1].addEventListener("click", ()=>{
     for(let action of recording.querySelectorAll(".listed-macro[data-type]")){
@@ -285,6 +289,7 @@ var onPage = async ()=>{
     }
     list.style.display = null
     recording.style.display = "none"
+    recordFunction = null
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).children[2].addEventListener("click", ()=>{
     recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#437" data-type="macro"><select class="new-select-thing">${macros.map((m,i)=>`<option value="${i}">${m.name}</option>`)}</select></div>`)
@@ -347,7 +352,7 @@ var onPage = async ()=>{
       }
       let macro = macros[before]
       macros[before] = null
-      macros.splice(+element.dataset.id>=0 ? after +1 : 0, 0, macro)
+      macros.splice(after>=0 ? after +1 : 0, 0, macro)
       macros.splice(macros.findIndex(m=>!m), 1)
       for(let e of list.querySelectorAll(`.listed-macro[data-id]`)){
         if(+e.dataset.id>=0){e.remove()}

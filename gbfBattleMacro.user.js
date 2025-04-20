@@ -229,7 +229,6 @@ var onPage = async ()=>{
         text = "Attack"
       }else if(usefulParent.classList.contains("btn-summon-use") || usefulParent.classList.contains("btn-quick-summon")){
         extra.type = "summon"
-        let summon
         if(usefulParent.classList.contains("btn-quick-summon")){
           usefulParent = document.querySelector(".lis-summon.is-quick")
         }else{

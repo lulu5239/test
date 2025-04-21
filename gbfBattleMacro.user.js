@@ -115,8 +115,11 @@ var onPage = async ()=>{
         let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
         if(button){
           if(document.querySelector(`.prt-command-chara[pos="${+button.getAttribute("ability-character-num")+1}"]`).style.display!=="block"){
-            click(document.querySelector(`.btn-command-back`))
-            await wait()
+            let back = document.querySelector(`.btn-command-back`)
+            if(back.classList.contains("display-on")){
+              click(back)
+              await wait()
+            }
             click(document.querySelector(`.btn-command-character[pos="${+button.getAttribute("ability-character-num")}"]`))
             await wait()
           }
@@ -150,6 +153,11 @@ var onPage = async ()=>{
           })
         }
       }else if(action.type==="summon"){
+        let back = document.querySelector(`.btn-command-back`)
+        if(back.classList.contains("display-on")){
+          click(back)
+          await wait()
+        }
         let button = document.querySelectorAll(".btn-command-summon.summon-on")[0]
         if(!button){continue}
         click(button)
@@ -164,8 +172,11 @@ var onPage = async ()=>{
         let button = document.querySelector(".btn-lock")
         let n = action.lock ? 1 : 0
         if(button.classList.contains("lock"+(1-n))){continue}
-        button.classList.remove("lock"+(1-n))
-        button.classList.add("lock"+n)
+        if(button.parentElement.style.display==="none"){
+          click(document.querySelector(`.btn-command-back`))
+          await wait()
+        }
+        click(button)
       }
     }
     list.querySelector(`[data-id="${id}"]`).removeAttribute("data-playing")
@@ -270,7 +281,7 @@ var onPage = async ()=>{
         for(let k in extra){last.dataset[k] = extra[k]}
         last.innerText = text
       }else{
-        recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "141" : extra.type==="attack" ? "411" : extra.type==="summon" ? "441" : extra.type==="calock" ? "#531" : "0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
+        recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "141" : extra.type==="attack" ? "411" : extra.type==="summon" ? "441" : extra.type==="calock" ? "531" : "0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
       }
     }
   })

@@ -253,7 +253,14 @@ var onPage = async ()=>{
         extra.ability = usefulParent.getAttribute("ability-id")
         text = usefulParent.getAttribute("ability-name")
       }
-      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "141" : extra.type==="attack" ? "411" : extra.type==="summon" ? "441" : "0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
+      let last
+      for(let e of recording.querySelectorAll(`[data-type]`)){last = e}
+      if(last && last.dataset.type===extra.type){
+        for(let k in last.dataset){last.dataset.removeAttribute(k)}
+        for(let k in extra){last.dataset[k] = extra[k]}
+      }else{
+        recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "141" : extra.type==="attack" ? "411" : extra.type==="summon" ? "441" : "0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
+      }
     }
   })
   list.querySelector(`.listed-macro[data-id="showAll"]`).addEventListener("click", ()=>{
@@ -303,7 +310,7 @@ var onPage = async ()=>{
     recordFunction = null
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).children[2].addEventListener("click", ()=>{
-    recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#437" data-type="macro"><select class="new-select-thing">${macros.map((m,i)=>`<option value="${i}">${m.name}</option>`)}</select></div>`)
+    recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#437" data-type="macro"><select class="new-select-thing"><option disabled default>Select a macro...</option>${macros.map((m,i)=>`<option value="${i}">${m.name}</option>`)}</select></div>`)
     let select = recording.querySelector(".new-select-thing")
     select.className = null
     select.addEventListener("change", ()=>{

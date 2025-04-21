@@ -170,7 +170,7 @@ var onPage = async ()=>{
         await wait()
       }else if(action.type==="calock"){
         let button = document.querySelector(".btn-lock")
-        let n = action.lock ? 1 : 0
+        let n = action.lock!="false" ? 1 : 0
         if(button.classList.contains("lock"+(1-n))){continue}
         if(button.parentElement.style.display==="none"){
           click(document.querySelector(`.btn-command-back`))

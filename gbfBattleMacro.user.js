@@ -253,10 +253,10 @@ var onPage = async ()=>{
         extra.ability = usefulParent.getAttribute("ability-id")
         text = usefulParent.getAttribute("ability-name")
       }
-      let last
+      let last; let p = extra.type==="skill" ? "ability" : extra.type
       for(let e of recording.querySelectorAll(`[data-type]`)){last = e}
       if(last && last.dataset.type===extra.type && extra[extra.type]==last.dataset[extra.type]){
-        for(let k in last.dataset){last.dataset.removeAttribute(k)}
+        for(let k in last.dataset){last.removeAttribute("data-"+k)}
         for(let k in extra){last.dataset[k] = extra[k]}
         last.innerText = text
       }else{

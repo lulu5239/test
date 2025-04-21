@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-04-18
+// @version      2025-04-20
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -13,6 +13,7 @@
 
 var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true}))
 var recordFunction; let recordable
+let cancel = 0
 
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
@@ -20,11 +21,12 @@ var onPage = async ()=>{
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"
+  cancel++
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
-    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div></div>
-    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button></div></div>
+    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div></div>
+    <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button> <button>Add macro</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
       <div class="listed-macro" style="text-align:center"></div>
@@ -44,6 +46,15 @@ var onPage = async ()=>{
         color:#fff;
         margin-bottom:2px;
       }
+      .listed-macro[data-playing="now"] {
+        background-color:#922;
+      }
+      .listed-macro[data-playing="soon"] {
+        background-color:#742;
+      }
+      .listed-macro[data-playing="original"] {
+        background-color:#472;
+      }
     </style>`
   )
   let list = document.querySelector("#macros-list")
@@ -56,12 +67,50 @@ var onPage = async ()=>{
   let partyHash = [stage.pJsnData.player.param.map(e=>e.pid).join(","), stage.pJsnData.summon.map(s=>s.id).join(",")].join(";")
   
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
-  let cancel = 0
-  let playMacro = async macro=>{
+  let playMacro = async id=>{
+    let macro = macros[id]
+    let line = list.querySelector(`[data-id="${id}"]`)
+    line.dataset.playing = "now"
+    list.querySelector(`.listed-macro[data-id="cancel"]`).style.display = null
+    let actions = [...macro.actions]
+    let next = {}
+    let check; check = (n,rec)=>{
+      if(rec && !next[n]){
+        list.querySelector(`[data-id="${n}"]`).dataset.playing = "soon"
+        next[n] = 1
+      }else{next[n]++}
+      if(rec>10){return}
+      for(let action of macros[n].actions){
+        if(action.type!=="macro"){continue}
+        check(action.macro, rec+1)
+      }
+    }
+    next[id] = 1
+    check(id,0)
+    let playing = [id]
     let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : macro.speed==="slow" ? 2000 : 500))
     let myCancel = cancel
-    for(let action of macro.actions){
+    while(actions.length){
       if(cancel>myCancel){break}
+      let action = actions.splice(0,1)[0]
+      if(action.type==="macro"){
+        if(!macros[action.macro]){continue}
+        next[action.macro]--
+        list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = playing.slice(-1)[0]===id ? "original" : "soon"
+        list.querySelector(`[data-id="${action.macro}"]`).dataset.playing = "now"
+        playing.push(action.macro)
+        actions.splice(0, 0, ...macros[action.macro].actions, {type:"leaveMacro"})
+      continue}
+      if(action.type==="leaveMacro"){
+        let last = playing.splice(-1, 1)[0]
+        if(next[last]>0){
+          list.querySelector(`[data-id="${last}"]`).dataset.playing = "soon"
+        }else{
+          list.querySelector(`[data-id="${last}"]`).removeAttribute("data-playing")
+        }
+        list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = "now"
+      continue}
+      
       if(action.type==="skill"){
         let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
         if(button){
@@ -105,13 +154,21 @@ var onPage = async ()=>{
         if(!button){continue}
         click(button)
         await wait()
-        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon}"]`)[0]
+        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "supporter" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
         if(!button){continue}
         click(button)
         await wait(200)
         click(document.querySelector(".btn-summon-use"))
         await wait()
       }
+    }
+    list.querySelector(`[data-id="${id}"]`).removeAttribute("data-playing")
+    for(let i in next){
+      list.querySelector(`[data-id="${i}"]`).removeAttribute("data-playing")
+    }
+    if(!list.querySelectorAll("[data-playing]").length){
+      list.querySelector(`.listed-macro[data-id="cancel"]`).style.backgroundColor = null
+      list.querySelector(`.listed-macro[data-id="cancel"]`).style.display = "none"
     }
   }
 
@@ -121,10 +178,9 @@ var onPage = async ()=>{
     list.querySelector(`.listed-macro[data-id="new"]`).insertAdjacentHTML("beforebegin", `<div class="listed-macro" data-id="${i}"><button style="padding:0px; font-size:8px; width:25px; display:inline-block">⚙️</button> <a>${macro.name}</a></div>`)
     let line = list.querySelector(`.listed-macro[data-id="${i}"]`)
     line.addEventListener("click", async ()=>{
+      if(line.dataset.playing){return}
       if(moveMode!==undefined){return moveMode(line)}
-      line.style.backgroundColor = "#922"
-      await playMacro(macro)
-      line.style.backgroundColor = null
+      await playMacro(line.dataset.id)
     })
     line.querySelector(`button`).addEventListener("click", ev=>{
       if(moveMode!==undefined){return}
@@ -161,7 +217,7 @@ var onPage = async ()=>{
     recordFunction = original=>{
       let usefulParent = original
       let character
-      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start","btn-summon-use"].find(c=>usefulParent.classList.contains(c))){
+      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start","btn-summon-use","btn-quick-summon"].find(c=>usefulParent.classList.contains(c))){
         if(usefulParent.classList.contains("btn-command-character")){character = usefulParent}
         usefulParent = usefulParent.parentElement
       }
@@ -171,10 +227,21 @@ var onPage = async ()=>{
       if(usefulParent.classList.contains("btn-attack-start")){
         extra.type = "attack"
         text = "Attack"
-      }else if(usefulParent.classList.contains("btn-summon-use")){
+      }else if(usefulParent.classList.contains("btn-summon-use") || usefulParent.classList.contains("btn-quick-summon")){
         extra.type = "summon"
-        extra.summon = usefulParent.getAttribute("summon-id")
-        text = usefulParent.getAttribute("summon-skill-name")
+        if(usefulParent.classList.contains("btn-quick-summon")){
+          usefulParent = document.querySelector(".lis-summon.is-quick")
+        }else if(usefulParent.getAttribute("summon-id")==="supporter"){
+          text = "Support summon"
+          extra.summon = "support"
+        }else{
+          usefulParent = document.querySelector(`.lis-summon[pos="${usefulParent.getAttribute("summon-id")}"]`)
+        }
+        if(!extra.summon){
+          let summon = stage.pJsnData.summon[+usefulParent.getAttribute("pos") -1]
+          text = summon.name
+          extra.summon = summon.id
+        }
       }else{
         extra.type = "skill"
         if(usefulParent.parentElement.classList.contains("pop-usual") && character){
@@ -197,6 +264,10 @@ var onPage = async ()=>{
     }
     listMacros()
   })
+  list.querySelector(`.listed-macro[data-id="cancel"]`).addEventListener("click", ()=>{
+    cancel++
+    list.querySelector(`.listed-macro[data-id="cancel"]`).style.backgroundColor = "#422"
+  })
   recording.querySelector(`.listed-macro[data-id="stop"]`).children[0].addEventListener("click", ()=>{
     let name = prompt("Macro name?")
     if(!name){return}
@@ -206,17 +277,22 @@ var onPage = async ()=>{
       parties:[partyHash],
     }
     for(let action of recording.querySelectorAll(".listed-macro[data-type]")){
+      action.remove()
+      if(action.dataset.type==="macro" && action.dataset.macro===undefined){continue}
       macro.actions.push({
         name:action.innerText,
         ...action.dataset,
       })
-      action.remove()
+    }
+    for(let a of macro.actions){
+      if(a.type==="macro"){a.macro = +a.macro}
     }
     macros.push(macro)
     createListedMacro(macros.length-1)
     list.style.display = null
     recording.style.display = "none"
     GM_setValue("macros", macros)
+    recordFunction = null
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).children[1].addEventListener("click", ()=>{
     for(let action of recording.querySelectorAll(".listed-macro[data-type]")){
@@ -224,6 +300,16 @@ var onPage = async ()=>{
     }
     list.style.display = null
     recording.style.display = "none"
+    recordFunction = null
+  })
+  recording.querySelector(`.listed-macro[data-id="stop"]`).children[2].addEventListener("click", ()=>{
+    recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#437" data-type="macro"><select class="new-select-thing">${macros.map((m,i)=>`<option value="${i}">${m.name}</option>`)}</select></div>`)
+    let select = recording.querySelector(".new-select-thing")
+    select.className = null
+    select.addEventListener("change", ()=>{
+      select.parentElement.dataset.macro = select.value
+      select.parentElement.innerText = macros[+select.value].name
+    })
   })
 
   settings.children[0].addEventListener("click", ()=>{
@@ -262,9 +348,22 @@ var onPage = async ()=>{
     list.insertAdjacentHTML("afterbegin", `<div class="listed-macro" data-id="moveAfter">Move macro after...</div>`)
     let line = list.querySelector(`.listed-macro[data-id="moveAfter"]`)
     moveMode = element=>{
-      let macro = macros[+settings.dataset.macro]
-      macros[+settings.dataset.macro] = null
-      macros.splice(+element.dataset.id>=0 ? +element.dataset.id +1 : 0, 0, macro)
+      let before = +settings.dataset.macro; let after = +element.dataset.id || 0
+      for(let m of macros){
+        for(let a of m.actions){
+          if(a.type!=="macro"){continue}
+          if(a.macro===before){
+            a.macro = after
+          }else if(a.macro<before && a.macro>=after){
+            a.macro++
+          }else if(a.macro>before && a.macro<=after){
+            a.macro--
+          }
+        }
+      }
+      let macro = macros[before]
+      macros[before] = null
+      macros.splice(after>=0 ? after +1 : 0, 0, macro)
       macros.splice(macros.findIndex(m=>!m), 1)
       for(let e of list.querySelectorAll(`.listed-macro[data-id]`)){
         if(+e.dataset.id>=0){e.remove()}
@@ -296,6 +395,11 @@ var onPage = async ()=>{
     for(let e of list.querySelectorAll("[data-id]")){
       if(e.dataset.id>i){
         e.dataset.id = +e.dataset.id -1
+      }
+    }
+    for(let m of macros){
+      for(let a of m.actions){
+        if(a.type==="macro" && a.macro>i){a.macro--}
       }
     }
     settings.style.display = "none"

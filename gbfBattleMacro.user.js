@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-04-20
+// @version      2025-04-21
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -115,8 +115,11 @@ var onPage = async ()=>{
         let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
         if(button){
           if(document.querySelector(`.prt-command-chara[pos="${+button.getAttribute("ability-character-num")+1}"]`).style.display!=="block"){
-            click(document.querySelector(`.btn-command-back`))
-            await wait()
+            let back = document.querySelector(`.btn-command-back`)
+            if(back.classList.contains("display-on")){
+              click(back)
+              await wait()
+            }
             click(document.querySelector(`.btn-command-character[pos="${+button.getAttribute("ability-character-num")}"]`))
             await wait()
           }
@@ -150,6 +153,11 @@ var onPage = async ()=>{
           })
         }
       }else if(action.type==="summon"){
+        let back = document.querySelector(`.btn-command-back`)
+        if(back.classList.contains("display-on")){
+          click(back)
+          await wait()
+        }
         let button = document.querySelectorAll(".btn-command-summon.summon-on")[0]
         if(!button){continue}
         click(button)
@@ -160,6 +168,16 @@ var onPage = async ()=>{
         await wait(200)
         click(document.querySelector(".btn-summon-use"))
         await wait()
+      }else if(action.type==="calock"){
+        let button = document.querySelector(".btn-lock")
+        let n = action.lock!="false" ? 1 : 0
+        if(button.classList.contains("lock"+(1-n))){continue}
+        if(button.parentElement.style.display==="none"){
+          click(document.querySelector(`.btn-command-back`))
+          await wait()
+        }
+        click(button)
+        if(macro.speed==="slow"){await wait()}
       }
     }
     list.querySelector(`[data-id="${id}"]`).removeAttribute("data-playing")
@@ -217,7 +235,7 @@ var onPage = async ()=>{
     recordFunction = original=>{
       let usefulParent = original
       let character
-      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start","btn-summon-use","btn-quick-summon"].find(c=>usefulParent.classList.contains(c))){
+      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start","btn-summon-use","btn-quick-summon","btn-lock"].find(c=>usefulParent.classList.contains(c))){
         if(usefulParent.classList.contains("btn-command-character")){character = usefulParent}
         usefulParent = usefulParent.parentElement
       }
@@ -242,6 +260,10 @@ var onPage = async ()=>{
           text = summon.name
           extra.summon = summon.id
         }
+      }else if(usefulParent.classList.contains("btn-lock")){
+        extra.type = "calock"
+        extra.lock = usefulParent.classList.contains("lock1")
+        text = (extra.lock ? "No" : "Auto")+" charge attack"
       }else{
         extra.type = "skill"
         if(usefulParent.parentElement.classList.contains("pop-usual") && character){
@@ -253,7 +275,15 @@ var onPage = async ()=>{
         extra.ability = usefulParent.getAttribute("ability-id")
         text = usefulParent.getAttribute("ability-name")
       }
-      recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "141" : extra.type==="attack" ? "411" : extra.type==="summon" ? "441" : "0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
+      let last; let p = extra.type==="skill" ? "ability" : extra.type
+      for(let e of recording.querySelectorAll(`[data-type]`)){last = e}
+      if(last && last.dataset.type===extra.type && extra[p]==last.dataset[p]){
+        for(let k in last.dataset){last.removeAttribute("data-"+k)}
+        for(let k in extra){last.dataset[k] = extra[k]}
+        last.innerText = text
+      }else{
+        recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "141" : extra.type==="attack" ? "411" : extra.type==="summon" ? "441" : extra.type==="calock" ? "531" : "0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
+      }
     }
   })
   list.querySelector(`.listed-macro[data-id="showAll"]`).addEventListener("click", ()=>{
@@ -303,7 +333,7 @@ var onPage = async ()=>{
     recordFunction = null
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).children[2].addEventListener("click", ()=>{
-    recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#437" data-type="macro"><select class="new-select-thing">${macros.map((m,i)=>`<option value="${i}">${m.name}</option>`)}</select></div>`)
+    recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#437" data-type="macro"><select class="new-select-thing"><option default>Select a macro...</option>${macros.map((m,i)=>`<option value="${i}">${m.name}</option>`)}</select></div>`)
     let select = recording.querySelector(".new-select-thing")
     select.className = null
     select.addEventListener("change", ()=>{

@@ -255,9 +255,10 @@ var onPage = async ()=>{
       }
       let last
       for(let e of recording.querySelectorAll(`[data-type]`)){last = e}
-      if(last && last.dataset.type===extra.type){
+      if(last && last.dataset.type===extra.type && extra[extra.type]==last.dataset[extra.type]){
         for(let k in last.dataset){last.dataset.removeAttribute(k)}
         for(let k in extra){last.dataset[k] = extra[k]}
+        last.innerText = text
       }else{
         recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "141" : extra.type==="attack" ? "411" : extra.type==="summon" ? "441" : "0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
       }

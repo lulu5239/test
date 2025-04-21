@@ -160,6 +160,12 @@ var onPage = async ()=>{
         await wait(200)
         click(document.querySelector(".btn-summon-use"))
         await wait()
+      }else if(action.type==="calock"){
+        let button = document.querySelector(".btn-lock")
+        let n = action.lock ? 1 : 0
+        if(button.classList.contains("lock"+(1-n))){continue}
+        button.classList.remove("lock"+(1-n))
+        button.classList.add("lock"+n)
       }
     }
     list.querySelector(`[data-id="${id}"]`).removeAttribute("data-playing")
@@ -217,7 +223,7 @@ var onPage = async ()=>{
     recordFunction = original=>{
       let usefulParent = original
       let character
-      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start","btn-summon-use","btn-quick-summon"].find(c=>usefulParent.classList.contains(c))){
+      while(usefulParent && !["lis-ability","prt-popup-body","btn-attack-start","btn-summon-use","btn-quick-summon","btn-lock"].find(c=>usefulParent.classList.contains(c))){
         if(usefulParent.classList.contains("btn-command-character")){character = usefulParent}
         usefulParent = usefulParent.parentElement
       }
@@ -242,6 +248,10 @@ var onPage = async ()=>{
           text = summon.name
           extra.summon = summon.id
         }
+      }else if(usefulParent.classList.contains("btn-lock")){
+        extra.type = "calock"
+        extra.lock = usefulParent.classList.contains("lock1")
+        text = (extra.lock ? "No" : "Auto")+" charge attack"
       }else{
         extra.type = "skill"
         if(usefulParent.parentElement.classList.contains("pop-usual") && character){

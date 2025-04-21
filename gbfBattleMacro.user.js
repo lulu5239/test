@@ -270,7 +270,7 @@ var onPage = async ()=>{
         for(let k in extra){last.dataset[k] = extra[k]}
         last.innerText = text
       }else{
-        recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "141" : extra.type==="attack" ? "411" : extra.type==="summon" ? "441" : "0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
+        recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#${extra.type==="skill" ? "141" : extra.type==="attack" ? "411" : extra.type==="summon" ? "441" : extra.type==="calock" ? "#531" : "0000"}" ${Object.keys(extra).map(k=>`data-${k}="${extra[k]}"`).join(" ")}>${text}</div>`)
       }
     }
   })

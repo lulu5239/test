@@ -321,7 +321,7 @@ var onPage = async ()=>{
     recordFunction = null
   })
   recording.querySelector(`.listed-macro[data-id="stop"]`).children[2].addEventListener("click", ()=>{
-    recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#437" data-type="macro"><select class="new-select-thing"><option disabled default>Select a macro...</option>${macros.map((m,i)=>`<option value="${i}">${m.name}</option>`)}</select></div>`)
+    recording.insertAdjacentHTML("beforeend", `<div class="listed-macro" style="background-color:#437" data-type="macro"><select class="new-select-thing"><option default>Select a macro...</option>${macros.map((m,i)=>`<option value="${i}">${m.name}</option>`)}</select></div>`)
     let select = recording.querySelector(".new-select-thing")
     select.className = null
     select.addEventListener("change", ()=>{

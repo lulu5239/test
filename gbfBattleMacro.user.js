@@ -237,7 +237,7 @@ var onPage = async ()=>{
         }else{
           usefulParent = document.querySelector(`.lis-summon[pos="${usefulParent.getAttribute("summon-id")}"]`)
         }
-        if(extra.summon){
+        if(!extra.summon){
           let summon = stage.pJsnData.summon[+usefulParent.getAttribute("pos") -1]
           text = summon.name
           extra.summon = summon.id

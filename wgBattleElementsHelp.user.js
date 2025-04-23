@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-11
+// @version      2025-04-23
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -351,7 +351,6 @@
   updateGoodness()
   let actionMenu = document.querySelector("#action_menu")
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2" id="swapForXPoption"><button id="btn_swapForXP" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Level up cards</button><div>`)
-  party[initialSwapData[0].id].receivingXP = true
   actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
     let card = document.querySelector("#swapForXPoption").dataset.card
     if(!card){return}

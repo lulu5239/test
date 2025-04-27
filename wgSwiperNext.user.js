@@ -213,7 +213,7 @@
       createNextAction(card)
     }
 
-    document.querySelector("#cardActionBlock").children[1].insertAdjacentHTML("afterbegin",
+    document.querySelector("#cardActionBlock, #noCardLeft").children[1].insertAdjacentHTML("afterbegin",
       `<style>.swiperNextButton {
         display:inline-flex;
         color:#fff;
@@ -259,8 +259,8 @@
         }
       })
     }
-    let table = document.querySelector("#cardName").parentElement.querySelector("table")
-    if(settings.showTopSimps){
+    let table = document.querySelector("#cardName")?.parentElement.querySelector("table")
+    if(settings.showTopSimps && table){
       table.classList.add("smallerTable")
       table.querySelector("tbody").insertAdjacentHTML("beforeend",
         `<tr class="bg-dark-light"><th>Top simps</th><td id="topSimps"><button class="btn">Load...</button><div></div></td></tr>`
@@ -306,7 +306,8 @@
       return originalNextCard(...args)
     }
     if(!$nextCard){
-      nextCard($("a.selectCard").first())
+      let card = document.querySelector("a.selectCard")
+      if(card){nextCard(card)}
     }
     
     var processCardActions = async ()=>{

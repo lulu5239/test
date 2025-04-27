@@ -374,6 +374,56 @@
         name:"", hpText:"", relHP:"0", xpText:"", relXP:"0", cardID:""
       }, true)
     })
+
+    let settingCheckbox = (key, name, checked)=>(`<input type="checkbox" ${checked || checked===undefined && settings[key] ? "checked" : ""} name="${key}"> <label for="${key}">${name}</label>`)
+    document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
+      `<div id="swiperNextSettings" class="card card-style">
+        <div>
+          <button data-page="visibility" class="btn btn-block">Visibility</button>
+          <button data-page="keybinds" class="btn btn-block">Keybinds</button>
+          <button data-page="recommendations" class="btn btn-block">Recommendations</button>
+        </div>
+        <div data-page="visibility">
+          For the destination buttons:<br>
+          ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
+          ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
+          On the cards page:
+          ${settingCheckbox("showTopSimps", "Add button to load top simps")}
+        </div>
+        <div data-page="keybinds">
+          Soon...
+        </div>
+        <div data-page="recommendations">
+          Later...
+        </div>
+      </div>
+      <style>
+        #swiperNextSettings div[data-page] {
+          display:none;
+        }
+        #swiperNextSettings div[data-page][data-visible] {
+          display:block;
+        }
+      </style>`
+    )
+    let settingsDiv = document.querySelector("div#swiperNextSettings")
+    for(let button of settingsDiv.children[0].children){
+      button.addEventListener("click", ()=>{
+        let previous = settingsDiv.querySelectorAll("[data-visible]")[0]
+        if(previous){previous.removeAttribute("data-visible")}
+        settingsDiv.querySelector(`[data-page="${button.dataset.page}"]`).dataset.visible = true
+      })
+    }
+    for(let option of document.querySelectorAll("[data-page] input, [data-page] select")){
+      option.addEventListener("change", ()=>{
+        if(option.class==="input" && option.type==="checkbox"){
+          settings[option.name] = !!option.checked
+        }else{
+          settings[option.name] = option.value
+        }
+        GM_setValue("settings", settings)
+      })
+    }
   return}
 
   if(path==="/home"){

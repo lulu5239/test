@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-16
+// @version      2025-04-28
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -9,7 +9,8 @@
 // @downloadURL  https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgSwiperNext.user.js
 // @updateURL    https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgSwiperNext.user.js
 // @run-at       document-end
-// @grant        none
+// @grant        GM_getValue
+// @grant        GM_setValue
 // ==/UserScript==
 
 (async ()=>{
@@ -26,6 +27,7 @@
     selectedOnce:"c42",
     selectedCharisma:"4e4",
   }
+  var settings = GM_getValue("settings") || {}
 
   if(path==="/swiper"){
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
@@ -86,8 +88,8 @@
       }
     }
     
-    let cardActions = localStorage["y_WG-cardActions"] ? JSON.parse(localStorage["y_WG-cardActions"]) : {}
-    let formations = localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
+    let cardActions = GM_getValue("cardActions") ? GM_getValue("cardActions") : localStorage["y_WG-cardActions"] ? JSON.parse(localStorage["y_WG-cardActions"]) : {}
+    let formations = GM_getValue("formations") ? GM_getValue("formations") : localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
     let formation = Object.values(formations).find(team=>team.selected)
     let charisma = formation?.charisma
     let switchingFormation = false
@@ -124,7 +126,7 @@
         formation = thisFormation
         formation.selected = true
         charisma = formation.charisma
-        localStorage["y_WG-formations"] = JSON.stringify(formations)
+        GM_setValue("formations", formations)
         applyEncounterStyle({each:()=>{}})
       })
       button.innerText = thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma
@@ -155,7 +157,7 @@
       return originalPostServer(...args.slice(0,2), data=>{
         if(data.result.includes(" Card (\u2116 ") && action!==1){
           cardActions[data.result.split(" Card (\u2116 ")[1].split(")")[0]] = action
-          localStorage["y_WG-cardActions"] = JSON.stringify(cardActions)
+          GM_setValue("cardActions", cardActions)
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
@@ -163,7 +165,7 @@
           charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1) /(data.result.endsWith(" (300% BOOST)") ? 3 : data.result.endsWith(" (200% BOOST)") ? 2 : 1)
           if(formation && charisma!==formation?.charisma){
             formation.charisma = charisma
-            localStorage["y_WG-formations"] = JSON.stringify(formations)
+            GM_setValue("formations", formations)
             swiperNextButtons.querySelector(`div[data-formation="${Object.keys(formations).find(k=>(formations[k]===formation))}"]`).innerText = charisma
           }
         }
@@ -185,9 +187,8 @@
   return}
 
   if(path==="/cards"){
-    let cards = JSON.parse(localStorage["y_WG-cardActions"])
-    let showTopSimps = !!localStorage["y_WG-showTopSimps"]
-
+    let cards = GM_getValue("cardActions") || JSON.parse(localStorage["y_WG-cardActions"] || "{}")
+    
     let selectedCard
     let createNextAction = card=>{
       if(card.querySelector(".nextAction")){card.querySelector(".nextAction").remove()}
@@ -204,7 +205,7 @@
           return document.querySelector(`#swiperNextButtons div[data-nextaction="nothing"]`).click()
         }
         delete cards[id]
-        localStorage["y_WG-cardActions"] = JSON.stringify(cards)
+        GM_setValue("cardActions", cards)
         card.querySelector(".nextAction").remove()
       })
     }
@@ -252,14 +253,14 @@
         }else{
           cards[selectedCard.dataset.cardid] = i
         }
-        localStorage["y_WG-cardActions"] = JSON.stringify(cards)
+        GM_setValue("cardActions", cards)
         for(let card of document.querySelectorAll(`a.selectCard[data-cardid="${selectedCard.dataset.cardid}"]`)){
           createNextAction(card)
         }
       })
     }
     let table = document.querySelector("#cardName").parentElement.querySelector("table")
-    if(showTopSimps){
+    if(settings.showTopSimps){
       table.classList.add("smallerTable")
       table.querySelector("tbody").insertAdjacentHTML("beforeend",
         `<tr class="bg-dark-light"><th>Top simps</th><td id="topSimps"><button class="btn">Load...</button><div></div></td></tr>`
@@ -298,7 +299,7 @@
       selectedCard = args[0][0]
       let action = cards[args[0].data("card").id]
       document.querySelector(`#swiperNextButtons div[data-nextaction="${action!==undefined ? ""+action : "nothing"}"]`).click()
-      if(showTopSimps){
+      if(settings.showTopSimps){
         document.querySelector("#topSimps button").style.display = null
         document.querySelector("#topSimps div").innerHTML = ""
       }
@@ -332,7 +333,7 @@
         }))
       }
       for(let id of ids){delete cards[id]}
-      localStorage["y_WG-cardActions"] = JSON.stringify(cards)
+      GM_setValue("cardActions", cards)
       if(Promise.all){await Promise.all(promises)}
     }
     window.processCardActions = processCardActions
@@ -358,7 +359,7 @@
         let button = document.querySelector("#resetCardActions")
         button.disabled = true
         cards = {}
-        localStorage["y_WG-cardActions"] = "{}"
+        GM_setValue("cardActions", {})
         button.innerText = "Done."
         document.querySelector("a.close-menu").click()
       })
@@ -373,10 +374,60 @@
         name:"", hpText:"", relHP:"0", xpText:"", relXP:"0", cardID:""
       }, true)
     })
+
+    let settingCheckbox = (key, name, checked)=>(`<input type="checkbox" ${checked || checked===undefined && settings[key] ? "checked" : ""} name="${key}"> <label for="${key}">${name}</label>`)
+    document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
+      `<div id="swiperNextSettings" class="card card-style">
+        <div>
+          <button data-page="visibility" class="btn btn-block">Visibility</button>
+          <button data-page="keybinds" class="btn btn-block">Keybinds</button>
+          <button data-page="recommendations" class="btn btn-block">Recommendations</button>
+        </div>
+        <div data-page="visibility">
+          For the destination buttons:<br>
+          ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
+          ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
+          On the cards page:
+          ${settingCheckbox("showTopSimps", "Add button to load top simps")}
+        </div>
+        <div data-page="keybinds">
+          Soon...
+        </div>
+        <div data-page="recommendations">
+          Later...
+        </div>
+      </div>
+      <style>
+        #swiperNextSettings div[data-page] {
+          display:none;
+        }
+        #swiperNextSettings div[data-page][data-visible] {
+          display:block;
+        }
+      </style>`
+    )
+    let settingsDiv = document.querySelector("div#swiperNextSettings")
+    for(let button of settingsDiv.children[0].children){
+      button.addEventListener("click", ()=>{
+        let previous = settingsDiv.querySelectorAll("[data-visible]")[0]
+        if(previous){previous.removeAttribute("data-visible")}
+        settingsDiv.querySelector(`[data-page="${button.dataset.page}"]`).dataset.visible = true
+      })
+    }
+    for(let option of document.querySelectorAll("[data-page] input, [data-page] select")){
+      option.addEventListener("change", ()=>{
+        if(option.class==="input" && option.type==="checkbox"){
+          settings[option.name] = !!option.checked
+        }else{
+          settings[option.name] = option.value
+        }
+        GM_setValue("settings", settings)
+      })
+    }
   return}
 
   if(path==="/home"){
-    let formations = localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
+    let formations = GM_getValue("formations") ? GM_getValue("formations") : localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
     for(let formation of document.querySelector("#party").querySelector("optgroup").children){
       if(formation.value==="default"){continue}
       let data = formations[formation.value.slice(2)]
@@ -390,6 +441,6 @@
         }
       }
     }
-    localStorage["y_WG-formations"] = JSON.stringify(formations)
+    GM_setValue("formations", formations)
   }
 })();

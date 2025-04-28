@@ -517,8 +517,10 @@
       return}
       settings[recording] = ev.key
       GM_setValue("settings", settings)
+      let option = settingsDiv.querySelector(`[data-page] [data-key="${recording}"]`)
       option.children[0].innerText = ev.key
       option.children[1].style.display = "block"
+      recording = null
     })
   return}
 

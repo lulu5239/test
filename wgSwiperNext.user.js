@@ -190,6 +190,7 @@
     document.addEventListener("keydown", ev=>{
       let action = Object.keys(settings).find(k=>k.startsWith("keybind.") && settings[k]===ev.key)
       if(!action){return}
+      action = action.slice(8)
       let i = ["disenchant", "portfolio", "box1", "box2", "box3"].findIndex(e=>e===action)
       if(i>=0){
         document.querySelector(`#swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()
@@ -506,6 +507,7 @@
       if(!recording){
         let action = Object.keys(settings).find(k=>k.startsWith("keybind.") && settings[k]===ev.key)
         if(!action){return}
+        action = action.slice(8)
         let i = ["disenchant", "portfolio", "box1", "box2", "box3"].findIndex(e=>e===action)
         if(i>=0 || action==="nothing"){
           document.querySelector(`#swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()

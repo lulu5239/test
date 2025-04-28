@@ -406,7 +406,10 @@
           ${settingKeybind("charm", "Charm")}<br>
           ${settingKeybind("deb", "Debonaire charm")}<br>
           ${settingKeybind("battle", "Battle")}<br>
+          ${settingKeybind("nothing", "Nothing (on cards page)")}<br>
           ${settingKeybind("next", "Next card (on cards page)")}<br>
+          <br>
+          ${checkboxSetting("keybindAutoNext", "Automatically display next card after selecting destination using keybind, from the cards page")}
         </div>
         <div data-page="recommendations">
           Later...
@@ -415,12 +418,16 @@
       <style>
         #swiperNextSettings div[data-page] {
           display:none;
+          color:#eee;
         }
         #swiperNextSettings div[data-page][data-visible] {
           display:block;
         }
         #swiperNextSettings div[data-page="keybinds"] div button {
           border: solid 2px #fffa;
+        }
+        #swiperNextSettings div[data-page="keybinds"] div {
+          font-size:20px;
         }
       </style>`
     )
@@ -442,13 +449,13 @@
             let option = settingsDiv.querySelector(`[data-page] [data-key="${recording}"]`)
             option.children[0].innerText = settings[recording] || ""
             option.children[0].style.backgroundColor = null
-            recoding = null
+            recording = null
           return}
           option.children[0].innerText = "Recording..."
           option.children[0].style.backgroundColor = "#555a"
           recording = key
         })
-        option.children[1].style.display = options[key] ? null : "none"
+        option.children[1].style.display = settings[key] ? null : "none"
         option.children[1].addEventListener("click", ()=>{
           delete settings[key]
           GM_setValue("settings", settings)
@@ -467,7 +474,18 @@
     }
 
     document.addEventListener("keydown", ev=>{
-      if(!recording){return}
+      if(!recording){
+        let action = Object.keys(settings).find(k=>k.startsWith("keybind.") && settings[k]===ev.key)
+        if(!action){return}
+        let i = ["disenchant", "portfolio", "box1", "box2", "box3"].findIndex(e=>e===action)
+        if(i>=0 || action==="nothing"){
+          document.querySelector(`.swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()
+          if(settings.keybindAutoNext){nextCard($nextCard)}
+        return}
+        if(action==="next"){
+          nextCard($nextCard)
+        }
+      return}
       settings[recording] = ev.key
       GM_setValue("settings", settings)
       option.children[0].innerText = ev.key

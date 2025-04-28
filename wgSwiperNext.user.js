@@ -377,9 +377,9 @@
     })
 
     let settingCheckbox = (key, name, checked)=>(`<label><input type="checkbox" ${checked || checked===undefined && settings[key] ? "checked" : ""} data-key="${key}"> ${name}</label>`)
-    let settingKeybind = (key, name)=>(`<div style="inline-block" data-key="${"keybind."+key}"><button class="btn"></button> <button class="btn"><i class="fa fa-delete"></i></button> ${name}</div>`)
+    let settingKeybind = (key, name)=>(`<div style="inline-block" data-key="${"keybind."+key}"><button class="btn"></button> <button class="btn"><i class="fa fa-times"></i></button> ${name}</div>`)
     document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
-      `<div id="swiperNextSettings" class="card card-style">
+      `<div id="swiperNextSettings" class="card card-style" style="padding:3px">
         <div>
           <button data-page="visibility" class="btn btn-block">Visibility</button>
           <button data-page="keybinds" class="btn btn-block">Keybinds</button>
@@ -395,6 +395,18 @@
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
           ${settingKeybind("disenchant", "Disenchant/battle")}<br>
+          ${settingKeybind("portfolio", "Portfolio")}<br>
+          ${settingKeybind("box1", "Box 1")}<br>
+          ${settingKeybind("box2", "Box 2")}<br>
+          ${settingKeybind("box3", "Box 3")}<br>
+          The following keybinds actually does things:<br>
+          ${settingKeybind("main", "Disenchant/battle (depends of the icon on the big button)")}<br>
+          ${settingKeybind("crush", "Crush")}<br>
+          ${settingKeybind("flirt", "Flirt")}<br>
+          ${settingKeybind("charm", "Charm")}<br>
+          ${settingKeybind("deb", "Debonaire charm")}<br>
+          ${settingKeybind("battle", "Battle")}<br>
+          ${settingKeybind("next", "Next card (on cards page)")}<br>
         </div>
         <div data-page="recommendations">
           Later...
@@ -407,8 +419,8 @@
         #swiperNextSettings div[data-page][data-visible] {
           display:block;
         }
-        #swiperNextSettings div[data-page="recording"] button {
-          border; solid 2px #fffa;
+        #swiperNextSettings div[data-page="keybinds"] div button {
+          border: solid 2px #fffa;
         }
       </style>`
     )
@@ -424,11 +436,11 @@
     for(let option of settingsDiv.querySelectorAll("[data-page] [data-key]")){
       let key = option.dataset.key
       if(key.startsWith("keybind.")){
-        option.children[0].innerText = options[key] || ""
+        option.children[0].innerText = settings[key] || ""
         option.children[0].addEventListener("click", ()=>{
           if(recording){
             let option = settingsDiv.querySelector(`[data-page] [data-key="${recording}"]`)
-            option.children[0].innerText = options[recording] || ""
+            option.children[0].innerText = settings[recording] || ""
             option.children[0].style.backgroundColor = null
             recoding = null
           return}

@@ -306,7 +306,7 @@
       return originalNextCard(...args)
     }
     if(!$nextCard){
-      let card = document.querySelector("a.selectCard")
+      let card = $("a.selectCard").first()
       if(card){nextCard(card)}
     }
     
@@ -409,7 +409,7 @@
           ${settingKeybind("nothing", "Nothing (on cards page)")}<br>
           ${settingKeybind("next", "Next card (on cards page)")}<br>
           <br>
-          ${checkboxSetting("keybindAutoNext", "Automatically display next card after selecting destination using keybind, from the cards page")}
+          ${settingCheckbox("keybindAutoNext", "Automatically display next card after selecting destination using keybind, from the cards page")}
         </div>
         <div data-page="recommendations">
           Later...
@@ -470,6 +470,9 @@
           settings[key] = option.value
         }
         GM_setValue("settings", settings)
+        if(["showTopSimps"].includes(key)){
+          showSuccessToast("Refresh the page to see the changes.")
+        }
       })
     }
 

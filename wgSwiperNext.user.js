@@ -196,18 +196,18 @@
         document.querySelector(`#swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()
       return}
       if(action==="main"){
-        document.querySelectot("#love").click()
+        document.querySelector("#love").click()
       }else if(action==="crush"){
-        document.querySelectot("#nope").click()
+        document.querySelector("#nope").click()
       }else if(action==="flirt"){
         flirtAnyways = true
-        document.querySelectot("#love").click()
+        document.querySelector("#love").click()
       }else if(action==="charm"){
-        document.querySelectot(".btnCharm").click()
+        document.querySelector(".btnCharm").click()
       }else if(action==="deb"){
-        document.querySelectot(settings.confirmKeybindCharm ? "#deb" : ".btnDeb").click()
+        document.querySelector(settings.confirmKeybindCharm ? "#deb" : ".btnDeb").click()
       }else if(action==="battle"){
-        document.querySelectot(".btnBattle").click()
+        document.querySelector(".btnBattle").click()
       }
     })
   return}

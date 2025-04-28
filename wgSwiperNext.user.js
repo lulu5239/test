@@ -157,8 +157,8 @@
       flirtAnyways = null
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
-        if(data.result.includes(" Card (\u2116 ") && action!==1){
-          cardActions[data.result.split(" Card (\u2116 ")[1].split(")")[0]] = action
+        if(data.result.includes(" Card (\u2116 ") && action!==1 || settings.keepActions){
+          cardActions[card.card_id] = action
           GM_setValue("cardActions", cardActions)
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
@@ -342,7 +342,7 @@
       for(let action of document.querySelectorAll("a.selectCard .nextAction")){
         if(!actions[action.dataset.action]){actions[action.dataset.action]=[]}
         actions[action.dataset.action].push(action.parentElement.dataset.pivotselect)
-        ids.push(action.parentElement.dataset.cardid)
+        if(!settings.keepActions){ids.push(action.parentElement.dataset.cardid)}
       }
       let promises = []
       for(let action in actions){
@@ -379,7 +379,7 @@
       button.innerText = "Done."
     })
     document.querySelector("#resetCardActions").addEventListener("click", ()=>{
-      areYouSure("If you want to cancel just some actions, use the Cancel button in the cards list. This is only useful to remove actions that might still be stored for cards you don't have anymore.", ()=>{
+      areYouSure(`If you want to cancel just some actions, use the Cancel button in the cards list. This is only useful to remove the ${Object.keys(cards).length} actions still stored for cards you might not have anymore.`, ()=>{
         for(let button of document.querySelectorAll(".cancelNext")){
           button.remove()
         }
@@ -439,7 +439,10 @@
           ${settingCheckbox("keybindAutoNext", "Automatically display next card after selecting destination using keybind, from the cards page")}
         </div>
         <div data-page="recommendations">
-          Later...
+          After executing the card actions, the script usually deletes the actions from its storage but you can disable that here.<br>
+          On the swiper page, the saved card action will become automatically selected.<br>
+          ${settingCheckbox("keepActions", "Keep card actions")}<br>
+          More options soon...
         </div>
       </div>
       <style>

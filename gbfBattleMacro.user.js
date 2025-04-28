@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-04-21
+// @version      2025-04-22
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -277,7 +277,7 @@ var onPage = async ()=>{
       }
       let last; let p = extra.type==="skill" ? "ability" : extra.type
       for(let e of recording.querySelectorAll(`[data-type]`)){last = e}
-      if(last && last.dataset.type===extra.type && extra[p]==last.dataset[p]){
+      if(last && extra.type!=="attack" && last.dataset.type===extra.type && extra[p]==last.dataset[p]){
         for(let k in last.dataset){last.removeAttribute("data-"+k)}
         for(let k in extra){last.dataset[k] = extra[k]}
         last.innerText = text

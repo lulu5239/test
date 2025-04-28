@@ -132,7 +132,8 @@
       button.innerText = thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma
       swiperNextButtons.appendChild(button)
     }
-    
+
+    let flirtAnyways
     let originalPostServer = postServer
     postServer = (...args)=>{
       let card = $('.tinder--card[data-encounterid=' + args[0] + ']').data("data")
@@ -150,13 +151,14 @@
       }else{
         selectedOnce = null
       }
-      if(action===0 && args[1]==="😘" && charisma-7>card.card.rarity){
+      if(action===0 && args[1]==="😘" && charisma-7>card.card.rarity && ! flirtAnyways){
         args[1] = "👊"
       }
+      flirtAnyways = null
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
-        if(data.result.includes(" Card (\u2116 ") && action!==1){
-          cardActions[data.result.split(" Card (\u2116 ")[1].split(")")[0]] = action
+        if(data.result.includes(" Card (\u2116 ") && action!==1 || settings.keepActions){
+          cardActions[card.card_id] = action
           GM_setValue("cardActions", cardActions)
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
@@ -184,6 +186,30 @@
       }
       return originalApplyEncounterStyle(...args)
     }
+
+    document.addEventListener("keydown", ev=>{
+      let action = Object.keys(settings).find(k=>k.startsWith("keybind.") && settings[k]===ev.key)
+      if(!action){return}
+      action = action.slice(8)
+      let i = ["disenchant", "portfolio", "box1", "box2", "box3"].findIndex(e=>e===action)
+      if(i>=0){
+        document.querySelector(`#swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()
+      return}
+      if(action==="main"){
+        document.querySelector("#love").click()
+      }else if(action==="crush"){
+        document.querySelector("#nope").click()
+      }else if(action==="flirt"){
+        flirtAnyways = true
+        document.querySelector("#love").click()
+      }else if(action==="charm"){
+        document.querySelector(".btnCharm").click()
+      }else if(action==="deb"){
+        document.querySelector(settings.confirmKeybindCharm ? "#deb" : ".btnDeb").click()
+      }else if(action==="battle"){
+        document.querySelector(".btnBattle").click()
+      }
+    })
   return}
 
   if(path==="/cards"){
@@ -213,7 +239,7 @@
       createNextAction(card)
     }
 
-    document.querySelector("#cardActionBlock").children[1].insertAdjacentHTML("afterbegin",
+    document.querySelector("#cardActionBlock, #noCardLeft").children[1].insertAdjacentHTML("afterbegin",
       `<style>.swiperNextButton {
         display:inline-flex;
         color:#fff;
@@ -259,8 +285,8 @@
         }
       })
     }
-    let table = document.querySelector("#cardName").parentElement.querySelector("table")
-    if(settings.showTopSimps){
+    let table = document.querySelector("#cardName")?.parentElement.querySelector("table")
+    if(settings.showTopSimps && table){
       table.classList.add("smallerTable")
       table.querySelector("tbody").insertAdjacentHTML("beforeend",
         `<tr class="bg-dark-light"><th>Top simps</th><td id="topSimps"><button class="btn">Load...</button><div></div></td></tr>`
@@ -306,7 +332,8 @@
       return originalNextCard(...args)
     }
     if(!$nextCard){
-      nextCard($("a.selectCard").first())
+      let card = $("a.selectCard").first()
+      if(card){nextCard(card)}
     }
     
     var processCardActions = async ()=>{
@@ -315,7 +342,7 @@
       for(let action of document.querySelectorAll("a.selectCard .nextAction")){
         if(!actions[action.dataset.action]){actions[action.dataset.action]=[]}
         actions[action.dataset.action].push(action.parentElement.dataset.pivotselect)
-        ids.push(action.parentElement.dataset.cardid)
+        if(!settings.keepActions){ids.push(action.parentElement.dataset.cardid)}
       }
       let promises = []
       for(let action in actions){
@@ -352,7 +379,7 @@
       button.innerText = "Done."
     })
     document.querySelector("#resetCardActions").addEventListener("click", ()=>{
-      areYouSure("If you want to cancel just some actions, use the Cancel button in the cards list. This is only useful to remove actions that might still be stored for cards you don't have anymore.", ()=>{
+      areYouSure(`If you want to cancel just some actions, use the Cancel button in the cards list. This is only useful to remove the ${Object.keys(cards).length} actions still stored for cards you might not have anymore.`, ()=>{
         for(let button of document.querySelectorAll(".cancelNext")){
           button.remove()
         }
@@ -373,6 +400,132 @@
         id:document.querySelector("#waifuJoinsContent a").href.split("=").slice(-1)[0],
         name:"", hpText:"", relHP:"0", xpText:"", relXP:"0", cardID:""
       }, true)
+    })
+
+    let settingCheckbox = (key, name, checked)=>(`<label><input type="checkbox" ${checked || checked===undefined && settings[key] ? "checked" : ""} data-key="${key}"> ${name}</label>`)
+    let settingKeybind = (key, name)=>(`<div style="inline-block" data-key="${"keybind."+key}"><button class="btn"></button> <button class="btn"><i class="fa fa-times"></i></button> ${name}</div>`)
+    document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
+      `<div id="swiperNextSettings" class="card card-style" style="padding:3px">
+        <div>
+          <button data-page="visibility" class="btn btn-block">Visibility</button>
+          <button data-page="keybinds" class="btn btn-block">Keybinds</button>
+          <button data-page="recommendations" class="btn btn-block">Recommendations</button>
+        </div>
+        <div data-page="visibility">
+          For the destination buttons:<br>
+          ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
+          ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
+          On the cards page:<br>
+          ${settingCheckbox("showTopSimps", "Add button to load top simps")}
+        </div>
+        <div data-page="keybinds">
+          Pressing keys on your keyboard would select the associated action:<br>
+          ${settingKeybind("disenchant", "Disenchant/battle")}<br>
+          ${settingKeybind("portfolio", "Portfolio")}<br>
+          ${settingKeybind("box1", "Box 1")}<br>
+          ${settingKeybind("box2", "Box 2")}<br>
+          ${settingKeybind("box3", "Box 3")}<br>
+          The following keybinds actually does things:<br>
+          ${settingKeybind("main", "Disenchant/battle (depends of the icon on the big button)")}<br>
+          ${settingKeybind("crush", "Crush")}<br>
+          ${settingKeybind("flirt", "Flirt")}<br>
+          ${settingKeybind("charm", "Charm")}<br>
+          ${settingKeybind("deb", "Debonaire charm")}<br>
+          ${settingCheckbox("confirmKeybindDeb", "Show confirmation menu when Deb charming using keybind")}<br>
+          ${settingKeybind("battle", "Battle")}<br>
+          ${settingKeybind("nothing", "Nothing (on cards page)")}<br>
+          ${settingKeybind("next", "Next card (on cards page)")}<br>
+          <br>
+          ${settingCheckbox("keybindAutoNext", "Automatically display next card after selecting destination using keybind, from the cards page")}
+        </div>
+        <div data-page="recommendations">
+          After executing the card actions, the script usually deletes the actions from its storage but you can disable that here.<br>
+          On the swiper page, the saved card action will become automatically selected.<br>
+          ${settingCheckbox("keepActions", "Keep card actions")}<br>
+          More options soon...
+        </div>
+      </div>
+      <style>
+        #swiperNextSettings div[data-page] {
+          display:none;
+          color:#eee;
+        }
+        #swiperNextSettings div[data-page][data-visible] {
+          display:block;
+        }
+        #swiperNextSettings div[data-page="keybinds"] div button {
+          border: solid 2px #fffa;
+        }
+        #swiperNextSettings div[data-page="keybinds"] div {
+          font-size:20px;
+        }
+      </style>`
+    )
+    let settingsDiv = document.querySelector("div#swiperNextSettings")
+    for(let button of settingsDiv.children[0].children){
+      button.addEventListener("click", ()=>{
+        let previous = settingsDiv.querySelectorAll("[data-visible]")[0]
+        if(previous){previous.removeAttribute("data-visible")}
+        settingsDiv.querySelector(`div[data-page="${button.dataset.page}"]`).dataset.visible = true
+      })
+    }
+    let recording
+    for(let option of settingsDiv.querySelectorAll("[data-page] [data-key]")){
+      let key = option.dataset.key
+      if(key.startsWith("keybind.")){
+        option.children[0].innerText = settings[key] || ""
+        option.children[0].addEventListener("click", ()=>{
+          if(recording){
+            let option = settingsDiv.querySelector(`[data-page] [data-key="${recording}"]`)
+            option.children[0].innerText = settings[recording] || ""
+            option.children[0].style.backgroundColor = null
+            recording = null
+          return}
+          option.children[0].innerText = "Recording..."
+          option.children[0].style.backgroundColor = "#555a"
+          recording = key
+        })
+        option.children[1].style.display = settings[key] ? null : "none"
+        option.children[1].addEventListener("click", ()=>{
+          delete settings[key]
+          GM_setValue("settings", settings)
+          option.children[0].innerText = ""
+          option.children[1].style.display = "none"
+        })
+      }
+      option.addEventListener("change", ()=>{
+        if(option.tagName.toLowerCase()==="input" && option.type==="checkbox"){
+          settings[key] = !!option.checked
+        }else{
+          settings[key] = option.value
+        }
+        GM_setValue("settings", settings)
+        if(["showTopSimps"].includes(key)){
+          showSuccessToast("Refresh the page to see the changes.")
+        }
+      })
+    }
+
+    document.addEventListener("keydown", ev=>{
+      if(!recording){
+        let action = Object.keys(settings).find(k=>k.startsWith("keybind.") && settings[k]===ev.key)
+        if(!action){return}
+        action = action.slice(8)
+        let i = ["disenchant", "portfolio", "box1", "box2", "box3"].findIndex(e=>e===action)
+        if(i>=0 || action==="nothing"){
+          document.querySelector(`#swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()
+          if(settings.keybindAutoNext){nextCard($nextCard)}
+        return}
+        if(action==="next"){
+          nextCard($nextCard)
+        }
+      return}
+      settings[recording] = ev.key
+      GM_setValue("settings", settings)
+      let option = settingsDiv.querySelector(`[data-page] [data-key="${recording}"]`)
+      option.children[0].innerText = ev.key
+      option.children[1].style.display = "block"
+      recording = null
     })
   return}
 

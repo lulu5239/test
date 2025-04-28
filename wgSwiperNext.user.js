@@ -376,7 +376,8 @@
       }, true)
     })
 
-    let settingCheckbox = (key, name, checked)=>(`<input type="checkbox" ${checked || checked===undefined && settings[key] ? "checked" : ""} name="${key}"> <label for="${key}">${name}</label>`)
+    let settingCheckbox = (key, name, checked)=>(`<label><input type="checkbox" ${checked || checked===undefined && settings[key] ? "checked" : ""} data-key="${key}"> ${name}</label>`)
+    let settingKeybind = (key, name)=>(`<div style="inline-block" data-key="${"keybind."+key}"><button class="btn"></button> <button class="btn"><i class="fa fa-delete"></i></button> ${name}</div>`)
     document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
       `<div id="swiperNextSettings" class="card card-style">
         <div>
@@ -388,11 +389,12 @@
           For the destination buttons:<br>
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
           ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
-          On the cards page:
+          On the cards page:<br>
           ${settingCheckbox("showTopSimps", "Add button to load top simps")}
         </div>
         <div data-page="keybinds">
-          Soon...
+          Pressing keys on your keyboard would select the associated action:<br>
+          ${settingKeybind("disenchant", "Disenchant/battle")}<br>
         </div>
         <div data-page="recommendations">
           Later...
@@ -405,6 +407,9 @@
         #swiperNextSettings div[data-page][data-visible] {
           display:block;
         }
+        #swiperNextSettings div[data-page="recording"] button {
+          border; solid 2px #fffa;
+        }
       </style>`
     )
     let settingsDiv = document.querySelector("div#swiperNextSettings")
@@ -412,19 +417,50 @@
       button.addEventListener("click", ()=>{
         let previous = settingsDiv.querySelectorAll("[data-visible]")[0]
         if(previous){previous.removeAttribute("data-visible")}
-        settingsDiv.querySelector(`[data-page="${button.dataset.page}"]`).dataset.visible = true
+        settingsDiv.querySelector(`div[data-page="${button.dataset.page}"]`).dataset.visible = true
       })
     }
-    for(let option of document.querySelectorAll("[data-page] input, [data-page] select")){
+    let recording
+    for(let option of settingsDiv.querySelectorAll("[data-page] [data-key]")){
+      let key = option.dataset.key
+      if(key.startsWith("keybind.")){
+        option.children[0].innerText = options[key] || ""
+        option.children[0].addEventListener("click", ()=>{
+          if(recording){
+            let option = settingsDiv.querySelector(`[data-page] [data-key="${recording}"]`)
+            option.children[0].innerText = options[recording] || ""
+            option.children[0].style.backgroundColor = null
+            recoding = null
+          return}
+          option.children[0].innerText = "Recording..."
+          option.children[0].style.backgroundColor = "#555a"
+          recording = key
+        })
+        option.children[1].style.display = options[key] ? null : "none"
+        option.children[1].addEventListener("click", ()=>{
+          delete settings[key]
+          GM_setValue("settings", settings)
+          option.children[0].innerText = ""
+          option.children[1].style.display = "none"
+        })
+      }
       option.addEventListener("change", ()=>{
-        if(option.class==="input" && option.type==="checkbox"){
-          settings[option.name] = !!option.checked
+        if(option.tagName.toLowerCase()==="input" && option.type==="checkbox"){
+          settings[key] = !!option.checked
         }else{
-          settings[option.name] = option.value
+          settings[key] = option.value
         }
         GM_setValue("settings", settings)
       })
     }
+
+    document.addEventListener("keydown", ev=>{
+      if(!recording){return}
+      settings[recording] = ev.key
+      GM_setValue("settings", settings)
+      option.children[0].innerText = ev.key
+      option.children[1].style.display = "block"
+    })
   return}
 
   if(path==="/home"){

@@ -132,7 +132,8 @@
       button.innerText = thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma
       swiperNextButtons.appendChild(button)
     }
-    
+
+    let flirtAnyways
     let originalPostServer = postServer
     postServer = (...args)=>{
       let card = $('.tinder--card[data-encounterid=' + args[0] + ']').data("data")
@@ -150,9 +151,10 @@
       }else{
         selectedOnce = null
       }
-      if(action===0 && args[1]==="😘" && charisma-7>card.card.rarity){
+      if(action===0 && args[1]==="😘" && charisma-7>card.card.rarity && ! flirtAnyways){
         args[1] = "👊"
       }
+      flirtAnyways = null
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
         if(data.result.includes(" Card (\u2116 ") && action!==1){
@@ -184,6 +186,29 @@
       }
       return originalApplyEncounterStyle(...args)
     }
+
+    document.addEventListener("keydown", ev=>{
+      let action = Object.keys(settings).find(k=>k.startsWith("keybind.") && settings[k]===ev.key)
+      if(!action){return}
+      let i = ["disenchant", "portfolio", "box1", "box2", "box3"].findIndex(e=>e===action)
+      if(i>=0){
+        document.querySelector(`#swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()
+      return}
+      if(action==="main"){
+        document.querySelectot("#love").click()
+      }else if(action==="crush"){
+        document.querySelectot("#nope").click()
+      }else if(action==="flirt"){
+        flirtAnyways = true
+        document.querySelectot("#love").click()
+      }else if(action==="charm"){
+        document.querySelectot(".btnCharm").click()
+      }else if(action==="deb"){
+        document.querySelectot(settings.confirmKeybindCharm ? "#deb" : ".btnDeb").click()
+      }else if(action==="battle"){
+        document.querySelectot(".btnBattle").click()
+      }
+    })
   return}
 
   if(path==="/cards"){
@@ -405,6 +430,7 @@
           ${settingKeybind("flirt", "Flirt")}<br>
           ${settingKeybind("charm", "Charm")}<br>
           ${settingKeybind("deb", "Debonaire charm")}<br>
+          ${settingCheckbox("confirmKeybindDeb", "Show confirmation menu when Deb charming using keybind")}<br>
           ${settingKeybind("battle", "Battle")}<br>
           ${settingKeybind("nothing", "Nothing (on cards page)")}<br>
           ${settingKeybind("next", "Next card (on cards page)")}<br>
@@ -482,7 +508,7 @@
         if(!action){return}
         let i = ["disenchant", "portfolio", "box1", "box2", "box3"].findIndex(e=>e===action)
         if(i>=0 || action==="nothing"){
-          document.querySelector(`.swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()
+          document.querySelector(`#swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()
           if(settings.keybindAutoNext){nextCard($nextCard)}
         return}
         if(action==="next"){

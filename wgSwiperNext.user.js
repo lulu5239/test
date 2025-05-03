@@ -30,10 +30,21 @@
   var settings = GM_getValue("settings") || {}
 
   if(settings.manualRerollOnly){
-    let original = ReRollGifts
+    let originalReroll = ReRollGifts
     ReRollGifts = (...args)=>{
-      if(!args[0]){return}
-      return original(...args)
+      if(!args[0] && !document.querySelector(".giftableItem")){return}
+      return originalReroll(...args)
+    }
+    let originalGive = giveItemHandler
+    giveItemHandler = (...args)=>{
+      let p = document.querySelector("#waifuFeed")
+      p.id = "originalWaifuFeed"
+      let thing = document.querySelector(".text-justify.opacity-30.px-4.font-9.mt-4")
+      thing.id = "waifuFeed"
+      let r = originalGive(...args)
+      thing.removeAttribute("id")
+      p.id = "waifuFeed"
+      return r
     }
   }
 

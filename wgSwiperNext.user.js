@@ -32,7 +32,7 @@
   if(settings.manualRerollOnly){
     let originalReroll = ReRollGifts
     ReRollGifts = (...args)=>{
-      if(!args[0] && !document.querySelector(".giftableItem")){return}
+      if(!args[0] && document.querySelector(".giftableItem")){return}
       return originalReroll(...args)
     }
     let originalGive = giveItemHandler

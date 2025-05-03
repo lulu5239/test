@@ -39,7 +39,7 @@
     giveItemHandler = (...args)=>{
       let p = document.querySelector("#waifuFeed")
       p.id = "originalWaifuFeed"
-      let thing = document.querySelector(".text-justify.opacity-30.px-4.font-9.mt-4")
+      let thing = document.querySelector(".text-justify.opacity-30.px-4.font-9.mt-4") || document.querySelector(".replaceGroupName")
       thing.id = "waifuFeed"
       let r = originalGive(...args)
       thing.removeAttribute("id")

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-28
+// @version      2025-05-03
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -28,6 +28,25 @@
     selectedCharisma:"4e4",
   }
   var settings = GM_getValue("settings") || {}
+
+  if(settings.manualRerollOnly){
+    let originalReroll = ReRollGifts
+    ReRollGifts = (...args)=>{
+      if(!args[0] && document.querySelector(".giftableItem")){return}
+      return originalReroll(...args)
+    }
+    let originalGive = giveItemHandler
+    giveItemHandler = (...args)=>{
+      let p = document.querySelector("#waifuFeed")
+      p.id = "originalWaifuFeed"
+      let thing = document.querySelector(".text-justify.opacity-30.px-4.font-9.mt-4")
+      thing.id = "waifuFeed"
+      let r = originalGive(...args)
+      thing.removeAttribute("id")
+      p.id = "waifuFeed"
+      return r
+    }
+  }
 
   if(path==="/swiper"){
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
@@ -416,7 +435,10 @@
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
           ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
           On the cards page:<br>
-          ${settingCheckbox("showTopSimps", "Add button to load top simps")}
+          ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>
+          <br>
+          When feeding an Animu:<br>
+          ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>

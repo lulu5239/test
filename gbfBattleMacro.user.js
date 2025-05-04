@@ -127,7 +127,7 @@ var onPage = async ()=>{
             await wait()
           }else{
             previousPos = stage.gGameStatus.command_slide.now_pos
-            stage.gGameStatus.command_slide.now_pos = +button.dataset["ability-character-num"]
+            stage.gGameStatus.command_slide.now_pos = +button.getAttribute("ability-character-num")
           }
           click(button)
           if(action.character){

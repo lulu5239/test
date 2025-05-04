@@ -34,7 +34,7 @@ var onPage = async ()=>{
       <div class="listed-macro"></div>
       <div class="listed-macro"></div>
       <div class="listed-macro">Move...</div>
-      <div class="listed-macro">Speed: <select><option value="slow">Slow</option><<option value="normal">Normal</option></select></div>
+      <div class="listed-macro">Speed: <select><option value="slow">Slow</option><option value="slower">Slower</option><option value="normal">Normal</option><option value="faster">Faster</option></select></div>
       <div class="listed-macro" style="background-color:#411">Delete</div>
     </div>
     <style>
@@ -67,6 +67,7 @@ var onPage = async ()=>{
   let partyHash = [stage.pJsnData.player.param.map(e=>e.pid).join(","), stage.pJsnData.summon.map(s=>s.id).join(",")].join(";")
   
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
+  let speeds = ["slow", "slower", "normal", "faster", "fast", "skip"]
   let playMacro = async id=>{
     let macro = macros[id]
     let line = list.querySelector(`[data-id="${id}"]`)
@@ -88,7 +89,8 @@ var onPage = async ()=>{
     next[id] = 1
     check(id,0)
     let playing = [id]
-    let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : macro.speed==="slow" ? 2000 : 500))
+    let speed = speeds.findIndex(s=>s===(macro.speed||"normal"))
+    let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : speed<=0 ? 2000 : 500))
     let myCancel = cancel
     while(actions.length){
       if(cancel>myCancel){break}
@@ -112,9 +114,10 @@ var onPage = async ()=>{
       continue}
       
       if(action.type==="skill"){
-        let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
+        let button = document.querySelector(`div[ability-id="${action.ability}"]`)
         if(button){
-          if(document.querySelector(`.prt-command-chara[pos="${+button.getAttribute("ability-character-num")+1}"]`).style.display!=="block"){
+          let previousPos = null
+          if(speed<=1 && document.querySelector(`.prt-command-chara[pos="${+button.getAttribute("ability-character-num")+1}"]`).style.display!=="block"){
             let back = document.querySelector(`.btn-command-back`)
             if(back.classList.contains("display-on")){
               click(back)
@@ -122,6 +125,9 @@ var onPage = async ()=>{
             }
             click(document.querySelector(`.btn-command-character[pos="${+button.getAttribute("ability-character-num")}"]`))
             await wait()
+          }else{
+            previousPos = stage.gGameStatus.command_slide.now_pos
+            stage.gGameStatus.command_slide.now_pos = +button.dataset["ability-character-num"]
           }
           click(button)
           if(action.character){
@@ -136,6 +142,9 @@ var onPage = async ()=>{
               click(character)
               await wait()
             }
+          }
+          if(previousPos!==null){
+            stage.gGameStatus.command_slide.now_pos = previousPos
           }
           await wait(200)
         }

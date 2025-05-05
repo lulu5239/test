@@ -22,6 +22,14 @@ var onPage = async ()=>{
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"
   cancel++
+  let view = requirejs.s.contexts._.defined["view/raid/setup"].prototype
+  view.$el = view.el
+  view.originalPlayScenarios = view.playScenarios
+  /*view.playScenarios = (...args)=>{
+    //window.test(args)
+    return view.originalPlayScenarios(...args)
+  }*/ // Not functional
+  window.test = (args)=>alert(args.length)
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",

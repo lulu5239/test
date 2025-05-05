@@ -23,12 +23,19 @@ var onPage = async ()=>{
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"
   cancel++
   let view = Game.view.setupView//requirejs.s.contexts._.defined["view/raid/setup"].prototype
+
+  let scenarioSpeed = 1
   let originalPlayScenarios = view.playScenarios
   view.playScenarios = function(...args) {
     stage.test(args)
-    return originalPlayScenarios.apply(game.view.setupView, args)
+    stage.lastScenario = [...args[0].scenario]
+    let remove = ["ability", "loop_damage", "windoweffect", "effect", "wait", "message", "attack"].slice(0, scenarioSpeed===0 ? 0 : scenarioSpeed===1 ? 5 : 999)
+    if(remove.length){
+      args[0].scenario = args[0].scenario.filter(e=>!remove.includes(e.cmd))
+    }
+    return originalPlayScenarios.apply(Game.view.setupView, args)
   };
-  stage.test = (args)=>alert(args.length)
+  stage.test = (args)=>{}
   stage.view = view
   
   let macros = GM_getValue("macros") || []

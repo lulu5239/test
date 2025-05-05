@@ -29,7 +29,7 @@ var onPage = async ()=>{
   view.playScenarios = function(...args) {
     stage.test(args)
     stage.lastScenario = [...args[0].scenario]
-    let remove = ["ability", "loop_damage", "windoweffect", "effect", "wait", "message", "attack"].slice(0, scenarioSpeed===0 ? 0 : scenarioSpeed===1 ? 5 : 999)
+    let remove = ["ability", "loop_damage", "windoweffect", "effect", "wait", "special_npc", "super", "message", "attack"].slice(0, scenarioSpeed===0 ? 0 : scenarioSpeed===1 ? 6 : 999)
     if(remove.length){
       args[0].scenario = args[0].scenario.filter(e=>!remove.includes(e.cmd))
     }

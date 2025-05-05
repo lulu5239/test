@@ -17,16 +17,22 @@ let cancel = 0
 
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
-  while(typeof(Game)=="undefined"){await new Promise(ok=>setTimeout(ok,10))}
-  let view
-  require(["view/raid/setup"], m=>{
-    let original = m.prototype.initialize
-    m.prototype.initialize = (...args)=>{
-      view = Game.obj = this
-      return original.apply(this, args)
+  while(typeof(Backbone)=="undefined"){await new Promise(ok=>setTimeout(ok,10))}
+  let views = {}
+  let originalExtend = Backbone.View.extend;
+  Backbone.View.extend = (...args)=>{
+    const OriginalClass = originalExtend.apply(this, args)
+    const originalInitialize = OriginalClass.prototype.initialize
+    OriginalClass.prototype.initialize = function(...args) {
+      //alert('Intercepted View initialize: '+this)
+      views[Math.random()+""] = this
+      if(originalinItialize){
+        return originalInitialize.apply(this, args)
+      }
     }
-  })
+  }
   while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
+  Game.views = views
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"

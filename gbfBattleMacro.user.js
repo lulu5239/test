@@ -24,11 +24,11 @@ var onPage = async ()=>{
   cancel++
   let view = requirejs.s.contexts._.defined["view/raid/setup"].prototype
   view.$el = view.el
-  view.originalPlayScenarios = view.playScenarios
-  /*view.playScenarios = (...args)=>{
-    //window.test(args)
-    return view.originalPlayScenarios(...args)
-  }*/ // Not functional
+  let originalPlayScenarios = view.playScenarios
+  view.playScenarios = (...args)=>{
+    window.test(args)
+    return originalPlayScenarios.apply(this, args)
+  }
   window.test = (args)=>alert(args.length)
   
   let macros = GM_getValue("macros") || []

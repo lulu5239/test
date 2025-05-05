@@ -17,28 +17,28 @@ let cancel = 0
 
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
+  while(typeof(Game)=="undefined"){await new Promise(ok=>setTimeout(ok,10))}
+  let view
+  require("view/raid/setup", m=>{
+    let original = m.prototype.initialize
+    m.prototype.initialize = (...args)=>{
+      view = this
+      return original.apply(this, args)
+    }
+  })
   while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"
   cancel++
-  let view = requirejs.s.contexts._.defined["view/raid/setup"].prototype
-  view.$el = view.el
+  //let view = requirejs.s.contexts._.defined["view/raid/setup"].prototype
   let originalPlayScenarios = view.playScenarios
-  const proxyView = new Proxy(view, {
-    get(target, prop) {
-      const value = target[prop];
-      if (typeof value === 'function') {
-          return value.bind(target);
-      }
-      return value;
-    }
-  });
   view.playScenarios = function(...args) {
-    scene.test(args)
+    stage.test(args)
     return originalPlayScenarios.apply(proxyView, args)
   };
-  scene.test = (args)=>alert(args.length)
+  stage.test = (args)=>alert(args.length)
+  stage.view = view
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",

@@ -17,25 +17,16 @@ let cancel = 0
 
 var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
-  while(typeof(Backbone)=="undefined"){await new Promise(ok=>setTimeout(ok,10))}
-  let views = {}
-  let originalDefine = define
-  define = (...args)=>{
-    views[Math.random()+""] = [this, document.currentScript, ...args]
-    return originalDefine.apply(this, args)
-  }
-  navigator.views = views
   while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
-  Game.views = views
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"
   cancel++
-  //let view = requirejs.s.contexts._.defined["view/raid/setup"].prototype
+  let view = Game.view.setupView//requirejs.s.contexts._.defined["view/raid/setup"].prototype
   let originalPlayScenarios = view.playScenarios
   view.playScenarios = function(...args) {
     stage.test(args)
-    return originalPlayScenarios.apply(proxyView, args)
+    return originalPlayScenarios.apply(game.view.setupView, args)
   };
   stage.test = (args)=>alert(args.length)
   stage.view = view

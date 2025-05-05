@@ -19,18 +19,12 @@ var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   while(typeof(Backbone)=="undefined"){await new Promise(ok=>setTimeout(ok,10))}
   let views = {}
-  let originalExtend = Backbone.View.extend;
-  Backbone.View.extend = (...args)=>{
-    const OriginalClass = originalExtend.apply(this, args)
-    const originalInitialize = OriginalClass.prototype.initialize
-    OriginalClass.prototype.initialize = function(...args) {
-      //alert('Intercepted View initialize: '+this)
-      views[Math.random()+""] = this
-      if(originalinItialize){
-        return originalInitialize.apply(this, args)
-      }
-    }
+  let originalDefine = define
+  define = (...args)=>{
+    views[Math.random()+""] = [this, document.currentScript, ...args]
+    return originalDefine.apply(this, args)
   }
+  navigator.views = views
   while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
   Game.views = views
   

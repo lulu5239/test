@@ -25,11 +25,20 @@ var onPage = async ()=>{
   let view = requirejs.s.contexts._.defined["view/raid/setup"].prototype
   view.$el = view.el
   let originalPlayScenarios = view.playScenarios
-  view.playScenarios = (...args)=>{
-    window.test(args)
-    return originalPlayScenarios.apply(this, args)
-  }
-  window.test = (args)=>alert(args.length)
+  const proxyView = new Proxy(view, {
+    get(target, prop) {
+      const value = target[prop];
+      if (typeof value === 'function') {
+          return value.bind(target);
+      }
+      return value;
+    }
+  });
+  view.playScenarios = function(...args) {
+    scene.test(args)
+    return originalPlayScenarios.apply(proxyView, args)
+  };
+  scene.test = (args)=>alert(args.length)
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",

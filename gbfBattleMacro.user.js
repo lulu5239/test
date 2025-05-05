@@ -19,10 +19,10 @@ var onPage = async ()=>{
   if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   while(typeof(Game)=="undefined"){await new Promise(ok=>setTimeout(ok,10))}
   let view
-  require("view/raid/setup", m=>{
+  require(["view/raid/setup"], m=>{
     let original = m.prototype.initialize
     m.prototype.initialize = (...args)=>{
-      view = this
+      view = Game.obj = this
       return original.apply(this, args)
     }
   })

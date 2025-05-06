@@ -29,10 +29,19 @@ var onPage = async ()=>{
   view.playScenarios = function(...args) {
     stage.test(args)
     stage.lastScenario = [...args[0].scenario]
-    let remove = ["ability", "loop_damage", "windoweffect", "effect", "wait", "special_npc", "super", "message", "attack"].slice(0, scenarioSpeed===0 ? 0 : scenarioSpeed===1 ? 6 : 999)
-    if(remove.length){
-      args[0].scenario = args[0].scenario.filter(e=>!remove.includes(e.cmd))
+    let mergedDamage = []
+    let newScenario = scenarioSpeed ? [] : args[0].scenario
+    for(let e of args[0].scenario){
+      if(!scenarioSpeed){break}
+      if(["ability", "loop_damage", "windoweffect", "effect"].includes(e.cmd)){
+        if(scenarioSpeed>=2){continue}
+        e.wait = 1
+      }
+      if(e.cmd==="special_npc"){continue}
+      if(scenarioSpeed>=99 && ["super", "message", "attack"].includes(e.cmd)){continue}
+      newScenario.push(e)
     }
+    args[0].scenario = newScenario
     return originalPlayScenarios.apply(Game.view.setupView, args)
   };
   stage.test = (args)=>{}

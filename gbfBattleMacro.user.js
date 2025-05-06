@@ -33,6 +33,31 @@ var onPage = async ()=>{
     let newScenario = scenarioSpeed ? [] : args[0].scenario
     for(let e of args[0].scenario){
       if(!scenarioSpeed){break}
+      if(e.cmd==="attack" && e.from==="player"){
+        mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
+        continue
+      }else if(mergedDamage.length){
+        let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
+        newScenario.push({
+          "cmd":"loop_damage",
+          "color":"6",
+          "to":"boss",
+          //"effect":"ab_3040252000_01",
+          "mode":"parallel",
+          "is_rengeki":0,
+          "is_damage_sync_effect":false,
+          //"wait":1,
+          "is_activate_counter_damaged":"",
+          "is_bulk_display":false,
+          "list":[
+            //[{"pos":0,"num":1,"value":37896,"split":["3","7","8","9","6"],"hp":999962104,"color":"6","size":"s","critical":false,"miss":0,"guard":false,"is_force_font_size":false,"attack_num":0,"no_damage_motion":false},]
+            mergedDamage,
+          ],
+          "total":[{"pos":1,"split":(""+total).split(),"attr":(""+total).length,"count":0}]
+        }
+        mergedDamage = []
+      }
+      if(e.cmd==="ability"){continue}
       if(["ability", "loop_damage", "windoweffect", "effect"].includes(e.cmd)){
         if(scenarioSpeed>=2){continue}
         e.wait = 1

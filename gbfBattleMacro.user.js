@@ -42,6 +42,7 @@ var onPage = async ()=>{
           continue
         }else if(scenarioSpeed>=2){
           mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
+          newScenario.push(e)
         }else{
           e.damage = [e.damage.reduce((r,l)=>[...r, ...l],[])]
         }
@@ -53,11 +54,11 @@ var onPage = async ()=>{
           if(a.damage){lastDamage=a.damage.slice(-1)[0]}
         }
         if(!lastDamage){continue}
-        mergedDamage.push({
+        mergedDamage.splice(0, 0, ...e.total.map(t=>{
           pos:lastDamage.pos,
           num:1,
-          value:+e.total.split.join(""),
-          split:e.total.split,
+          value:+t.split.join(""),
+          split:t.split,
           hp:lastDamage.hp,
           color:lastDamage.color,
           critical:lastDamage.critical,
@@ -65,7 +66,7 @@ var onPage = async ()=>{
           guard:false,
           is_force_font_size:true,
           no_damage_motion:false,
-        })
+        }))
         continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)

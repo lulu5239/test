@@ -66,7 +66,7 @@ var onPage = async ()=>{
         if(scenarioSpeed>=2){continue}
         e.wait = 1
       }
-      if(["special", "special_npc"].includes(e.cmd)){continue}
+      if(["special", "special_npc", "summon"].includes(e.cmd)){continue}
       if(scenarioSpeed>=99 && ["super", "message", "attack"].includes(e.cmd)){continue}
       newScenario.push(e)
     }

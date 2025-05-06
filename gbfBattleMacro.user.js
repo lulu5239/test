@@ -37,26 +37,46 @@ var onPage = async ()=>{
         if(scenarioSpeed>=99){
           continue
         }else if(scenarioSpeed>=2){
-          mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []).map(a=>{a.size="m"; return a}))
+          mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
         }else{
           e.damage = [e.damage.reduce((r,l)=>[...r, ...l],[])]
         }
         continue
+      }else if((e.cmd==="special" || e.cmd==="special_npc") && e.from==="player"){
+        if(scenarioSpeed>=99){continue}
+        let lastDamage
+        for(let a of e.list){
+          if(a.damage){lastDamage=a.damage.slice(-1)[0]}
+        }
+        if(!lastDamage){continue}
+        mergedDamage.push({
+          pos:lastDamage.pos,
+          num:1,
+          value:+e.total.split.join(""),
+          split:e.total.split,
+          hp:lastDamage.hp,
+          color:lastDamage.color,
+          critical:lastDamage.critical,
+          miss:lastDamage.miss,
+          guard:false,
+          is_force_font_size:true,
+          no_damage_motion:false,
+        })
+        continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
         newScenario.push({
-          "cmd":"loop_damage",
-          "color":mergedDamage.find(o=>o.color)?.color,
-          "to":"boss",
-          "mode":"parallel",
-          "is_rengeki":0,
-          "is_damage_sync_effect":false,
-          "is_activate_counter_damaged":"",
-          "is_bulk_display":false,
-          "list":[
-            mergedDamage,
-          ],
-          "total":[{"pos":1,"split":(""+total).split(""),"attr":(""+total).length,"count":0}]
+          cmd:"loop_damage",
+          color:mergedDamage.find(o=>o.color)?.color,
+          to:"boss",
+          mode:"parallel",
+          wait:1,
+          is_rengeki:0,
+          is_damage_sync_effect:false,
+          is_activate_counter_damaged:"",
+          is_bulk_display:false,
+          list:[mergedDamage.map((a,i)=>{a.attack_num=i; a.size="m"; return a})],
+          total:[{"pos":1,"split":(""+total).split(""),"attr":(""+total).length,"count":0}]
         })
         mergedDamage = []
       }

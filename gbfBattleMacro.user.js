@@ -33,6 +33,10 @@ var onPage = async ()=>{
     let newScenario = scenarioSpeed ? [] : args[0].scenario
     for(let e of args[0].scenario){
       if(!scenarioSpeed){break}
+      if(["modechange", "recast", "chain_burst_gauge", "bg_change", "bgm"].includes(e.cmd)){
+        newScenario.push(e)
+        continue
+      }
       if(e.cmd==="attack" && e.from==="player"){
         if(scenarioSpeed>=99){
           continue
@@ -42,7 +46,7 @@ var onPage = async ()=>{
           e.damage = [e.damage.reduce((r,l)=>[...r, ...l],[])]
         }
         continue
-      }else if((e.cmd==="special" || e.cmd==="special_npc") && e.from==="player"){
+      }else if(e.cmd==="special" || e.cmd==="special_npc"){
         if(scenarioSpeed>=99){continue}
         let lastDamage
         for(let a of e.list){
@@ -75,14 +79,10 @@ var onPage = async ()=>{
           is_damage_sync_effect:false,
           is_activate_counter_damaged:"",
           is_bulk_display:false,
-          list:[mergedDamage.map((a,i)=>{a.attack_num=i; a.size="m"; return a})],
+          list:[mergedDamage.map((a,i)=>{a.attack_num=i; a.size="m"; a.concurrent_attack_count=0; return a})],
           total:[{"pos":1,"split":(""+total).split(""),"attr":(""+total).length,"count":0}]
         })
         mergedDamage = []
-      }
-      if(["modechange", "recast", "chain_burst_gauge", "bg_change", "bgm"].includes(e.cmd)){
-        newScenario.push(e)
-        continue
       }
       if(e.cmd==="ability"){continue}
       if(["ability", "loop_damage", "windoweffect", "effect"].includes(e.cmd)){

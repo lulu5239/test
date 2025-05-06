@@ -86,7 +86,6 @@ var onPage = async ()=>{
         })
         mergedDamage = []
       }
-      if(e.cmd==="ability"){continue}
       if(["ability", "loop_damage", "windoweffect", "effect"].includes(e.cmd)){
         if(scenarioSpeed>=3){continue}
         e.wait = 1

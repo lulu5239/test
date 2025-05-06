@@ -33,8 +33,12 @@ var onPage = async ()=>{
     let newScenario = scenarioSpeed ? [] : args[0].scenario
     for(let e of args[0].scenario){
       if(!scenarioSpeed){break}
+      if(["modechange", "recast", "chain_burst_gauge", "bg_change", "bgm"].includes(e.cmd)){
+        newScenario.push(e)
+        continue
+      }
       if(e.cmd==="attack" && e.from==="player"){
-        mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
+        mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []).map(a=>{a.size="m"; return a}))
         continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
@@ -53,8 +57,8 @@ var onPage = async ()=>{
             //[{"pos":0,"num":1,"value":37896,"split":["3","7","8","9","6"],"hp":999962104,"color":"6","size":"s","critical":false,"miss":0,"guard":false,"is_force_font_size":false,"attack_num":0,"no_damage_motion":false},]
             mergedDamage,
           ],
-          "total":[{"pos":1,"split":(""+total).split(),"attr":(""+total).length,"count":0}]
-        }
+          "total":[{"pos":1,"split":(""+total).split(""),"attr":(""+total).length,"count":0}]
+        })
         mergedDamage = []
       }
       if(e.cmd==="ability"){continue}
@@ -62,7 +66,7 @@ var onPage = async ()=>{
         if(scenarioSpeed>=2){continue}
         e.wait = 1
       }
-      if(e.cmd==="special_npc"){continue}
+      if(["special", "special_npc"].includes(e.cmd)){continue}
       if(scenarioSpeed>=99 && ["super", "message", "attack"].includes(e.cmd)){continue}
       newScenario.push(e)
     }

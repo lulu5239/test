@@ -24,7 +24,7 @@ var onPage = async ()=>{
   cancel++
   let view = Game.view.setupView//requirejs.s.contexts._.defined["view/raid/setup"].prototype
 
-  let scenarioSpeed = 2
+  let scenarioSpeed = 1
   let originalPlayScenarios = view.playScenarios
   view.playScenarios = function(...args) {
     stage.test(args)
@@ -42,9 +42,9 @@ var onPage = async ()=>{
           continue
         }else if(scenarioSpeed>=2){
           mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
-          newScenario.push(e)
         }else{
           e.damage = [e.damage.reduce((r,l)=>[...r, ...l],[])]
+          newScenario.push(e)
         }
         continue
       }else if(e.cmd==="special" || e.cmd==="special_npc"){
@@ -54,7 +54,7 @@ var onPage = async ()=>{
           if(a.damage){lastDamage=a.damage.slice(-1)[0]}
         }
         if(!lastDamage){continue}
-        mergedDamage.splice(0, 0, ...e.total.map(t=>{
+        mergedDamage.splice(0, 0, ...e.total.map(t=>({
           pos:lastDamage.pos,
           num:1,
           value:+t.split.join(""),
@@ -66,7 +66,7 @@ var onPage = async ()=>{
           guard:false,
           is_force_font_size:true,
           no_damage_motion:false,
-        }))
+        })))
         continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)

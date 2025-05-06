@@ -69,9 +69,10 @@ var onPage = async ()=>{
         continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
+        let color = mergedDamage.find(o=>o.color)?.color
         newScenario.push({
           cmd:"loop_damage",
-          color:mergedDamage.find(o=>o.color)?.color,
+          color,
           to:"boss",
           mode:"parallel",
           wait:1,
@@ -80,7 +81,7 @@ var onPage = async ()=>{
           is_activate_counter_damaged:"",
           is_bulk_display:false,
           list:[mergedDamage.map((a,i)=>{a.attack_num=i; a.size="m"; a.concurrent_attack_count=0; return a})],
-          total:[{"pos":1,"split":(""+total).split(""),"attr":(""+total).length,"count":0}]
+          total:[{"pos":1,"split":(""+total).split(""),"attr":color,"count":0}]
         })
         mergedDamage = []
       }

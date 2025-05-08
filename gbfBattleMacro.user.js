@@ -29,6 +29,7 @@ var onPage = async ()=>{
   view.playScenarios = function(...args) {
     stage.test(args)
     stage.lastScenario = [...args[0].scenario]
+    delete stage.gScenarioParam
     let mergedDamage = []
     let newScenario = scenarioSpeed ? [] : args[0].scenario
     for(let e of args[0].scenario){

@@ -31,7 +31,7 @@ var onPage = async ()=>{
     stage.lastScenario = [...args[0].scenario]
     delete stage.gScenarioParam
     let mergedDamage = []
-    let newScenario = scenarioSpeed ? [] : args[0].scenario
+    let newScenario = scenarioSpeed || stage.pJsnData.multi_raid_member_info?.length>1 ? [] : args[0].scenario
     for(let e of args[0].scenario){
       if(!scenarioSpeed){break}
       if(["recast", "chain_burst_gauge"].includes(e.cmd)){

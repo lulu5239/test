@@ -352,7 +352,7 @@
     }
     if(!$nextCard){
       let card = $("a.selectCard").first()
-      if(card){nextCard(card)}
+      if(card?.length){nextCard(card)}
     }
     
     var processCardActions = async ()=>{
@@ -423,7 +423,7 @@
 
     let settingCheckbox = (key, name, checked)=>(`<label><input type="checkbox" ${checked || checked===undefined && settings[key] ? "checked" : ""} data-key="${key}"> ${name}</label>`)
     let settingKeybind = (key, name)=>(`<div style="inline-block" data-key="${"keybind."+key}"><button class="btn"></button> <button class="btn"><i class="fa fa-times"></i></button> ${name}</div>`)
-    let settintSelect = (key, list)=>(`<select style="inline-block" data-key="${key}">`+list.map(o=>`<option value="${o.value}"${settings[key]==o.value ? " default" : ""}>${o.name}</option>`)+`</select>`)
+    let settingSelect = (key, list)=>(`<select style="display:inline-block" class="btn" data-key="${key}">`+list.map(o=>`<option value="${o.value}"${settings[key]==o.value ? " default" : ""}>${o.name}</option>`)+`</select>`)
     document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
       `<div id="swiperNextSettings" class="card card-style" style="padding:3px">
         <div>

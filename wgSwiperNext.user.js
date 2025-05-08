@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-05-03
+// @version      2025-05-08
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -170,7 +170,7 @@
       }else{
         selectedOnce = null
       }
-      if(action===0 && args[1]==="😘" && charisma-7>card.card.rarity && ! flirtAnyways){
+      if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && ! flirtAnyways){
         args[1] = "👊"
       }
       flirtAnyways = null
@@ -199,7 +199,7 @@
       let data = $('.tinder--card:not(.removed)').first()?.data("data")
       if(data && charisma){
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
-        button.dataset.battlemode = charisma-7>data.card.rarity ? true : ""
+        button.dataset.battlemode = (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
         button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : "Battle") : "Disenchant"
         updateFlirtButton()
       }
@@ -423,6 +423,7 @@
 
     let settingCheckbox = (key, name, checked)=>(`<label><input type="checkbox" ${checked || checked===undefined && settings[key] ? "checked" : ""} data-key="${key}"> ${name}</label>`)
     let settingKeybind = (key, name)=>(`<div style="inline-block" data-key="${"keybind."+key}"><button class="btn"></button> <button class="btn"><i class="fa fa-times"></i></button> ${name}</div>`)
+    let settintSelect = (key, list)=>(`<select style="inline-block" data-key="${key}">`+list.map(o=>`<option value="${o.value}"${settings[key]==o.value ? " default" : ""}>${o.name}</option>`)+`</select>`)
     document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
       `<div id="swiperNextSettings" class="card card-style" style="padding:3px">
         <div>
@@ -464,7 +465,17 @@
           After executing the card actions, the script usually deletes the actions from its storage but you can disable that here.<br>
           On the swiper page, the saved card action will become automatically selected.<br>
           ${settingCheckbox("keepActions", "Keep card actions")}<br>
-          More options soon...
+          When selecting disenchant, replace flirt button with battle button if:<br>
+          ${settingSelect("replaceFlirtWithBattle", [
+            {value:0, name:"Enough charisma for guaranteed flirt success"},
+            {value:-1, name:"Never"},
+            {value:1, name:"Common rarity"},
+            {value:2, name:"Uncommon rarity or lower"},
+            {value:3, name:"Rare rarity or lower"},
+            {value:4, name:"Epic rarity or lower"},
+            {value:5, name:"Legendary rarity or lower"},
+            {value:6, name:"Always"},
+          ])}
         </div>
       </div>
       <style>

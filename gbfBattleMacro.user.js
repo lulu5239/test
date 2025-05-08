@@ -33,7 +33,7 @@ var onPage = async ()=>{
     let newScenario = scenarioSpeed ? [] : args[0].scenario
     for(let e of args[0].scenario){
       if(!scenarioSpeed){break}
-      if(["modechange", "recast", "chain_burst_gauge", "bg_change", "bgm"].includes(e.cmd)){
+      if(["recast", "chain_burst_gauge"].includes(e.cmd)){
         newScenario.push(e)
         continue
       }
@@ -85,6 +85,10 @@ var onPage = async ()=>{
           total:[{"pos":1,"split":(""+total).split(""),"attr":color,"count":0}]
         })
         mergedDamage = []
+      }
+      if(["modechange", "bg_change", "bgm"].includes(e.cmd)){
+        newScenario.push(e)
+        continue
       }
       if(["ability", "loop_damage", "windoweffect", "effect"].includes(e.cmd)){
         if(scenarioSpeed>=3){continue}
@@ -142,6 +146,7 @@ var onPage = async ()=>{
   let recording = document.querySelector("#macro-recording")
   let settings = document.querySelector("#macro-settings")
   let partyHash = [stage.pJsnData.player.param.map(e=>e.pid).join(","), stage.pJsnData.summon.map(s=>s.id).join(",")].join(";")
+  let enemyHash = stage.pJsnData.boss.param.map(e=>e.enemy_id).join(",")
   
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
   let speeds = ["slow", "slower", "normal", "faster", "fast", "skip"]

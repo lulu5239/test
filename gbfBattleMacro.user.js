@@ -105,7 +105,7 @@ var onPage = async ()=>{
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
-    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div></div>
+    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div><div class="listed-macro" data-id="extra" style="background-color:#000"><div style="display:none"><button data-id="scenarioSpeed">Speed</button></div></div></div>
     <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button> <button>Add macro</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
@@ -118,6 +118,16 @@ var onPage = async ()=>{
       <div class="listed-macro">Move...</div>
       <div class="listed-macro">Speed: <select><option value="slow">Slow</option><option value="slower">Slower</option><option value="normal">Normal</option><option value="faster">Faster</option></select></div>
       <div class="listed-macro" style="background-color:#411">Delete</div>
+    </div>
+    <div id="macro-speed" style="display:none">
+      <div class="listed-macro" style="background-color:#111" data-value="back">Back</div>
+      ${[
+        {value:0, name:"Default", description:"The default speed."},
+        {value:1, name:"Not slow", description:"Skips long animations (like summons) and merges damage."},
+        {value:2, name:"Faster", description:"Merges all attacks into a single animation."},
+        {value:3, name:"Fast", description:"Skips more animations."},
+        {value:99, name:"Skip all", description:"It would be sad to use that."},
+      ].map(o=>`<div class="listed-macro" data-value="${o.value}"><a style="font-size:125%">${o.name}</a><br><a>${o.description}</a><div data-status="none"></div></div>`)}
     </div>
     <style>
       .listed-macro {
@@ -136,6 +146,9 @@ var onPage = async ()=>{
       }
       .listed-macro[data-playing="original"] {
         background-color:#472;
+      }
+      .listed-macro[data-status="none"] {
+        display:none;
       }
     </style>`
   )
@@ -551,6 +564,43 @@ var onPage = async ()=>{
     settings.style.display = "none"
     list.style.display = null
   GM_setValue("macros", macros)})
+
+  if(GM_getValue("unlockedExtra"){
+    button.children[0].style.display=null
+    button.style.backgroundColor = null
+  }else{
+    let unlocking
+    list.querySelector(`div.listed-macro[data-id="extra"]`).addEventListener("click", async ()=>{
+      if(unlocking){return}
+      let button = list.querySelector(`div.listed-macro[data-id="extra"]`)
+      if(button.dataset.lastTry && +new Date()- +button.dataset.lastTry>5000){
+        button.dataset.lastTry = +new Date()
+        button.dataset.clicks = 0
+      }
+      let clicks = button.dataset.clicks = +button.dataset.clicks + 1
+      if(clicks>=3){
+        unlocking = true
+        button.style.transition = "1s"
+        button.style.backgroundColor = "#ff8"
+        await new Promise(ok=>setTimeout(ok,1000))
+        button.children[0].style.display = null
+        button.style.backgroundColor = null
+        GM_setValue("unlockedExtra", true)
+      }
+    })
+  }
+  list.querySelector(`button[data-id="scenarioSpeed"]`).addEventListener("click", ()=>{
+    list.style.display = "none"
+    document.querySelector("#macro-speed").style.display = null
+  })
+  for(let speed of document.querySelectorAll(`#macro-speed div`)){
+    speed.addEventListener("click", ()=>{
+      if(speed.dataset.value==="back"){
+        list.style.display = null
+        document.querySelector("#macro-speed").style.display = "none"
+      }
+    })
+  }
 }
 
 window.addEventListener("hashchange", onPage)

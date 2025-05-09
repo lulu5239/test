@@ -29,7 +29,6 @@ var onPage = async ()=>{
   view.playScenarios = function(...args) {
     stage.test(args)
     stage.lastScenario = [...args[0].scenario]
-    delete stage.gScenarioParam
     let mergedDamage = []
     let newScenario = scenarioSpeed && !(stage.pJsnData.multi_raid_member_info?.length>1) ? [] : args[0].scenario
     for(let e of (newScenario.length ? [] : args[0].scenario)){
@@ -92,7 +91,7 @@ var onPage = async ()=>{
       }
       if(["ability", "loop_damage", "windoweffect", "effect"].includes(e.cmd)){
         if(scenarioSpeed>=3){continue}
-        e.wait = 1
+        if(e.wait){e.wait = 1}
       }
       if(["special", "special_npc", "summon"].includes(e.cmd)){continue}
       if(scenarioSpeed>=99 && ["super", "message", "attack"].includes(e.cmd)){continue}
@@ -112,6 +111,8 @@ var onPage = async ()=>{
       <div class="listed-macro" style="background-color:#111">Back</div>
       <div class="listed-macro" style="text-align:center"></div>
       <div class="listed-macro">Rename</div>
+      <div class="listed-macro"></div>
+      <div class="listed-macro"></div>
       <div class="listed-macro"></div>
       <div class="listed-macro"></div>
       <div class="listed-macro">Move...</div>
@@ -301,13 +302,16 @@ var onPage = async ()=>{
       settings.children[3].innerText = macro.parties?.includes(partyHash) ? "Don't show for this party" : "Show for this party"
       settings.children[3].style.display = !macro.parties ? "none" : null
       settings.children[4].innerText = !macro.parties ? "Don't always show" : "Always show"
-      settings.children[6].querySelector("select").value = macro.speed || "normal"
+      settings.children[5].innerText = macro.enemies?.includes(enemyHash) ? "Don't show for this opponent" : "Show for this opponent"
+      settings.children[5].style.display = !macro.enemies ? "none" : null
+      settings.children[6].innerText = !macro.enemies ? "Don't show for all opponents" : "Show for all opponents"
+      settings.children[8].querySelector("select").value = macro.speed || "normal"
       window.scrollTo(0, window.innerHeight)
     })
   }
   let listMacros = ()=>{
     for(let i in macros){
-      if(!showAll && macros[i].parties && !macros[i].parties.includes(partyHash)){continue}
+      if(!showAll && (macros[i].parties && !macros[i].parties.includes(partyHash) || macros[i].enemies && !macros[i].enemies.includes(enemyHash))){continue}
       createListedMacro(i)
     }
   }
@@ -466,6 +470,27 @@ var onPage = async ()=>{
     settings.children[4].innerText = !macro.parties ? "Don't always show" : "Always show"
   GM_setValue("macros", macros)})
   settings.children[5].addEventListener("click", ()=>{
+    let macro = macros[+settings.dataset.macro]
+    let i = macro.enemies.findIndex(p=>p===enemyHash)
+    if(i===-1){
+      macro.enemies.push(enemyHash)
+    }else{
+      macro.enemies.splice(i,1)
+    }
+    settings.children[5].innerText = i===-1 ? "Don't show for this opponent" : "Show for this opponent"
+  GM_setValue("macros", macros)})
+  settings.children[6].addEventListener("click", ()=>{
+    let macro = macros[+settings.dataset.macro]
+    if(macro.enemies){
+      delete macro.enemies
+    }else{
+      macro.enemies = [enemyHash]
+    }
+    settings.children[5].innerText = "Don't show for this opponent"
+    settings.children[5].style.display = !macro.enemies ? "none" : null
+    settings.children[6].innerText = !macro.enemies ? "Don't show for this opponent" : "Show for this opponent"
+  GM_setValue("macros", macros)})
+  settings.children[7].addEventListener("click", ()=>{
     list.insertAdjacentHTML("afterbegin", `<div class="listed-macro" data-id="moveAfter">Move macro after...</div>`)
     let line = list.querySelector(`.listed-macro[data-id="moveAfter"]`)
     moveMode = element=>{
@@ -505,10 +530,10 @@ var onPage = async ()=>{
     settings.style.display = "none"
     list.style.display = null
   })
-  settings.children[6].querySelector("select").addEventListener("change", ()=>{
-    macros[+settings.dataset.macro].speed = settings.children[6].querySelector("select").value
+  settings.children[8].querySelector("select").addEventListener("change", ()=>{
+    macros[+settings.dataset.macro].speed = settings.children[8].querySelector("select").value
   GM_setValue("macros", macros)})
-  settings.children[7].addEventListener("click", ()=>{
+  settings.children[9].addEventListener("click", ()=>{
     if(!confirm("Delete the macro?")){return}
     let i = +settings.dataset.macro
     list.querySelector(`[data-id="${i}"]`).remove()

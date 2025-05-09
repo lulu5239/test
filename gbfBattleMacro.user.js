@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-04 b
+// @version      2025-05-04 c
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -594,14 +594,14 @@ var onPage = async ()=>{
       }
     })
   }
-  let speeds = GM_getValue("scenarioSpeed") || {}
-  scenarioSpeed = speeds[enemyHash] || speeds.default || 0
+  let scenarioSpeeds = GM_getValue("scenarioSpeed") || {}
+  scenarioSpeed = scenarioSpeeds[enemyHash] || scenarioSpeeds.default || 0
   list.querySelector(`button[data-id="scenarioSpeed"]`).addEventListener("click", ()=>{
     list.style.display = "none"
     document.querySelector("#macro-speed").style.display = null
   })
   for(let speed of document.querySelectorAll(`#macro-speed div`)){
-    speed.dataset.status = speeds.default==speed.dataset.value ? "selectedDefault" : speeds[enemyHash]==speed.dataset.value ? "selected" : "none"
+    speed.dataset.status = scenarioSpeeds.default==speed.dataset.value ? "selectedDefault" : scenarioSpeeds[enemyHash]==speed.dataset.value ? "selected" : "none"
     speed.addEventListener("click", ()=>{
       if(speed.dataset.value==="back"){
         list.style.display = null
@@ -611,13 +611,14 @@ var onPage = async ()=>{
         let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
         if(enemy){
           enemy.dataset.status = "none"
-          delete speeds[enemyHash]
+          delete scenarioSpeeds[enemyHash]
+          scenarioSpeed = scenarioSpeeds.default
         }
       }else if(speed.dataset.status==="selected"){
         let d = speed.parentElement.querySelector(`[data-status="selectedDefault"]`)
         if(d){
           d.dataset.status = "none"
-          speeds.default = +speed.dataset.value
+          scenarioSpeeds.default = +speed.dataset.value
           speed.dataset.status = "selectedDefault"
         }
       }else{
@@ -625,10 +626,10 @@ var onPage = async ()=>{
         if(enemy){
           enemy.dataset.status = "none"
         }
-        speeds[enemyHash] = +speed.dataset.value
+        scenarioSpeeds[enemyHash] = scenarioSpeed = +speed.dataset.value
         speed.dataset.status = "selected"
       }
-      GM_setValue("scenarioSpeed", speeds)
+      GM_setValue("scenarioSpeed", scenarioSpeeds)
     })
   }
 }

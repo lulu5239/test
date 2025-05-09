@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-04 a
+// @version      2025-05-04 b
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -24,7 +24,7 @@ var onPage = async ()=>{
   cancel++
   let view = Game.view.setupView//requirejs.s.contexts._.defined["view/raid/setup"].prototype
 
-  let scenarioSpeed = 1
+  let scenarioSpeed = 0
   let originalPlayScenarios = view.playScenarios
   view.playScenarios = function(...args) {
     stage.test(args)
@@ -123,11 +123,11 @@ var onPage = async ()=>{
       <div class="listed-macro" style="background-color:#111" data-value="back">Back</div>
       ${[
         {value:0, name:"Default", description:"The default speed."},
-        {value:1, name:"Not slow", description:"Skips long animations (like summons) and merges damage."},
+        {value:1, name:"Not slow", description:"Skips long animations (like summons) and merges damage of attacks."},
         {value:2, name:"Faster", description:"Merges all attacks into a single animation."},
         {value:3, name:"Fast", description:"Skips more animations."},
         {value:99, name:"Skip all", description:"It would be sad to use that."},
-      ].map(o=>`<div class="listed-macro" data-value="${o.value}"><a style="font-size:125%">${o.name}</a><br><a>${o.description}</a><div data-status="none"></div></div>`)}
+      ].map(o=>`<div class="listed-macro" data-value="${o.value}" data-status="none"><a style="font-size:125%">${o.name}</a><br><a>${o.description}</a></div>`)}
     </div>
     <style>
       .listed-macro {
@@ -147,8 +147,13 @@ var onPage = async ()=>{
       .listed-macro[data-playing="original"] {
         background-color:#472;
       }
-      .listed-macro[data-status="none"] {
-        display:none;
+      .listed-macro[data-status="selected"]::after {
+        content:"Selected for this opponent";
+        color:#df9;
+      }
+      .listed-macro[data-status="selectedDefault"]::after {
+        content:"Selected";
+        color:#9f9;
       }
     </style>`
   )
@@ -573,7 +578,7 @@ var onPage = async ()=>{
     list.querySelector(`div.listed-macro[data-id="extra"]`).addEventListener("click", async ()=>{
       if(unlocking){return}
       let button = list.querySelector(`div.listed-macro[data-id="extra"]`)
-      if(button.dataset.lastTry && +new Date()- +button.dataset.lastTry>5000){
+      if(!button.dataset.lastTry || +new Date()- +button.dataset.lastTry>5000){
         button.dataset.lastTry = +new Date()
         button.dataset.clicks = 0
       }
@@ -589,16 +594,41 @@ var onPage = async ()=>{
       }
     })
   }
+  let speeds = GM_getValue("scenarioSpeed") || {}
+  scenarioSpeed = speeds[enemyHash] || speeds.default || 0
   list.querySelector(`button[data-id="scenarioSpeed"]`).addEventListener("click", ()=>{
     list.style.display = "none"
     document.querySelector("#macro-speed").style.display = null
   })
   for(let speed of document.querySelectorAll(`#macro-speed div`)){
+    speed.dataset.status = speeds.default==speed.dataset.value ? "selectedDefault" : speeds[enemyHash]==speed.dataset.value ? "selected" : "none"
     speed.addEventListener("click", ()=>{
       if(speed.dataset.value==="back"){
         list.style.display = null
-        document.querySelector("#macro-speed").style.display = "none"
+        speed.parentElement.style.display = "none"
+      return}
+      if(speed.dataset.status==="selectedDefault"){
+        let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
+        if(enemy){
+          enemy.dataset.status = "none"
+          delete speeds[enemyHash]
+        }
+      }else if(speed.dataset.status==="selected"){
+        let d = speed.parentElement.querySelector(`[data-status="selectedDefault"]`)
+        if(d){
+          d.dataset.status = "none"
+          speeds.default = +speed.dataset.value
+          speed.dataset.status = "selectedDefault"
+        }
+      }else{
+        let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
+        if(enemy){
+          enemy.dataset.status = "none"
+        }
+        speeds[enemyHash] = +speed.dataset.value
+        speed.dataset.status = "selected"
       }
+      GM_setValue("scenarioSpeed", speeds)
     })
   }
 }

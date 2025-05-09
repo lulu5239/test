@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-05-03
+// @version      2025-05-09
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -392,7 +392,7 @@
         continue
       }
       if(canEnd){continue}
-      if(move.estimatedDamage > best.estimatedDamage){
+      if(move.pp > 1 && move.estimatedDamage > best.estimatedDamage){
         best = move
       }
     }

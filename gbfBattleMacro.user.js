@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-04-22
+// @version      2025-05-09
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -22,10 +22,90 @@ var onPage = async ()=>{
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"
   cancel++
+  let view = Game.view.setupView//requirejs.s.contexts._.defined["view/raid/setup"].prototype
+
+  let scenarioSpeed = 0
+  let originalPlayScenarios = view.playScenarios
+  view.playScenarios = function(...args) {
+    stage.test(args)
+    stage.lastScenario = [...args[0].scenario]
+    let mergedDamage = []
+    let newScenario = scenarioSpeed && !(stage.pJsnData.multi_raid_member_info?.length>1) ? [] : args[0].scenario
+    for(let e of (newScenario.length ? [] : args[0].scenario)){
+      if(["recast", "chain_burst_gauge"].includes(e.cmd)){
+        newScenario.push(e)
+        continue
+      }
+      if(e.cmd==="attack" && e.from==="player"){
+        if(scenarioSpeed>=99){
+          continue
+        }else if(scenarioSpeed>=2){
+          mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
+        }else{
+          e.damage = [e.damage.reduce((r,l)=>[...r, ...l],[])]
+          newScenario.push(e)
+        }
+        continue
+      }else if(e.cmd==="special" || e.cmd==="special_npc"){
+        if(scenarioSpeed>=99){continue}
+        let lastDamage
+        for(let a of e.list){
+          if(a.damage){lastDamage=a.damage.slice(-1)[0]}
+        }
+        if(!lastDamage){continue}
+        mergedDamage.splice(0, 0, ...e.total.map(t=>({
+          pos:lastDamage.pos,
+          num:1,
+          value:+t.split.join(""),
+          split:t.split,
+          hp:lastDamage.hp,
+          color:lastDamage.color,
+          critical:lastDamage.critical,
+          miss:lastDamage.miss,
+          guard:false,
+          is_force_font_size:true,
+          no_damage_motion:false,
+        })))
+        continue
+      }else if(mergedDamage.length){
+        let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
+        let color = mergedDamage.find(o=>o.color)?.color
+        newScenario.push({
+          cmd:"loop_damage",
+          color,
+          to:"boss",
+          mode:"parallel",
+          wait:1,
+          is_rengeki:0,
+          is_damage_sync_effect:false,
+          is_activate_counter_damaged:"",
+          is_bulk_display:false,
+          list:[mergedDamage.map((a,i)=>{a.attack_num=i; a.size="m"; a.concurrent_attack_count=0; return a})],
+          total:[{"pos":1,"split":(""+total).split(""),"attr":color,"count":0}]
+        })
+        mergedDamage = []
+      }
+      if(["modechange", "bg_change", "bgm"].includes(e.cmd)){
+        newScenario.push(e)
+        continue
+      }
+      if(["ability", "loop_damage", "windoweffect", "effect"].includes(e.cmd)){
+        if(scenarioSpeed>=3){continue}
+        if(e.wait){e.wait = 1}
+      }
+      if(["special", "special_npc", "summon"].includes(e.cmd)){continue}
+      if(scenarioSpeed>=99 && ["super", "message", "attack"].includes(e.cmd)){continue}
+      newScenario.push(e)
+    }
+    args[0].scenario = newScenario
+    return originalPlayScenarios.apply(Game.view.setupView, args)
+  };
+  stage.test = (args)=>{}
+  stage.view = view
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
-    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div></div>
+    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div><div class="listed-macro" data-id="extra" style="background-color:#000; min-height:10px;"><div style="display:none"><button data-id="scenarioSpeed">Speed</button></div></div></div>
     <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button> <button>Add macro</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
@@ -33,9 +113,21 @@ var onPage = async ()=>{
       <div class="listed-macro">Rename</div>
       <div class="listed-macro"></div>
       <div class="listed-macro"></div>
+      <div class="listed-macro"></div>
+      <div class="listed-macro"></div>
       <div class="listed-macro">Move...</div>
-      <div class="listed-macro">Speed: <select><option value="slow">Slow</option><<option value="normal">Normal</option></select></div>
+      <div class="listed-macro">Speed: <select><option value="slow">Slow</option><option value="slower">Slower</option><option value="normal">Normal</option><option value="faster">Faster</option></select></div>
       <div class="listed-macro" style="background-color:#411">Delete</div>
+    </div>
+    <div id="macro-speed" style="display:none">
+      <div class="listed-macro" style="background-color:#111" data-value="back">Back</div>
+      ${[
+        {value:0, name:"Default", description:"The default speed."},
+        {value:1, name:"Not slow", description:"Skips long animations (like summons) and merges damage of attacks."},
+        {value:2, name:"Faster", description:"Merges all attacks into a single animation."},
+        {value:3, name:"Fast", description:"Skips more animations."},
+        {value:99, name:"Skip all", description:"It would be sad to use that."},
+      ].map(o=>`<div class="listed-macro" data-value="${o.value}" data-status="none"><a style="font-size:125%">${o.name}</a><br><a>${o.description}</a></div>`)}
     </div>
     <style>
       .listed-macro {
@@ -55,6 +147,14 @@ var onPage = async ()=>{
       .listed-macro[data-playing="original"] {
         background-color:#472;
       }
+      .listed-macro[data-status="selected"]::after {
+        content:"Selected for this opponent";
+        color:#df9; display:block;
+      }
+      .listed-macro[data-status="selectedDefault"]::after {
+        content:"Selected";
+        color:#9f9; display:block;
+      }
     </style>`
   )
   let list = document.querySelector("#macros-list")
@@ -65,8 +165,10 @@ var onPage = async ()=>{
   let recording = document.querySelector("#macro-recording")
   let settings = document.querySelector("#macro-settings")
   let partyHash = [stage.pJsnData.player.param.map(e=>e.pid).join(","), stage.pJsnData.summon.map(s=>s.id).join(",")].join(";")
+  let enemyHash = stage.pJsnData.boss.param.map(e=>e.enemy_id).join(",")
   
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
+  let speeds = ["slow", "slower", "normal", "faster", "fast", "skip"]
   let playMacro = async id=>{
     let macro = macros[id]
     let line = list.querySelector(`[data-id="${id}"]`)
@@ -88,7 +190,8 @@ var onPage = async ()=>{
     next[id] = 1
     check(id,0)
     let playing = [id]
-    let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : macro.speed==="slow" ? 2000 : 500))
+    let speed = speeds.findIndex(s=>s===(macro.speed||"normal"))
+    let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : speed<=0 ? 2000 : 500))
     let myCancel = cancel
     while(actions.length){
       if(cancel>myCancel){break}
@@ -112,9 +215,10 @@ var onPage = async ()=>{
       continue}
       
       if(action.type==="skill"){
-        let button = document.querySelectorAll(`div[ability-id="${action.ability}"]`)[0]
+        let button = document.querySelector(`div[ability-id="${action.ability}"]`)
         if(button){
-          if(document.querySelector(`.prt-command-chara[pos="${+button.getAttribute("ability-character-num")+1}"]`).style.display!=="block"){
+          let previousPos = null
+          if(speed<=1 && document.querySelector(`.prt-command-chara[pos="${+button.getAttribute("ability-character-num")+1}"]`).style.display!=="block"){
             let back = document.querySelector(`.btn-command-back`)
             if(back.classList.contains("display-on")){
               click(back)
@@ -122,10 +226,13 @@ var onPage = async ()=>{
             }
             click(document.querySelector(`.btn-command-character[pos="${+button.getAttribute("ability-character-num")}"]`))
             await wait()
+          }else{
+            previousPos = stage.gGameStatus.command_slide.now_pos
+            stage.gGameStatus.command_slide.now_pos = +button.getAttribute("ability-character-num")
           }
           click(button)
           if(action.character){
-            await wait()
+            if(speed<=1){await wait()}
             let character
             for(let c of document.querySelectorAll(`.pop-select-member .prt-character .btn-command-character img`)){
               if(characterByImage(c.src)===action.character){
@@ -134,10 +241,13 @@ var onPage = async ()=>{
             }
             if(character){
               click(character)
-              await wait()
+              if(speed<=1){await wait()}
             }
           }
-          await wait(200)
+          if(previousPos!==null){
+            stage.gGameStatus.command_slide.now_pos = previousPos
+          }
+          if(speed<=2){await wait(200)}
         }
       }else if(action.type==="attack"){
         let button = document.querySelectorAll(`.btn-attack-start.display-on`)[0]
@@ -210,13 +320,16 @@ var onPage = async ()=>{
       settings.children[3].innerText = macro.parties?.includes(partyHash) ? "Don't show for this party" : "Show for this party"
       settings.children[3].style.display = !macro.parties ? "none" : null
       settings.children[4].innerText = !macro.parties ? "Don't always show" : "Always show"
-      settings.children[6].querySelector("select").value = macro.speed || "normal"
+      settings.children[5].innerText = macro.enemies?.includes(enemyHash) ? "Don't show for this opponent" : "Show for this opponent"
+      settings.children[5].style.display = !macro.enemies ? "none" : null
+      settings.children[6].innerText = !macro.enemies ? "Don't show for all opponents" : "Show for all opponents"
+      settings.children[8].querySelector("select").value = macro.speed || "normal"
       window.scrollTo(0, window.innerHeight)
     })
   }
   let listMacros = ()=>{
     for(let i in macros){
-      if(!showAll && macros[i].parties && !macros[i].parties.includes(partyHash)){continue}
+      if(!showAll && (macros[i].parties && !macros[i].parties.includes(partyHash) || macros[i].enemies && !macros[i].enemies.includes(enemyHash))){continue}
       createListedMacro(i)
     }
   }
@@ -375,6 +488,27 @@ var onPage = async ()=>{
     settings.children[4].innerText = !macro.parties ? "Don't always show" : "Always show"
   GM_setValue("macros", macros)})
   settings.children[5].addEventListener("click", ()=>{
+    let macro = macros[+settings.dataset.macro]
+    let i = macro.enemies.findIndex(p=>p===enemyHash)
+    if(i===-1){
+      macro.enemies.push(enemyHash)
+    }else{
+      macro.enemies.splice(i,1)
+    }
+    settings.children[5].innerText = i===-1 ? "Don't show for this opponent" : "Show for this opponent"
+  GM_setValue("macros", macros)})
+  settings.children[6].addEventListener("click", ()=>{
+    let macro = macros[+settings.dataset.macro]
+    if(macro.enemies){
+      delete macro.enemies
+    }else{
+      macro.enemies = [enemyHash]
+    }
+    settings.children[5].innerText = "Don't show for this opponent"
+    settings.children[5].style.display = !macro.enemies ? "none" : null
+    settings.children[6].innerText = !macro.enemies ? "Don't show for this opponent" : "Show for this opponent"
+  GM_setValue("macros", macros)})
+  settings.children[7].addEventListener("click", ()=>{
     list.insertAdjacentHTML("afterbegin", `<div class="listed-macro" data-id="moveAfter">Move macro after...</div>`)
     let line = list.querySelector(`.listed-macro[data-id="moveAfter"]`)
     moveMode = element=>{
@@ -414,10 +548,10 @@ var onPage = async ()=>{
     settings.style.display = "none"
     list.style.display = null
   })
-  settings.children[6].querySelector("select").addEventListener("change", ()=>{
-    macros[+settings.dataset.macro].speed = settings.children[6].querySelector("select").value
+  settings.children[8].querySelector("select").addEventListener("change", ()=>{
+    macros[+settings.dataset.macro].speed = settings.children[8].querySelector("select").value
   GM_setValue("macros", macros)})
-  settings.children[7].addEventListener("click", ()=>{
+  settings.children[9].addEventListener("click", ()=>{
     if(!confirm("Delete the macro?")){return}
     let i = +settings.dataset.macro
     list.querySelector(`[data-id="${i}"]`).remove()
@@ -435,6 +569,70 @@ var onPage = async ()=>{
     settings.style.display = "none"
     list.style.display = null
   GM_setValue("macros", macros)})
+
+  if(GM_getValue("unlockedExtra")){
+    let button = list.querySelector(`div.listed-macro[data-id="extra"]`)
+    button.children[0].style.display = null
+    button.style.backgroundColor = null
+  }else{
+    let unlocking
+    list.querySelector(`div.listed-macro[data-id="extra"]`).addEventListener("click", async ()=>{
+      if(unlocking){return}
+      let button = list.querySelector(`div.listed-macro[data-id="extra"]`)
+      if(!button.dataset.lastTry || +new Date()- +button.dataset.lastTry>5000){
+        button.dataset.lastTry = +new Date()
+        button.dataset.clicks = 0
+      }
+      let clicks = button.dataset.clicks = (+button.dataset.clicks||0) + 1
+      if(clicks>=3){
+        unlocking = true
+        button.style.transition = "1s"
+        button.style.backgroundColor = "#ff8"
+        await new Promise(ok=>setTimeout(ok,1000))
+        button.children[0].style.display = null
+        button.style.backgroundColor = null
+        GM_setValue("unlockedExtra", true)
+      }
+    })
+  }
+  let scenarioSpeeds = GM_getValue("scenarioSpeed") || {}
+  scenarioSpeed = scenarioSpeeds[enemyHash] || scenarioSpeeds.default || 0
+  list.querySelector(`button[data-id="scenarioSpeed"]`).addEventListener("click", ()=>{
+    list.style.display = "none"
+    document.querySelector("#macro-speed").style.display = null
+  })
+  for(let speed of document.querySelectorAll(`#macro-speed div`)){
+    speed.dataset.status = scenarioSpeeds.default==speed.dataset.value ? "selectedDefault" : scenarioSpeeds[enemyHash]==speed.dataset.value ? "selected" : "none"
+    speed.addEventListener("click", ()=>{
+      if(speed.dataset.value==="back"){
+        list.style.display = null
+        speed.parentElement.style.display = "none"
+      return}
+      if(speed.dataset.status==="selectedDefault"){
+        let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
+        if(enemy){
+          enemy.dataset.status = "none"
+          delete scenarioSpeeds[enemyHash]
+          scenarioSpeed = scenarioSpeeds.default
+        }
+      }else if(speed.dataset.status==="selected"){
+        let d = speed.parentElement.querySelector(`[data-status="selectedDefault"]`)
+        if(d){
+          d.dataset.status = "none"
+        }
+        scenarioSpeeds.default = +speed.dataset.value
+        speed.dataset.status = "selectedDefault"
+      }else{
+        let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
+        if(enemy){
+          enemy.dataset.status = "none"
+        }
+        scenarioSpeeds[enemyHash] = scenarioSpeed = +speed.dataset.value
+        speed.dataset.status = "selected"
+      }
+      GM_setValue("scenarioSpeed", scenarioSpeeds)
+    })
+  }
 }
 
 window.addEventListener("hashchange", onPage)

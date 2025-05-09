@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-04
+// @version      2025-05-04 a
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -565,7 +565,7 @@ var onPage = async ()=>{
     list.style.display = null
   GM_setValue("macros", macros)})
 
-  if(GM_getValue("unlockedExtra"){
+  if(GM_getValue("unlockedExtra")){
     button.children[0].style.display=null
     button.style.backgroundColor = null
   }else{

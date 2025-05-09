@@ -105,7 +105,7 @@ var onPage = async ()=>{
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
-    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div><div class="listed-macro" data-id="extra" style="background-color:#000"><div style="display:none"><button data-id="scenarioSpeed">Speed</button></div></div></div>
+    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div><div class="listed-macro" data-id="extra" style="background-color:#000; min-height:10px;"><div style="display:none"><button data-id="scenarioSpeed">Speed</button></div></div></div>
     <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button> <button>Add macro</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
@@ -577,7 +577,7 @@ var onPage = async ()=>{
         button.dataset.lastTry = +new Date()
         button.dataset.clicks = 0
       }
-      let clicks = button.dataset.clicks = +button.dataset.clicks + 1
+      let clicks = button.dataset.clicks = (+button.dataset.clicks||0) + 1
       if(clicks>=3){
         unlocking = true
         button.style.transition = "1s"

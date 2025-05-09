@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-04 c
+// @version      2025-05-04 d
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -148,11 +148,11 @@ var onPage = async ()=>{
         background-color:#472;
       }
       .listed-macro[data-status="selected"]::after {
-        content:"Selected for this opponent";
+        content:"\\nSelected for this opponent";
         color:#df9;
       }
       .listed-macro[data-status="selectedDefault"]::after {
-        content:"Selected";
+        content:"\\nSelected";
         color:#9f9;
       }
     </style>`
@@ -571,7 +571,8 @@ var onPage = async ()=>{
   GM_setValue("macros", macros)})
 
   if(GM_getValue("unlockedExtra")){
-    button.children[0].style.display=null
+    let button = list.querySelector(`div.listed-macro[data-id="extra"]`)
+    button.children[0].style.display = null
     button.style.backgroundColor = null
   }else{
     let unlocking
@@ -618,9 +619,9 @@ var onPage = async ()=>{
         let d = speed.parentElement.querySelector(`[data-status="selectedDefault"]`)
         if(d){
           d.dataset.status = "none"
-          scenarioSpeeds.default = +speed.dataset.value
-          speed.dataset.status = "selectedDefault"
         }
+        scenarioSpeeds.default = +speed.dataset.value
+        speed.dataset.status = "selectedDefault"
       }else{
         let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
         if(enemy){

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-10 c
+// @version      2025-05-10 d
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -204,6 +204,7 @@ var onPage = async ()=>{
     while(actions.length){
       if(pauseAutoFarm){await pauseAutoFarm[0]}
       if(cancel>myCancel){break}
+      // Check if won battle
       let action = actions.splice(0,1)[0]
       if(action.type==="macro"){
         if(!macros[action.macro]){continue}
@@ -262,14 +263,17 @@ var onPage = async ()=>{
         let button = document.querySelectorAll(`.btn-attack-start.display-on`)[0]
         if(button){
           click(button)
+          let observer
           await new Promise((ok,err)=>{
-            let observer = new MutationObserver(()=>{
+            observer = new MutationObserver(()=>{
               if(cancel>myCancel || button.classList.contains("display-on")){ok()}
             })
             observer.observe(button, {
               attributes:true,
             })
           })
+          observer.disconnect()
+          // Check if won battle
         }
       }else if(action.type==="summon"){
         let back = document.querySelector(`.btn-command-back`)
@@ -641,11 +645,12 @@ var onPage = async ()=>{
     list.style.display = "none"
     showMacroSpeeds()
   })
+  let autoFarming
   for(let speed of document.querySelectorAll(`#macro-speed div.listed-macro`)){
     speed.dataset.status = scenarioSpeeds.default==speed.dataset.value ? "selectedDefault" : scenarioSpeeds[enemyHash]==speed.dataset.value ? "selected" : "none"
     speed.addEventListener("click", ()=>{
       if(speed.dataset.value==="back"){
-        (scenarioSpeed===100 ? document.querySelector("#pause-auto-farm") : list).style.display = null
+        (scenarioSpeed===100 && autoFarming ? document.querySelector("#pause-auto-farm") : list).style.display = null
         speed.parentElement.style.display = "none"
         if(pauseAutoFarm){
           pauseAutoFarm[1]()
@@ -726,11 +731,12 @@ var onPage = async ()=>{
   if(scenarioSpeed===100){
     document.querySelector("#pause-auto-farm").style.display = null
     list.style.display = "none"
+    autoFarming = true
     setTimeout(async ()=>{
       if(pauseAutoFarm){await pauseAutoFarm[0]}
       let settings = autoQuests[stage.quest_id]
       if(scenarioSpeed!==100 || !settings){return}
-      if(settings.macro){
+      if(settings.macro!==undefined){
         await playMacro(settings.macro)
       }
       if(settings.autoGame){

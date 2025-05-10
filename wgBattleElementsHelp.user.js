@@ -336,7 +336,7 @@
     }
     currentCard.moves = args[0].attacks
     handleSwapParty(args[0].swap_party)
-    showInventory({output:lastSequenceData.output, faked:true})
+    //showInventory({output:lastSequenceData.output, faked:true})
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
       updateGoodness()
@@ -389,7 +389,7 @@
     }
     window.battleHelpVars.usingBest = true
     if(!card){
-      showErrorToast("No card to swap to...")
+      return showErrorToast("No card to swap to...")
     }
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })

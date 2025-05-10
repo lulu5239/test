@@ -188,7 +188,7 @@
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = window.battleHelpVars.fullStats = {}
-  let winText
+  let winText; let lastForcedSwap = 0
   let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
@@ -228,6 +228,7 @@
       continue}
       if(e.a==="faint"){
         window.battleHelpVars.usingBest = false
+        lastForcedSwap = +new Date()
       continue}
       if(e.a==="narate" && winText===true){
         winText = e.p.text
@@ -241,7 +242,7 @@
       }
       if(e.p.text==="Found next opponent: null"){
         winText = true
-      }
+      }l
       if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {") || e.p.text.startsWith("Found next opponent: {")){
         let stats = fullStats[e.p.text.startsWith("p1") ? "p1" : "p2"] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
         for(let p of ["moves", "special", "stats"]){
@@ -336,7 +337,7 @@
     }
     currentCard.moves = args[0].attacks
     handleSwapParty(args[0].swap_party)
-    //showInventory({output:lastSequenceData.output, faked:true})
+    if(+new Date()-lastForcedSwap<100){showInventory({output:lastSequenceData.output, faked:true})}
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
       updateGoodness()

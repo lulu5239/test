@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-10 f
+// @version      2025-05-10 g
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -160,7 +160,7 @@ var onPage = async ()=>{
         {value:3, name:"Fast", description:"Skips more animations."},
         {value:99, name:"Skip all", description:"It would be sad to use that."},
         {value:100, name:"Auto farm", description:"Automatically farm this quest multiple times."},
-      ].map(o=>`<div class="listed-macro" data-value="${o.value}" data-status="none"><a style="font-size:125%">${o.name}</a><br><a>${o.description}</a></div>`)}
+      ].map(o=>`<div class="listed-macro" data-value="${o.value}" data-status="none"><a style="font-size:125%">${o.name}</a><br><a>${o.description}</a></div>`).join("")}
       <div style="display:none; color:#fff" class="autoSettings">
         <div>Auto farm settings:</div>
         <div>When starting, play macro <select data-key="macro" data-type="number" data-value=""></select> then enable <select data-key="autoGame"><option value="nothing">nothing</option><option value="semi">semi auto</option><option value="full" selected>full auto</option></select>.</div>
@@ -726,6 +726,18 @@ var onPage = async ()=>{
         let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
         if(enemy){
           enemy.dataset.status = "none"
+        }
+        if(enemy.dataset.value=="100"){
+          autoQuestSave = autoQuests[stage.pJsnData.quest_id]
+          delete autoQuests[stage.pJsnData.quest_id]
+          GM_setValue("autoQuests", autoQuests)
+          farmingQuest = undefined
+          speed.parentElement.querySelector("div.autoSettings").style.display = "none"
+          if(pauseAutoFarm){
+            cancel++
+            pauseAutoFarm[1]()
+            pauseAutoFarm = null
+          }
         }
         scenarioSpeeds[enemyHash] = scenarioSpeed = +speed.dataset.value
         speed.dataset.status = "selected"

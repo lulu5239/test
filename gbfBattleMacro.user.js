@@ -793,7 +793,7 @@ var onPage = async ()=>{
     list.style.display = "none"
     autoFarming = true
     farmingQuest = stage.pJsnData.quest_id
-    ;(async ()=>{
+    setTimeout(async ()=>{
       while(document.querySelector("#multi-btn-mask").style.display==="block"){await new Promise(ok=>setTimeout(ok,100))}
       await new Promise(ok=>setTimeout(ok,2000))
       if(pauseAutoFarm){await pauseAutoFarm[0]}
@@ -815,7 +815,7 @@ var onPage = async ()=>{
       if(settings.autoGame){
         // Edit game's auto setting
       }
-    })()
+    }, 1000)
   }
 }
 

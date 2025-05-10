@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-10 g
+// @version      2025-05-10 h
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -35,8 +35,12 @@ var onPage = async ()=>{
     lastHandledPage = document.location.hash
     while(!document.querySelector(".se-quest-start")){await new Promise(ok=>setTimeout(ok,100))}
     click(document.querySelector(".se-quest-start"))
-    await new Promise(ok=>setTimeout(ok,2000))
-    let button = document.querySelector(".btn-use-full.index-1.on")
+    let p = document.location.hash
+    let button
+    while(document.location.hash===p && !button){
+      await new Promise(ok=>setTimeout(ok,100))
+      button = document.querySelector(".btn-use-full.index-1.on")
+    }
     if(button){
       let autoQuests = GM_getValue("autoQuests")
       let settings = autoQuests[farmingQuest]
@@ -46,8 +50,12 @@ var onPage = async ()=>{
         GM_setValue("autoQuests", autoQuests)
       }
       click(button)
-      await new Promise(ok=>setTimeout(ok,2000))
-      click(document.querySelector(".common-item-recovery-pop .prt-popup-footer .btn-usual-ok.on"))
+      button = null
+      while(document.location.hash===p && !button){
+        await new Promise(ok=>setTimeout(ok,100))
+        button = document.querySelector(".common-item-recovery-pop .prt-popup-footer .btn-usual-ok.on")
+      }
+      click(button)
     }
   return}
   if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}

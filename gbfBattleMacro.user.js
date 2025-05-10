@@ -46,6 +46,8 @@ var onPage = async ()=>{
         GM_setValue("autoQuests", autoQuests)
       }
       click(button)
+      await new Promise(ok=>setTimeout(ok,2000))
+      click(document.querySelector(".common-item-recovery-pop .prt-popup-footer .btn-usual-ok.on"))
     }
   return}
   if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}

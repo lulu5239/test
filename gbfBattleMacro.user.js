@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-09 a
+// @version      2025-05-10 a
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -202,7 +202,7 @@ var onPage = async ()=>{
     let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : speed<=0 ? 2000 : 500))
     let myCancel = cancel
     while(actions.length){
-      if(pauseAutoFarm){await pauseAutoFarm[0])
+      if(pauseAutoFarm){await pauseAutoFarm[0]}
       if(cancel>myCancel){break}
       let action = actions.splice(0,1)[0]
       if(action.type==="macro"){

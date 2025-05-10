@@ -790,7 +790,7 @@ var onPage = async ()=>{
       let settings = autoQuests[stage.pJsnData.quest_id]
       if(scenarioSpeed!==100 || !settings){return}
       let end = document.querySelector(".prt-command-end")
-      let observer = new MutationObserver(()=>{
+      let observer = new MutationObserver(async ()=>{
         if(end.style.display && scenarioSpeed===100){
           if(pauseAutoFarm){await pauseAutoFarm[0]}
           click(end.children[0])

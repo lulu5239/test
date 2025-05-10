@@ -15,19 +15,42 @@ var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true, t
 var recordFunction; let recordable
 let cancel = 0
 let farmingQuest
+let lastHandledPage
 
 var onPage = async ()=>{
+  if(document.location.hash===lastHandledPage){return}
   if(document.location.hash?.startsWith("#result") && farmingQuest){
-    let id = farmingQuest; farmingQuest = null
+    lastHandledPage = document.location.hash
+    let autoQuests = GM_getValue("autoQuests")
+    let settings = autoQuests[farmingQuest]
+    if(settings.max===0){return}
+    if(settings.max>0){
+      settings.max--
+      GM_setValue("autoQuests", autoQuests)
+    }
     await new Promise(ok=>setTimeout(ok,5000))
-    farmingQuest = id
-    document.location.href = document.location.href.slice(0, document.location.href.indexOf("#")) + `#quest/supporter/${farmingQuest}`
+    document.location.href = document.location.href.slice(0, document.location.href.indexOf("#")) + `#quest/supporter/${farmingQuest}/0`
   return}
   if(document.location.hash?.startsWith("#quest/supporter/"+farmingQuest) && farmingQuest){
+    lastHandledPage = document.location.hash
+    while(!document.querySelector(".btn-silent-se")){await new Promise(ok=>setTimeout(ok,100))}
     click(document.querySelector(".btn-silent-se"))
+    await new Promise(ok=>setTimeout(ok,2000))
+    let button = document.querySelector("btn-use-full index-1 on")
+    if(button){
+      let autoQuests = GM_getValue("autoQuests")
+      let settings = autoQuests[farmingQuest]
+      if(settings.maxHalfElixirs===0){return}
+      if(settings.maxHalfElixirs>0){
+        settings.maxHalfElixirs--
+        GM_setValue("autoQuests", autoQuests)
+      }
+      click(button)
+    }
   return}
   if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
-  while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
+  lastHandledPage = document.location.hash
+  while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelector("#tpl-prt-total-damage")){await new Promise(ok=>setTimeout(ok,100))}
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"

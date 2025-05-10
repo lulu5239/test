@@ -645,7 +645,7 @@ var onPage = async ()=>{
     speed.dataset.status = scenarioSpeeds.default==speed.dataset.value ? "selectedDefault" : scenarioSpeeds[enemyHash]==speed.dataset.value ? "selected" : "none"
     speed.addEventListener("click", ()=>{
       if(speed.dataset.value==="back"){
-        (scenarioSpeed===100 ? document.querySelector("#macro-speed") : list).style.display = null
+        (scenarioSpeed===100 ? document.querySelector("#pause-auto-farm") : list).style.display = null
         speed.parentElement.style.display = "none"
         if(pauseAutoFarm){
           pauseAutoFarm[1]()

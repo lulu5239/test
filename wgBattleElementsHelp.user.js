@@ -388,6 +388,9 @@
       return showErrorToast("Already using best card!")
     }
     window.battleHelpVars.usingBest = true
+    if(!card){
+      showErrorToast("No card to swap to...")
+    }
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
 

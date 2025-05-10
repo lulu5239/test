@@ -376,11 +376,11 @@
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max
     for(let card of Object.values(party)){
-      if(!card.hp || card.noPP){continue}
+      if(!card.hp || card.noPP || card.level<120 && card.hp<50){delete card.goodATT; continue}
       card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<120 ? 2 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
-    let card = Object.values(party).filter(card=>card.goodATT===max && !card.noPP).sort((c1,c2)=>c2.hp-c1.hp)[0]
+    let card = max!==undefined && Object.values(party).filter(card=>card.goodATT===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
     if(card===currentCard){ // Couldn't find better way to identify the current card
       if(window.battleHelpVars.auto){
         return document.querySelector("#btn_bestMove").click()

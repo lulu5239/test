@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-09
+// @version      2025-05-09 a
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -127,8 +127,15 @@ var onPage = async ()=>{
         {value:2, name:"Faster", description:"Merges all attacks into a single animation."},
         {value:3, name:"Fast", description:"Skips more animations."},
         {value:99, name:"Skip all", description:"It would be sad to use that."},
+        {value:100, name:"Auto farm", description:"Automatically farm this quest multiple times."},
       ].map(o=>`<div class="listed-macro" data-value="${o.value}" data-status="none"><a style="font-size:125%">${o.name}</a><br><a>${o.description}</a></div>`)}
+      <div style="display:none" class="autoSettings">
+        <div>Auto farm settings:</div>
+        <div>When starting, play macro <select data-key="macro" data-type="number" data-value=""></select> then enable <select data-key="autoGame"><option value="nothing">nothing</option><option value="semi">semi auto</option><option value="full" selected>full auto</option></select>.</div>
+        <div>Maximum <input data-type="number" data-key="max" placeholder="infinite"> battles and <input data-type="number" data-key="maxHalfElixirs" placeholder="infinite" value="0"> half elixirs.</div>
+      </div>
     </div>
+    <div id="pause-auto-farm" style="text-align:center; display:none; font-size:200%"><button>Pause auto farm</button></div>
     <style>
       .listed-macro {
         display:block;
@@ -169,6 +176,7 @@ var onPage = async ()=>{
   
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
   let speeds = ["slow", "slower", "normal", "faster", "fast", "skip"]
+  let pauseAutoFarm
   let playMacro = async id=>{
     let macro = macros[id]
     let line = list.querySelector(`[data-id="${id}"]`)
@@ -194,6 +202,7 @@ var onPage = async ()=>{
     let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : speed<=0 ? 2000 : 500))
     let myCancel = cancel
     while(actions.length){
+      if(pauseAutoFarm){await pauseAutoFarm[0])
       if(cancel>myCancel){break}
       let action = actions.splice(0,1)[0]
       if(action.type==="macro"){
@@ -455,6 +464,7 @@ var onPage = async ()=>{
     })
   })
 
+  let autoQuests = GM_getValue("autoQuests") || {}
   settings.children[0].addEventListener("click", ()=>{
     settings.style.display = "none"
     list.style.display = null
@@ -525,6 +535,17 @@ var onPage = async ()=>{
           }
         }
       }
+      for(let k in autoQuests){
+        let o = autoQuests[k]
+        if(!o.macro){continue}
+        if(o.macro===before){
+          o.macro = after
+        }else if(o.macro<before && o.macro>=after){
+          o.macro++
+        }else if(o.macro>before && o.macro<=after){
+          o.macro--
+        }
+      }
       let macro = macros[before]
       macros[before] = null
       macros.splice(after>=0 ? after +1 : 0, 0, macro)
@@ -563,7 +584,17 @@ var onPage = async ()=>{
     }
     for(let m of macros){
       for(let a of m.actions){
+        if(a.type==="macro" && a.macro===i){a.macro=null}else
         if(a.type==="macro" && a.macro>i){a.macro--}
+      }
+    }
+    for(let k in autoQuests){
+      let o = autoQuests[k]
+      if(!o.macro){continue}
+      if(o.macro===i){
+        delete o.macro
+      }else if(o.macro>i){
+        o.macro--
       }
     }
     settings.style.display = "none"
@@ -596,17 +627,30 @@ var onPage = async ()=>{
     })
   }
   let scenarioSpeeds = GM_getValue("scenarioSpeed") || {}
-  scenarioSpeed = scenarioSpeeds[enemyHash] || scenarioSpeeds.default || 0
+  let autoQuestSave
+  scenarioSpeed = autoQuests[stage.quest_id] ? 100 : scenarioSpeeds[enemyHash] || scenarioSpeeds.default || 0
+  let showMacroSpeeds = ()=>{
+    document.querySelector("#macro-speed").style.display = null
+    let list = document.querySelector(`#macro-speed div.autoSettings [data-key="macro"]`)
+    list.innerHTML = `<option value="">none</option>`+macros.map((macro,i)=>(
+      `<option value="${i}">${macro.name}</option>`
+    ))
+    list.value = list.dataset.value
+  }
   list.querySelector(`button[data-id="scenarioSpeed"]`).addEventListener("click", ()=>{
     list.style.display = "none"
-    document.querySelector("#macro-speed").style.display = null
+    showMacroSpeeds()
   })
-  for(let speed of document.querySelectorAll(`#macro-speed div`)){
+  for(let speed of document.querySelectorAll(`#macro-speed div.listed-macro`)){
     speed.dataset.status = scenarioSpeeds.default==speed.dataset.value ? "selectedDefault" : scenarioSpeeds[enemyHash]==speed.dataset.value ? "selected" : "none"
     speed.addEventListener("click", ()=>{
       if(speed.dataset.value==="back"){
-        list.style.display = null
+        (scenarioSpeed===100 ? document.querySelector("#macro-speed") : list).style.display = null
         speed.parentElement.style.display = "none"
+        if(pauseAutoFarm){
+          pauseAutoFarm[1]()
+          pauseAutoFarm = null
+        }
       return}
       if(speed.dataset.status==="selectedDefault"){
         let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
@@ -614,8 +658,20 @@ var onPage = async ()=>{
           enemy.dataset.status = "none"
           delete scenarioSpeeds[enemyHash]
           scenarioSpeed = scenarioSpeeds.default
+          if(enemy.dataset.value=="100"){
+            autoQuestSave = autoQuests[stage.quest_id]
+            delete autoQuests[stage.quest_id]
+            GM_setValue("autoQuests", autoQuests)
+            speed.parentElement.querySelector("div.autoSettings").style.display = "none"
+            if(pauseAutoFarm){
+              cancel++
+              pauseAutoFarm[1]()
+              pauseAutoFarm = null
+            }
+          }
         }
       }else if(speed.dataset.status==="selected"){
+        if(speed.dataset.value=="100"){return}
         let d = speed.parentElement.querySelector(`[data-status="selectedDefault"]`)
         if(d){
           d.dataset.status = "none"
@@ -629,9 +685,56 @@ var onPage = async ()=>{
         }
         scenarioSpeeds[enemyHash] = scenarioSpeed = +speed.dataset.value
         speed.dataset.status = "selected"
+        if(speed.dataset.value=="100"){
+          autoQuests[stage.quest_id] = autoQuestSave || {maxHalfElixirs:0}
+          speed.parentElement.querySelector("div.autoSettings").style.display = null
+          GM_setValue("autoQuests", autoQuests)
+        }
       }
       GM_setValue("scenarioSpeed", scenarioSpeeds)
     })
+  }
+  for(let e of document.querySelectorAll("#macro-speed div.autoSettings select, #macro-speed div.autoSettings input")){
+    let settings = autoQuests[stage.quest_id]
+    if(settings?.[e.dataset.key]!==undefined){
+      if(e.dataset.key==="macro"){
+        e.dataset.value = settings[e.dataset.key]
+      }else{
+        e.value = settings[e.dataset.key]
+      }
+    }
+    e.addEventListener("change", ()=>{
+      let settings = autoQuests[stage.quest_id]
+      if(!settings){return}
+      if(e.dataset.type==="number" && e.value && !+e.value){
+        e.value = ""
+      return}
+      settings[e.dataset.key] = e.dataset.type==="number" ? (e.value==="" ? undefined : +e.value) : e.value
+      if(e.dataset.key==="macro"){
+        e.dataset.value = e.value
+      }
+      GM_setValue("autoQuests", autoQuests)
+    })
+  }
+  document.querySelector("#macro-speed div.autoSettings").style.display = autoQuests[stage.quest_id] ? null : "none"
+  document.querySelector("#pause-auto-farm button").addEventListener("click", ()=>{
+    pauseAutoFarm = []
+    pauseAutoFarm[0] = new Promise(ok=>{pauseAutoFarm[1]=ok})
+    document.querySelector("#pause-auto-farm").style.display = "none"
+    showMacroSpeeds()
+  })
+  if(scenarioSpeed===100){
+    setTimeout(async ()=>{
+      if(pauseAutoFarm){await pauseAutoFarm[0]}
+      let settings = autoQuests[stage.quest_id]
+      if(scenarioSpeed!==100 || !settings){return}
+      if(settings.macro){
+        await playMacro(settings.macro)
+      }
+      if(settings.autoGame){
+        // Edit game's auto setting
+      }
+    }, 3000)
   }
 }
 

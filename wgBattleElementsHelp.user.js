@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-05-03
+// @version      2025-05-10
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -75,7 +75,7 @@
         if(!party[k].lastSeen){
           party[k].lastSeen = +new Date()
         continue}
-        if(+new Date()-party[k].lastSeen>24*3600000){ // 24 hours
+        if(+new Date()-party[k].lastSeen>7*24*3600000){ // A week
           delete party[k]
         }
       }
@@ -100,7 +100,7 @@
   }
   var magicElements = ["grass","fire","water","electric","psychic","ice","music","dark","light"]
    
-  if(path==="/battle"){
+  if(path==="/battle" || path==="/battle/"){
     let list = []
     for(let card of document.querySelectorAll("img.battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()
@@ -132,7 +132,7 @@
         element,
         level:+card.parentElement.querySelector("span.bg-highlight").innerText.slice(3)
       })
-      if(localStorage["y_WG-autoBattle"]){ // Experimental, enable if you want
+      if(localStorage["y_WG-autoBattle"]){
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
         text.querySelector(".autoBattleButton").addEventListener("click",()=>{
           if(localStorage["y_WG-autoBattle"]!=="all"){
@@ -143,7 +143,16 @@
       }
     }
     localStorage["y_WG-battles"] = JSON.stringify(list)
-    document.querySelector("#partyView").querySelector("p.font-italic").innerText = "You can heal your Animus from this page."
+    document.querySelector("#partyView p.font-italic").innerText = "You can heal your Animus from this page."
+    if(localStorage["y_WG-autoBattle"]){
+      document.querySelector(".page-content .content.mt-5 table").insertAdjacentHTML("beforebegin",
+        `<label style="display:block"><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label>`
+      )
+      let box = document.querySelector(".page-content .content.mt-5 label input")
+      box.addEventListener("change", ()=>{
+        localStorage["y_WG-autoBattle"] = box.checked ? "all" : true
+      })
+    }
   return}
   
   let previousParty = party
@@ -204,9 +213,14 @@
           document.location.href = "/battle/"+battle.id
         })
         if(localStorage["y_WG-autoBattle"]==="all" && winText?.includes("<br")){
+          let cancel
           setTimeout(()=>{
+            if(cancel){return}
             document.location.href = "/battle/"+battle.id
           }, 3000)
+          for(let e of document.querySelectorAll("#winner_block a, #winner_block button")){
+            e.addEventListener("click", ()=>{cancel=true})
+          }
         }
       continue}
       if(e.a==="newhp" && e.t==="player1" && currentCard){
@@ -392,7 +406,7 @@
         continue
       }
       if(canEnd){continue}
-      if(move.estimatedDamage > best.estimatedDamage){
+      if(move.pp > 1 && move.estimatedDamage > best.estimatedDamage){
         best = move
       }
     }

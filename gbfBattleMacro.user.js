@@ -33,8 +33,8 @@ var onPage = async ()=>{
   return}
   if(document.location.hash?.startsWith("#quest/supporter/"+farmingQuest) && farmingQuest){
     lastHandledPage = document.location.hash
-    while(!document.querySelector(".btn-silent-se")){await new Promise(ok=>setTimeout(ok,100))}
-    click(document.querySelector(".btn-silent-se"))
+    while(!document.querySelector(".se-quest-start")){await new Promise(ok=>setTimeout(ok,100))}
+    click(document.querySelector(".se-quest-start"))
     await new Promise(ok=>setTimeout(ok,2000))
     let button = document.querySelector("btn-use-full index-1 on")
     if(button){
@@ -778,6 +778,7 @@ var onPage = async ()=>{
       let end = document.querySelector(".prt-command-end")
       let observer = new MutationObserver(()=>{
         if(end.style.display && scenarioSpeed===100){
+          if(pauseAutoFarm){await pauseAutoFarm[0]}
           click(end.children[0])
         }
       })

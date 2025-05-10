@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-10 e
+// @version      2025-05-10 f
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -18,11 +18,14 @@ let farmingQuest
 
 var onPage = async ()=>{
   if(document.location.hash?.startsWith("#result") && farmingQuest){
+    let id = farmingQuest; farmingQuest = null
+    await new Promise(ok=>setTimeout(ok,5000))
+    farmingQuest = id
     document.location.href = document.location.href.slice(0, document.location.href.indexOf("#")) + `#quest/supporter/${farmingQuest}`
   return}
-  if(document.location.hash?.startsWith("#quest/supporter/") && farmingQuest){
+  if(document.location.hash?.startsWith("#quest/supporter/"+farmingQuest) && farmingQuest){
     click(document.querySelector(".btn-silent-se"))
-  }
+  return}
   if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
   
@@ -642,7 +645,7 @@ var onPage = async ()=>{
   }
   let scenarioSpeeds = GM_getValue("scenarioSpeed") || {}
   let autoQuestSave
-  scenarioSpeed = autoQuests[stage.quest_id] ? 100 : scenarioSpeeds[enemyHash] || scenarioSpeeds.default || 0
+  scenarioSpeed = autoQuests[stage.pJsnData.quest_id] ? 100 : scenarioSpeeds[enemyHash] || scenarioSpeeds.default || 0
   let showMacroSpeeds = ()=>{
     document.querySelector("#macro-speed").style.display = null
     let list = document.querySelector(`#macro-speed div.autoSettings [data-key="macro"]`)
@@ -674,8 +677,8 @@ var onPage = async ()=>{
           delete scenarioSpeeds[enemyHash]
           scenarioSpeed = scenarioSpeeds.default
           if(enemy.dataset.value=="100"){
-            autoQuestSave = autoQuests[stage.quest_id]
-            delete autoQuests[stage.quest_id]
+            autoQuestSave = autoQuests[stage.pJsnData.quest_id]
+            delete autoQuests[stage.pJsnData.quest_id]
             GM_setValue("autoQuests", autoQuests)
             farmingQuest = undefined
             speed.parentElement.querySelector("div.autoSettings").style.display = "none"
@@ -702,17 +705,17 @@ var onPage = async ()=>{
         scenarioSpeeds[enemyHash] = scenarioSpeed = +speed.dataset.value
         speed.dataset.status = "selected"
         if(speed.dataset.value=="100"){
-          autoQuests[stage.quest_id] = autoQuestSave || {maxHalfElixirs:0}
+          autoQuests[stage.pJsnData.quest_id] = autoQuestSave || {maxHalfElixirs:0}
           speed.parentElement.querySelector("div.autoSettings").style.display = null
           GM_setValue("autoQuests", autoQuests)
-          farmingQuest = stage.quest_id
+          farmingQuest = stage.pJsnData.quest_id
         }
       }
       GM_setValue("scenarioSpeed", scenarioSpeeds)
     })
   }
   for(let e of document.querySelectorAll("#macro-speed div.autoSettings select, #macro-speed div.autoSettings input")){
-    let settings = autoQuests[stage.quest_id]
+    let settings = autoQuests[stage.pJsnData.quest_id]
     if(settings?.[e.dataset.key]!==undefined){
       if(e.dataset.key==="macro"){
         e.dataset.value = settings[e.dataset.key]
@@ -721,7 +724,7 @@ var onPage = async ()=>{
       }
     }
     e.addEventListener("change", ()=>{
-      let settings = autoQuests[stage.quest_id]
+      let settings = autoQuests[stage.pJsnData.quest_id]
       if(!settings){return}
       if(e.dataset.type==="number" && e.value && +e.value!==+e.value){
         e.value = ""
@@ -733,7 +736,7 @@ var onPage = async ()=>{
       GM_setValue("autoQuests", autoQuests)
     })
   }
-  document.querySelector("#macro-speed div.autoSettings").style.display = autoQuests[stage.quest_id] ? null : "none"
+  document.querySelector("#macro-speed div.autoSettings").style.display = autoQuests[stage.pJsnData.quest_id] ? null : "none"
   document.querySelector("#pause-auto-farm button").addEventListener("click", ()=>{
     pauseAutoFarm = []
     pauseAutoFarm[0] = new Promise(ok=>{pauseAutoFarm[1]=ok})
@@ -744,9 +747,10 @@ var onPage = async ()=>{
     document.querySelector("#pause-auto-farm").style.display = null
     list.style.display = "none"
     autoFarming = true
+    farmingQuest = stage.pJsnData.quest_id
     setTimeout(async ()=>{
       if(pauseAutoFarm){await pauseAutoFarm[0]}
-      let settings = autoQuests[stage.quest_id]
+      let settings = autoQuests[stage.pJsnData.quest_id]
       if(scenarioSpeed!==100 || !settings){return}
       let end = document.querySelector(".prt-command-end")
       let observer = new MutationObserver(()=>{

@@ -39,7 +39,7 @@ var onPage = async ()=>{
     let button
     while(document.location.hash===p && !button){
       await new Promise(ok=>setTimeout(ok,100))
-      button = document.querySelector(".btn-use-full.index-1.on")
+      button = document.querySelector(".btn-use-full.index-1")
     }
     if(button){
       let autoQuests = GM_getValue("autoQuests")
@@ -53,7 +53,7 @@ var onPage = async ()=>{
       button = null
       while(document.location.hash===p && !button){
         await new Promise(ok=>setTimeout(ok,100))
-        button = document.querySelector(".common-item-recovery-pop .prt-popup-footer .btn-usual-ok.on")
+        button = document.querySelector(".common-item-recovery-pop .prt-popup-footer .btn-usual-ok")
       }
       click(button)
     }
@@ -793,7 +793,9 @@ var onPage = async ()=>{
     list.style.display = "none"
     autoFarming = true
     farmingQuest = stage.pJsnData.quest_id
-    setTimeout(async ()=>{
+    ;(async ()=>{
+      while(document.querySelector("#multi-btn-mask").style.display==="block"){await new Promise(ok=>setTimeout(ok,100))}
+      await new Promise(ok=>setTimeout(ok,2000))
       if(pauseAutoFarm){await pauseAutoFarm[0]}
       let settings = autoQuests[stage.pJsnData.quest_id]
       if(scenarioSpeed!==100 || !settings){return}
@@ -813,7 +815,7 @@ var onPage = async ()=>{
       if(settings.autoGame){
         // Edit game's auto setting
       }
-    }, 5000)
+    })()
   }
 }
 

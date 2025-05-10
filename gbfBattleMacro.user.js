@@ -204,7 +204,6 @@ var onPage = async ()=>{
     while(actions.length){
       if(pauseAutoFarm){await pauseAutoFarm[0]}
       if(cancel>myCancel || document.querySelector(".prt-command-end").style.display){break}
-      // Check if won battle
       let action = actions.splice(0,1)[0]
       if(action.type==="macro"){
         if(!macros[action.macro]){continue}
@@ -745,12 +744,6 @@ var onPage = async ()=>{
       if(pauseAutoFarm){await pauseAutoFarm[0]}
       let settings = autoQuests[stage.quest_id]
       if(scenarioSpeed!==100 || !settings){return}
-      if(settings.macro!==undefined){
-        await playMacro(settings.macro)
-      }
-      if(settings.autoGame){
-        // Edit game's auto setting
-      }
       let end = document.querySelector(".prt-command-end")
       let observer = new MutationObserver(()=>{
         if(end.style.display && scenarioSpeed===100){
@@ -760,6 +753,12 @@ var onPage = async ()=>{
       observer.observe(end, {
         attributes:true,
       })
+      if(settings.macro!==undefined){
+        await playMacro(settings.macro)
+      }
+      if(settings.autoGame){
+        // Edit game's auto setting
+      }
     }, 3000)
   }
 }

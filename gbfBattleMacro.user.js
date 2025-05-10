@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-10 b
+// @version      2025-05-10 c
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -105,7 +105,7 @@ var onPage = async ()=>{
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
-    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div><div class="listed-macro" data-id="extra" style="background-color:#000; min-height:10px;"><div style="display:none"><button data-id="scenarioSpeed">Speed</button></div></div></div>
+    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div><div class="listed-macro" data-id="extra" style="background-color:#000; min-height:10px;"><div style="display:none"><button data-id="scenarioSpeed">Speed</button></div></div><div style="display:none" class="nothing"></div></div>
     <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button> <button>Add macro</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
@@ -179,14 +179,14 @@ var onPage = async ()=>{
   let pauseAutoFarm
   let playMacro = async id=>{
     let macro = macros[id]
-    let line = list.querySelector(`[data-id="${id}"]`)
+    let line = list.querySelector(`[data-id="${id}"], .nothing`)
     line.dataset.playing = "now"
     list.querySelector(`.listed-macro[data-id="cancel"]`).style.display = null
     let actions = [...macro.actions]
     let next = {}
     let check; check = (n,rec)=>{
       if(rec && !next[n]){
-        list.querySelector(`[data-id="${n}"]`).dataset.playing = "soon"
+        list.querySelector(`[data-id="${n}"], .nothing`).dataset.playing = "soon"
         next[n] = 1
       }else{next[n]++}
       if(rec>10){return}
@@ -208,19 +208,19 @@ var onPage = async ()=>{
       if(action.type==="macro"){
         if(!macros[action.macro]){continue}
         next[action.macro]--
-        list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = playing.slice(-1)[0]===id ? "original" : "soon"
-        list.querySelector(`[data-id="${action.macro}"]`).dataset.playing = "now"
+        list.querySelector(`[data-id="${playing.slice(-1)[0]}"], .nothing`).dataset.playing = playing.slice(-1)[0]===id ? "original" : "soon"
+        list.querySelector(`[data-id="${action.macro}"], .nothing`).dataset.playing = "now"
         playing.push(action.macro)
         actions.splice(0, 0, ...macros[action.macro].actions, {type:"leaveMacro"})
       continue}
       if(action.type==="leaveMacro"){
         let last = playing.splice(-1, 1)[0]
         if(next[last]>0){
-          list.querySelector(`[data-id="${last}"]`).dataset.playing = "soon"
+          list.querySelector(`[data-id="${last}"], .nothing`).dataset.playing = "soon"
         }else{
-          list.querySelector(`[data-id="${last}"]`).removeAttribute("data-playing")
+          list.querySelector(`[data-id="${last}"], .nothing`).removeAttribute("data-playing")
         }
-        list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = "now"
+        list.querySelector(`[data-id="${playing.slice(-1)[0]}"], .nothing`).dataset.playing = "now"
       continue}
       
       if(action.type==="skill"){
@@ -299,11 +299,11 @@ var onPage = async ()=>{
         if(macro.speed==="slow"){await wait()}
       }
     }
-    list.querySelector(`[data-id="${id}"]`).removeAttribute("data-playing")
+    list.querySelector(`[data-id="${id}"], .nothing`).removeAttribute("data-playing")
     for(let i in next){
-      list.querySelector(`[data-id="${i}"]`).removeAttribute("data-playing")
+      list.querySelector(`[data-id="${i}"], .nothing`).removeAttribute("data-playing")
     }
-    if(!list.querySelectorAll("[data-playing]").length){
+    if(!list.querySelector("[data-playing]")){
       list.querySelector(`.listed-macro[data-id="cancel"]`).style.backgroundColor = null
       list.querySelector(`.listed-macro[data-id="cancel"]`).style.display = "none"
     }
@@ -724,6 +724,8 @@ var onPage = async ()=>{
     showMacroSpeeds()
   })
   if(scenarioSpeed===100){
+    document.querySelector("#pause-auto-farm").style.display = null
+    list.style.display = "none"
     setTimeout(async ()=>{
       if(pauseAutoFarm){await pauseAutoFarm[0]}
       let settings = autoQuests[stage.quest_id]

@@ -36,7 +36,7 @@ var onPage = async ()=>{
     while(!document.querySelector(".se-quest-start")){await new Promise(ok=>setTimeout(ok,100))}
     click(document.querySelector(".se-quest-start"))
     await new Promise(ok=>setTimeout(ok,2000))
-    let button = document.querySelector("btn-use-full.index-1.on")
+    let button = document.querySelector(".btn-use-full.index-1.on")
     if(button){
       let autoQuests = GM_getValue("autoQuests")
       let settings = autoQuests[farmingQuest]

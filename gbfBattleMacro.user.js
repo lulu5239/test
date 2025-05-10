@@ -685,7 +685,7 @@ var onPage = async ()=>{
   })
   let autoFarming
   for(let speed of document.querySelectorAll(`#macro-speed div.listed-macro`)){
-    speed.dataset.status = scenarioSpeeds.default==speed.dataset.value ? "selectedDefault" : scenarioSpeeds[enemyHash]==speed.dataset.value ? "selected" : "none"
+    speed.dataset.status = scenarioSpeeds.default==speed.dataset.value ? "selectedDefault" : scenarioSpeed==speed.dataset.value ? "selected" : "none"
     speed.addEventListener("click", ()=>{
       if(speed.dataset.value==="back"){
         (scenarioSpeed===100 && autoFarming ? document.querySelector("#pause-auto-farm") : list).style.display = null
@@ -726,17 +726,17 @@ var onPage = async ()=>{
         let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
         if(enemy){
           enemy.dataset.status = "none"
-        }
-        if(enemy.dataset.value=="100"){
-          autoQuestSave = autoQuests[stage.pJsnData.quest_id]
-          delete autoQuests[stage.pJsnData.quest_id]
-          GM_setValue("autoQuests", autoQuests)
-          farmingQuest = undefined
-          speed.parentElement.querySelector("div.autoSettings").style.display = "none"
-          if(pauseAutoFarm){
-            cancel++
-            pauseAutoFarm[1]()
-            pauseAutoFarm = null
+          if(enemy.dataset.value=="100"){
+            autoQuestSave = autoQuests[stage.pJsnData.quest_id]
+            delete autoQuests[stage.pJsnData.quest_id]
+            GM_setValue("autoQuests", autoQuests)
+            farmingQuest = undefined
+            speed.parentElement.querySelector("div.autoSettings").style.display = "none"
+            if(pauseAutoFarm){
+              cancel++
+              pauseAutoFarm[1]()
+              pauseAutoFarm = null
+            }
           }
         }
         scenarioSpeeds[enemyHash] = scenarioSpeed = +speed.dataset.value
@@ -805,7 +805,7 @@ var onPage = async ()=>{
       if(settings.autoGame){
         // Edit game's auto setting
       }
-    }, 3000)
+    }, 5000)
   }
 }
 

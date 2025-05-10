@@ -203,7 +203,7 @@ var onPage = async ()=>{
     let myCancel = cancel
     while(actions.length){
       if(pauseAutoFarm){await pauseAutoFarm[0]}
-      if(cancel>myCancel){break}
+      if(cancel>myCancel || document.querySelector(".prt-command-end").style.display){break}
       // Check if won battle
       let action = actions.splice(0,1)[0]
       if(action.type==="macro"){
@@ -263,17 +263,24 @@ var onPage = async ()=>{
         let button = document.querySelectorAll(`.btn-attack-start.display-on`)[0]
         if(button){
           click(button)
-          let observer
+          let observer1; let observer2
           await new Promise((ok,err)=>{
-            observer = new MutationObserver(()=>{
+            observer1 = new MutationObserver(()=>{
               if(cancel>myCancel || button.classList.contains("display-on")){ok()}
             })
-            observer.observe(button, {
+            observer1.observe(button, {
+              attributes:true,
+            })
+            let end = document.querySelector(".prt-command-end")
+            observer2 = new MutationObserver(()=>{
+              if(cancel>myCancel || end.style.display){ok()}
+            })
+            observer2.observe(end, {
               attributes:true,
             })
           })
-          observer.disconnect()
-          // Check if won battle
+          observer1.disconnect()
+          observer2.disconnect()
         }
       }else if(action.type==="summon"){
         let back = document.querySelector(`.btn-command-back`)
@@ -667,6 +674,7 @@ var onPage = async ()=>{
             autoQuestSave = autoQuests[stage.quest_id]
             delete autoQuests[stage.quest_id]
             GM_setValue("autoQuests", autoQuests)
+            GM_setValue("loopingQuest", undefined)
             speed.parentElement.querySelector("div.autoSettings").style.display = "none"
             if(pauseAutoFarm){
               cancel++
@@ -694,6 +702,7 @@ var onPage = async ()=>{
           autoQuests[stage.quest_id] = autoQuestSave || {maxHalfElixirs:0}
           speed.parentElement.querySelector("div.autoSettings").style.display = null
           GM_setValue("autoQuests", autoQuests)
+          GM_setValue("loopingQuest", stage.quest_id)
         }
       }
       GM_setValue("scenarioSpeed", scenarioSpeeds)
@@ -742,6 +751,15 @@ var onPage = async ()=>{
       if(settings.autoGame){
         // Edit game's auto setting
       }
+      let end = document.querySelector(".prt-command-end")
+      let observer = new MutationObserver(()=>{
+        if(end.style.display && scenarioSpeed===100){
+          click(end.children[0])
+        }
+      })
+      observer.observe(end, {
+        attributes:true,
+      })
     }, 3000)
   }
 }

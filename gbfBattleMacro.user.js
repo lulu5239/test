@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-10 d
+// @version      2025-05-10 e
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -11,12 +11,19 @@
 // @grant        GM_setValue
 // ==/UserScript==
 
-var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true}))
+var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true, target:e, currentTarget:e}))
 var recordFunction; let recordable
 let cancel = 0
+let farmingQuest
 
 var onPage = async ()=>{
-  if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
+  if(document.location.hash?.startsWith("#result") && farmingQuest){
+    document.location.href = document.location.href.slice(0, document.location.href.indexOf("#")) + `#quest/supporter/${farmingQuest}`
+  return}
+  if(document.location.hash?.startsWith("#quest/supporter/") && farmingQuest){
+    click(document.querySelector(".btn-silent-se"))
+  }
+  if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
@@ -27,7 +34,6 @@ var onPage = async ()=>{
   let scenarioSpeed = 0
   let originalPlayScenarios = view.playScenarios
   view.playScenarios = function(...args) {
-    stage.test(args)
     stage.lastScenario = [...args[0].scenario]
     let mergedDamage = []
     let newScenario = scenarioSpeed && !(stage.pJsnData.multi_raid_member_info?.length>1) ? [] : args[0].scenario
@@ -100,8 +106,6 @@ var onPage = async ()=>{
     args[0].scenario = newScenario
     return originalPlayScenarios.apply(Game.view.setupView, args)
   };
-  stage.test = (args)=>{}
-  stage.view = view
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
@@ -673,7 +677,7 @@ var onPage = async ()=>{
             autoQuestSave = autoQuests[stage.quest_id]
             delete autoQuests[stage.quest_id]
             GM_setValue("autoQuests", autoQuests)
-            GM_setValue("loopingQuest", undefined)
+            farmingQuest = undefined
             speed.parentElement.querySelector("div.autoSettings").style.display = "none"
             if(pauseAutoFarm){
               cancel++
@@ -701,7 +705,7 @@ var onPage = async ()=>{
           autoQuests[stage.quest_id] = autoQuestSave || {maxHalfElixirs:0}
           speed.parentElement.querySelector("div.autoSettings").style.display = null
           GM_setValue("autoQuests", autoQuests)
-          GM_setValue("loopingQuest", stage.quest_id)
+          farmingQuest = stage.quest_id
         }
       }
       GM_setValue("scenarioSpeed", scenarioSpeeds)

@@ -23,7 +23,7 @@ var click = (e, crect)=>{
 var recordFunction; let recordable
 let cancel = 0
 let farmingQuest
-let lastHandledPage
+let lastHandledPage; let stageObserver
 
 var onPage = async ()=>{
   if(document.location.hash===lastHandledPage){return}
@@ -224,8 +224,9 @@ var onPage = async ()=>{
     </style>`
   )
   let list = document.querySelector("#macros-list")
-  let observer = new MutationObserver(onPage)
-  observer.observe(list.parentElement, {
+  if(stageObserver){stageObserver.disconnect()}
+  stageObserver = new MutationObserver(onPage)
+  stageObserver.observe(list.parentElement, {
     childList:true,
   })
   let recording = document.querySelector("#macro-recording")

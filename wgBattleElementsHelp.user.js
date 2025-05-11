@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-05-09
+// @version      2025-05-10
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -75,7 +75,7 @@
         if(!party[k].lastSeen){
           party[k].lastSeen = +new Date()
         continue}
-        if(+new Date()-party[k].lastSeen>24*3600000){ // 24 hours
+        if(+new Date()-party[k].lastSeen>7*24*3600000){ // A week
           delete party[k]
         }
       }
@@ -100,7 +100,7 @@
   }
   var magicElements = ["grass","fire","water","electric","psychic","ice","music","dark","light"]
    
-  if(path==="/battle"){
+  if(path==="/battle" || path==="/battle/"){
     let list = []
     for(let card of document.querySelectorAll("img.battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()
@@ -132,7 +132,7 @@
         element,
         level:+card.parentElement.querySelector("span.bg-highlight").innerText.slice(3)
       })
-      if(localStorage["y_WG-autoBattle"]){ // Experimental, enable if you want
+      if(localStorage["y_WG-autoBattle"]){
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
         text.querySelector(".autoBattleButton").addEventListener("click",()=>{
           if(localStorage["y_WG-autoBattle"]!=="all"){
@@ -143,7 +143,16 @@
       }
     }
     localStorage["y_WG-battles"] = JSON.stringify(list)
-    document.querySelector("#partyView").querySelector("p.font-italic").innerText = "You can heal your Animus from this page."
+    document.querySelector("#partyView p.font-italic").innerText = "You can heal your Animus from this page."
+    if(localStorage["y_WG-autoBattle"]){
+      document.querySelector(".page-content .content.mt-5 table").insertAdjacentHTML("beforebegin",
+        `<label style="display:block"><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label>`
+      )
+      let box = document.querySelector(".page-content .content.mt-5 label input")
+      box.addEventListener("change", ()=>{
+        localStorage["y_WG-autoBattle"] = box.checked ? "all" : true
+      })
+    }
   return}
   
   let previousParty = party
@@ -179,7 +188,7 @@
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = window.battleHelpVars.fullStats = {}
-  let winText
+  let winText; let lastForcedSwap = 0
   let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
@@ -204,9 +213,14 @@
           document.location.href = "/battle/"+battle.id
         })
         if(localStorage["y_WG-autoBattle"]==="all" && winText?.includes("<br")){
+          let cancel
           setTimeout(()=>{
+            if(cancel){return}
             document.location.href = "/battle/"+battle.id
           }, 3000)
+          for(let e of document.querySelectorAll("#winner_block a, #winner_block button")){
+            e.addEventListener("click", ()=>{cancel=true})
+          }
         }
       continue}
       if(e.a==="newhp" && e.t==="player1" && currentCard){
@@ -214,6 +228,7 @@
       continue}
       if(e.a==="faint"){
         window.battleHelpVars.usingBest = false
+        lastForcedSwap = +new Date()
       continue}
       if(e.a==="narate" && winText===true){
         winText = e.p.text
@@ -322,7 +337,7 @@
     }
     currentCard.moves = args[0].attacks
     handleSwapParty(args[0].swap_party)
-    showInventory({output:lastSequenceData.output, faked:true})
+    if(+new Date()-lastForcedSwap<100){showInventory({output:lastSequenceData.output, faked:true})}
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
       updateGoodness()
@@ -362,11 +377,11 @@
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max
     for(let card of Object.values(party)){
-      if(!card.hp || card.noPP){continue}
+      if(!card.hp || card.noPP || card.level<120 && card.hp<50){delete card.goodATT; continue}
       card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<120 ? 2 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
-    let card = Object.values(party).filter(card=>card.goodATT===max && !card.noPP).sort((c1,c2)=>c2.hp-c1.hp)[0]
+    let card = max!==undefined && Object.values(party).filter(card=>card.goodATT===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
     if(card===currentCard){ // Couldn't find better way to identify the current card
       if(window.battleHelpVars.auto){
         return document.querySelector("#btn_bestMove").click()
@@ -374,6 +389,9 @@
       return showErrorToast("Already using best card!")
     }
     window.battleHelpVars.usingBest = true
+    if(!card){
+      return showErrorToast("No card to swap to...")
+    }
     actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
   })
 

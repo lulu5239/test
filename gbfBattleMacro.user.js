@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-09
+// @version      2025-05-11
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -11,13 +11,64 @@
 // @grant        GM_setValue
 // ==/UserScript==
 
-var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true}))
+var click = (e, crect)=>{
+  let rect = e.getBoundingClientRect()
+  if(!["x","y","width","height"].find(k=>rect[k])){rect = crect}
+  return $(e).trigger($.Event("tap",{
+    target:e, currentTarget:e,
+    x:rect && Math.floor(rect.x+rect.width*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
+    y:rect && Math.floor(rect.y+rect.height*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
+  }))
+}
 var recordFunction; let recordable
 let cancel = 0
+let farmingQuest
+let lastHandledPage; let stageObserver
 
 var onPage = async ()=>{
-  if(document.querySelectorAll("#macros-list").length || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
-  while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelectorAll("#tpl-prt-total-damage").length){await new Promise(ok=>setTimeout(ok,100))}
+  if(document.location.hash===lastHandledPage){return}
+  if(document.location.hash?.startsWith("#result") && farmingQuest){
+    lastHandledPage = document.location.hash
+    let autoQuests = GM_getValue("autoQuests")
+    let settings = autoQuests[farmingQuest]
+    if(settings.max===0){return}
+    if(settings.max>0){
+      settings.max--
+      GM_setValue("autoQuests", autoQuests)
+    }
+    await new Promise(ok=>setTimeout(ok,5000))
+    document.location.href = document.location.href.slice(0, document.location.href.indexOf("#")) + `#quest/supporter/${farmingQuest}/0`
+  return}
+  if(document.location.hash?.startsWith("#quest/supporter/"+farmingQuest) && farmingQuest){
+    lastHandledPage = document.location.hash
+    while(!document.querySelector(".se-quest-start")){await new Promise(ok=>setTimeout(ok,100))}
+    click(document.querySelector(".se-quest-start"))
+    let p = document.location.hash
+    let button
+    while(document.location.hash===p && !button){
+      await new Promise(ok=>setTimeout(ok,100))
+      button = document.querySelector(".btn-use-full.index-1")
+    }
+    if(button){
+      let autoQuests = GM_getValue("autoQuests")
+      let settings = autoQuests[farmingQuest]
+      if(settings.maxHalfElixirs===0){return}
+      if(settings.maxHalfElixirs>0){
+        settings.maxHalfElixirs--
+        GM_setValue("autoQuests", autoQuests)
+      }
+      click(button)
+      button = null
+      while(document.location.hash===p && !button){
+        await new Promise(ok=>setTimeout(ok,100))
+        button = document.querySelector(".common-item-recovery-pop .prt-popup-footer .btn-usual-ok")
+      }
+      click(button)
+    }
+  return}
+  if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
+  lastHandledPage = document.location.hash
+  while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelector("#tpl-prt-total-damage")){await new Promise(ok=>setTimeout(ok,100))}
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"
@@ -27,7 +78,6 @@ var onPage = async ()=>{
   let scenarioSpeed = 0
   let originalPlayScenarios = view.playScenarios
   view.playScenarios = function(...args) {
-    stage.test(args)
     stage.lastScenario = [...args[0].scenario]
     let mergedDamage = []
     let newScenario = scenarioSpeed && !(stage.pJsnData.multi_raid_member_info?.length>1) ? [] : args[0].scenario
@@ -38,6 +88,7 @@ var onPage = async ()=>{
       }
       if(e.cmd==="attack" && e.from==="player"){
         if(scenarioSpeed>=99){
+          newScenario.push({cmd:"wait", fps:24})
           continue
         }else if(scenarioSpeed>=2){
           mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
@@ -47,7 +98,6 @@ var onPage = async ()=>{
         }
         continue
       }else if(e.cmd==="special" || e.cmd==="special_npc"){
-        if(scenarioSpeed>=99){continue}
         let lastDamage
         for(let a of e.list){
           if(a.damage){lastDamage=a.damage.slice(-1)[0]}
@@ -59,13 +109,14 @@ var onPage = async ()=>{
           value:+t.split.join(""),
           split:t.split,
           hp:lastDamage.hp,
-          color:lastDamage.color,
+          color:lastDamage.color || lastDamage.attr,
           critical:lastDamage.critical,
           miss:lastDamage.miss,
           guard:false,
           is_force_font_size:true,
           no_damage_motion:false,
         })))
+        if(scenarioSpeed>=3){newScenario.push({cmd:"wait", fps:24})}
         continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
@@ -90,22 +141,30 @@ var onPage = async ()=>{
         continue
       }
       if(["ability", "loop_damage", "windoweffect", "effect"].includes(e.cmd)){
-        if(scenarioSpeed>=3){continue}
+        if(scenarioSpeed>=3){
+          if(scenarioSpeed>=99 && e.cmd==="effect" && e.kind?.startsWith("burst")){
+            newScenario.push(e)
+          }
+        continue}
         if(e.wait){e.wait = 1}
       }
-      if(["special", "special_npc", "summon"].includes(e.cmd)){continue}
-      if(scenarioSpeed>=99 && ["super", "message", "attack"].includes(e.cmd)){continue}
+      if(["special", "special_npc", "summon"].includes(e.cmd)){
+        newScenario.push({cmd:"wait", fps:24})
+        continue
+      }
+      if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
+        if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:24})}
+        continue
+      }
       newScenario.push(e)
     }
     args[0].scenario = newScenario
     return originalPlayScenarios.apply(Game.view.setupView, args)
   };
-  stage.test = (args)=>{}
-  stage.view = view
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
-    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div><div class="listed-macro" data-id="extra" style="background-color:#000; min-height:10px;"><div style="display:none"><button data-id="scenarioSpeed">Speed</button></div></div></div>
+    `<div id="macros-list"><div class="listed-macro" data-id="new">New...</div><div class="listed-macro" data-id="showAll">Show all</div><div class="listed-macro" data-id="cancel" style="display:none">Stop playing</div><div class="listed-macro" data-id="extra" style="background-color:#000; min-height:10px;"><div style="display:none"><button data-id="scenarioSpeed">Speed</button></div></div><div style="display:none" class="nothing"></div></div>
     <div id="macro-recording" style="display:none"><div class="listed-macro" data-id="stop"><button>End recording</button> <button>Cancel</button> <button>Add macro</button></div></div>
     <div id="macro-settings" style="display:none">
       <div class="listed-macro" style="background-color:#111">Back</div>
@@ -127,8 +186,15 @@ var onPage = async ()=>{
         {value:2, name:"Faster", description:"Merges all attacks into a single animation."},
         {value:3, name:"Fast", description:"Skips more animations."},
         {value:99, name:"Skip all", description:"It would be sad to use that."},
-      ].map(o=>`<div class="listed-macro" data-value="${o.value}" data-status="none"><a style="font-size:125%">${o.name}</a><br><a>${o.description}</a></div>`)}
+        {value:100, name:"Auto farm", description:"Automatically farm this quest multiple times."},
+      ].map(o=>`<div class="listed-macro" data-value="${o.value}" data-status="none"><a style="font-size:125%">${o.name}</a><br><a>${o.description}</a></div>`).join("")}
+      <div style="display:none; color:#fff" class="autoSettings">
+        <div>Auto farm settings:</div>
+        <div>When starting, play macro <select data-key="macro" data-type="number" data-value=""></select> then enable <select data-key="autoGame"><option value="">nothing</option><option value="semi">semi auto</option><option value="full" selected>full auto</option></select>.</div>
+        <div>Maximum <input data-type="number" data-key="max" placeholder="infinite"> battles and <input data-type="number" data-key="maxHalfElixirs" placeholder="infinite" value="0"> half elixirs.</div>
+      </div>
     </div>
+    <div id="pause-auto-farm" style="text-align:center; display:none; font-size:200%"><button>Pause auto farm</button></div>
     <style>
       .listed-macro {
         display:block;
@@ -158,8 +224,9 @@ var onPage = async ()=>{
     </style>`
   )
   let list = document.querySelector("#macros-list")
-  let observer = new MutationObserver(onPage)
-  observer.observe(list.parentElement, {
+  if(stageObserver){stageObserver.disconnect()}
+  stageObserver = new MutationObserver(onPage)
+  stageObserver.observe(list.parentElement, {
     childList:true,
   })
   let recording = document.querySelector("#macro-recording")
@@ -169,16 +236,17 @@ var onPage = async ()=>{
   
   let characterByImage = url=>url.split("/").slice(-1)[0].split("_")[0]
   let speeds = ["slow", "slower", "normal", "faster", "fast", "skip"]
+  let pauseAutoFarm
   let playMacro = async id=>{
     let macro = macros[id]
-    let line = list.querySelector(`[data-id="${id}"]`)
+    let line = list.querySelector(`[data-id="${id}"], .nothing`)
     line.dataset.playing = "now"
     list.querySelector(`.listed-macro[data-id="cancel"]`).style.display = null
     let actions = [...macro.actions]
     let next = {}
     let check; check = (n,rec)=>{
       if(rec && !next[n]){
-        list.querySelector(`[data-id="${n}"]`).dataset.playing = "soon"
+        list.querySelector(`[data-id="${n}"], .nothing`).dataset.playing = "soon"
         next[n] = 1
       }else{next[n]++}
       if(rec>10){return}
@@ -194,24 +262,25 @@ var onPage = async ()=>{
     let wait = time=>new Promise(ok=>setTimeout(ok,time ? time : speed<=0 ? 2000 : 500))
     let myCancel = cancel
     while(actions.length){
-      if(cancel>myCancel){break}
+      if(pauseAutoFarm){await pauseAutoFarm[0]}
+      if(cancel>myCancel || document.querySelector(".prt-command-end").style.display){break}
       let action = actions.splice(0,1)[0]
       if(action.type==="macro"){
         if(!macros[action.macro]){continue}
         next[action.macro]--
-        list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = playing.slice(-1)[0]===id ? "original" : "soon"
-        list.querySelector(`[data-id="${action.macro}"]`).dataset.playing = "now"
+        list.querySelector(`[data-id="${playing.slice(-1)[0]}"], .nothing`).dataset.playing = playing.slice(-1)[0]===id ? "original" : "soon"
+        list.querySelector(`[data-id="${action.macro}"], .nothing`).dataset.playing = "now"
         playing.push(action.macro)
         actions.splice(0, 0, ...macros[action.macro].actions, {type:"leaveMacro"})
       continue}
       if(action.type==="leaveMacro"){
         let last = playing.splice(-1, 1)[0]
         if(next[last]>0){
-          list.querySelector(`[data-id="${last}"]`).dataset.playing = "soon"
+          list.querySelector(`[data-id="${last}"], .nothing`).dataset.playing = "soon"
         }else{
-          list.querySelector(`[data-id="${last}"]`).removeAttribute("data-playing")
+          list.querySelector(`[data-id="${last}"], .nothing`).removeAttribute("data-playing")
         }
-        list.querySelector(`[data-id="${playing.slice(-1)[0]}"]`).dataset.playing = "now"
+        list.querySelector(`[data-id="${playing.slice(-1)[0]}"], .nothing`).dataset.playing = "now"
       continue}
       
       if(action.type==="skill"){
@@ -230,7 +299,7 @@ var onPage = async ()=>{
             previousPos = stage.gGameStatus.command_slide.now_pos
             stage.gGameStatus.command_slide.now_pos = +button.getAttribute("ability-character-num")
           }
-          click(button)
+          click(button, {x:44+69*+button.parentElement.dataset["ability-index"], y:468, width:40, height:42})
           if(action.character){
             if(speed<=1){await wait()}
             let character
@@ -250,17 +319,27 @@ var onPage = async ()=>{
           if(speed<=2){await wait(200)}
         }
       }else if(action.type==="attack"){
-        let button = document.querySelectorAll(`.btn-attack-start.display-on`)[0]
+        let button = document.querySelector(`.btn-attack-start.display-on`)
         if(button){
           click(button)
+          let observer1; let observer2
           await new Promise((ok,err)=>{
-            let observer = new MutationObserver(()=>{
+            observer1 = new MutationObserver(()=>{
               if(cancel>myCancel || button.classList.contains("display-on")){ok()}
             })
-            observer.observe(button, {
+            observer1.observe(button, {
+              attributes:true,
+            })
+            let end = document.querySelector(".prt-command-end")
+            observer2 = new MutationObserver(()=>{
+              if(cancel>myCancel || end.style.display){ok()}
+            })
+            observer2.observe(end, {
               attributes:true,
             })
           })
+          observer1.disconnect()
+          observer2.disconnect()
         }
       }else if(action.type==="summon"){
         let back = document.querySelector(`.btn-command-back`)
@@ -272,6 +351,7 @@ var onPage = async ()=>{
         if(!button){continue}
         click(button)
         await wait()
+        // Selecting support summon can bug
         button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "supporter" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
         if(!button){continue}
         click(button)
@@ -290,11 +370,11 @@ var onPage = async ()=>{
         if(macro.speed==="slow"){await wait()}
       }
     }
-    list.querySelector(`[data-id="${id}"]`).removeAttribute("data-playing")
+    list.querySelector(`[data-id="${id}"], .nothing`).removeAttribute("data-playing")
     for(let i in next){
-      list.querySelector(`[data-id="${i}"]`).removeAttribute("data-playing")
+      list.querySelector(`[data-id="${i}"], .nothing`).removeAttribute("data-playing")
     }
-    if(!list.querySelectorAll("[data-playing]").length){
+    if(!list.querySelector("[data-playing]")){
       list.querySelector(`.listed-macro[data-id="cancel"]`).style.backgroundColor = null
       list.querySelector(`.listed-macro[data-id="cancel"]`).style.display = "none"
     }
@@ -455,6 +535,7 @@ var onPage = async ()=>{
     })
   })
 
+  let autoQuests = GM_getValue("autoQuests") || {}
   settings.children[0].addEventListener("click", ()=>{
     settings.style.display = "none"
     list.style.display = null
@@ -525,6 +606,17 @@ var onPage = async ()=>{
           }
         }
       }
+      for(let k in autoQuests){
+        let o = autoQuests[k]
+        if(!o.macro){continue}
+        if(o.macro===before){
+          o.macro = after
+        }else if(o.macro<before && o.macro>=after){
+          o.macro++
+        }else if(o.macro>before && o.macro<=after){
+          o.macro--
+        }
+      }
       let macro = macros[before]
       macros[before] = null
       macros.splice(after>=0 ? after +1 : 0, 0, macro)
@@ -563,7 +655,17 @@ var onPage = async ()=>{
     }
     for(let m of macros){
       for(let a of m.actions){
+        if(a.type==="macro" && a.macro===i){a.macro=null}else
         if(a.type==="macro" && a.macro>i){a.macro--}
+      }
+    }
+    for(let k in autoQuests){
+      let o = autoQuests[k]
+      if(!o.macro){continue}
+      if(o.macro===i){
+        delete o.macro
+      }else if(o.macro>i){
+        o.macro--
       }
     }
     settings.style.display = "none"
@@ -596,17 +698,31 @@ var onPage = async ()=>{
     })
   }
   let scenarioSpeeds = GM_getValue("scenarioSpeed") || {}
-  scenarioSpeed = scenarioSpeeds[enemyHash] || scenarioSpeeds.default || 0
+  let autoQuestSave
+  scenarioSpeed = autoQuests[stage.pJsnData.quest_id] ? 100 : scenarioSpeeds[enemyHash] || scenarioSpeeds.default || 0
+  let showMacroSpeeds = ()=>{
+    document.querySelector("#macro-speed").style.display = null
+    let list = document.querySelector(`#macro-speed div.autoSettings [data-key="macro"]`)
+    list.innerHTML = `<option value="">none</option>`+macros.map((macro,i)=>(
+      `<option value="${i}">${macro.name}</option>`
+    ))
+    list.value = list.dataset.value
+  }
   list.querySelector(`button[data-id="scenarioSpeed"]`).addEventListener("click", ()=>{
     list.style.display = "none"
-    document.querySelector("#macro-speed").style.display = null
+    showMacroSpeeds()
   })
-  for(let speed of document.querySelectorAll(`#macro-speed div`)){
-    speed.dataset.status = scenarioSpeeds.default==speed.dataset.value ? "selectedDefault" : scenarioSpeeds[enemyHash]==speed.dataset.value ? "selected" : "none"
+  let autoFarming
+  for(let speed of document.querySelectorAll(`#macro-speed div.listed-macro`)){
+    speed.dataset.status = scenarioSpeeds.default==speed.dataset.value ? "selectedDefault" : scenarioSpeed==speed.dataset.value ? "selected" : "none"
     speed.addEventListener("click", ()=>{
       if(speed.dataset.value==="back"){
-        list.style.display = null
+        (scenarioSpeed===100 && autoFarming ? document.querySelector("#pause-auto-farm") : list).style.display = null
         speed.parentElement.style.display = "none"
+        if(pauseAutoFarm){
+          pauseAutoFarm[1]()
+          pauseAutoFarm = null
+        }
       return}
       if(speed.dataset.status==="selectedDefault"){
         let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
@@ -614,8 +730,21 @@ var onPage = async ()=>{
           enemy.dataset.status = "none"
           delete scenarioSpeeds[enemyHash]
           scenarioSpeed = scenarioSpeeds.default
+          if(enemy.dataset.value=="100"){
+            autoQuestSave = autoQuests[stage.pJsnData.quest_id]
+            delete autoQuests[stage.pJsnData.quest_id]
+            GM_setValue("autoQuests", autoQuests)
+            farmingQuest = undefined
+            speed.parentElement.querySelector("div.autoSettings").style.display = "none"
+            if(pauseAutoFarm){
+              cancel++
+              pauseAutoFarm[1]()
+              pauseAutoFarm = null
+            }
+          }
         }
       }else if(speed.dataset.status==="selected"){
+        if(speed.dataset.value=="100"){return}
         let d = speed.parentElement.querySelector(`[data-status="selectedDefault"]`)
         if(d){
           d.dataset.status = "none"
@@ -626,12 +755,99 @@ var onPage = async ()=>{
         let enemy = speed.parentElement.querySelector(`[data-status="selected"]`)
         if(enemy){
           enemy.dataset.status = "none"
+          if(enemy.dataset.value=="100"){
+            autoQuestSave = autoQuests[stage.pJsnData.quest_id]
+            delete autoQuests[stage.pJsnData.quest_id]
+            GM_setValue("autoQuests", autoQuests)
+            farmingQuest = undefined
+            speed.parentElement.querySelector("div.autoSettings").style.display = "none"
+            if(pauseAutoFarm){
+              cancel++
+              pauseAutoFarm[1]()
+              pauseAutoFarm = null
+            }
+          }
         }
         scenarioSpeeds[enemyHash] = scenarioSpeed = +speed.dataset.value
         speed.dataset.status = "selected"
+        if(speed.dataset.value=="100"){
+          autoQuests[stage.pJsnData.quest_id] = autoQuestSave || {maxHalfElixirs:0, autoGame:"full"}
+          speed.parentElement.querySelector("div.autoSettings").style.display = null
+          GM_setValue("autoQuests", autoQuests)
+          farmingQuest = stage.pJsnData.quest_id
+        }
       }
       GM_setValue("scenarioSpeed", scenarioSpeeds)
     })
+  }
+  for(let e of document.querySelectorAll("#macro-speed div.autoSettings select, #macro-speed div.autoSettings input")){
+    let settings = autoQuests[stage.pJsnData.quest_id]
+    if(settings?.[e.dataset.key]!==undefined){
+      if(e.dataset.key==="macro"){
+        e.dataset.value = settings[e.dataset.key]
+      }else{
+        e.value = settings[e.dataset.key]
+      }
+    }
+    e.addEventListener("change", ()=>{
+      let settings = autoQuests[stage.pJsnData.quest_id]
+      if(!settings){return}
+      if(e.dataset.type==="number" && e.value && +e.value!==+e.value){
+        e.value = ""
+      return}
+      settings[e.dataset.key] = e.dataset.type==="number" ? (e.value==="" ? undefined : +e.value) : e.value
+      if(e.dataset.key==="macro"){
+        e.dataset.value = e.value
+      }
+      GM_setValue("autoQuests", autoQuests)
+    })
+  }
+  document.querySelector("#macro-speed div.autoSettings").style.display = autoQuests[stage.pJsnData.quest_id] ? null : "none"
+  document.querySelector("#pause-auto-farm button").addEventListener("click", ()=>{
+    pauseAutoFarm = []
+    pauseAutoFarm[0] = new Promise(ok=>{pauseAutoFarm[1]=ok})
+    document.querySelector("#pause-auto-farm").style.display = "none"
+    showMacroSpeeds()
+  })
+  if(scenarioSpeed===100){
+    document.querySelector("#pause-auto-farm").style.display = null
+    list.style.display = "none"
+    autoFarming = true
+    farmingQuest = stage.pJsnData.quest_id
+    setTimeout(async ()=>{
+      while(document.querySelector("#multi-btn-mask").style.display==="block" || stage.gGameStatus.ability_popup){await new Promise(ok=>setTimeout(ok,100))}
+      await new Promise(ok=>setTimeout(ok,2000))
+      if(pauseAutoFarm){await pauseAutoFarm[0]}
+      let settings = autoQuests[stage.pJsnData.quest_id]
+      if(scenarioSpeed!==100 || !settings){return}
+      let end = document.querySelector(".prt-command-end")
+      let observer = new MutationObserver(async ()=>{
+        if(end.style.display && scenarioSpeed===100){
+          observer.disconnect()
+          if(pauseAutoFarm){await pauseAutoFarm[0]}
+          click(end.children[0])
+        }
+      })
+      observer.observe(end, {
+        attributes:true,
+      })
+      if(settings.macro!==undefined){
+        await playMacro(settings.macro)
+        await new Promise(ok=>setTimeout(ok,200))
+      }
+      if(settings.autoGame){
+        view.battleAutoType = settings.autoGame==="full" ? 2 : 1
+        if(settings.autoGame==="semi"){
+          click(document.querySelector(`.btn-attack-start.display-on`))
+          await new Promise(ok=>setTimeout(ok,500))
+          view._showAutoButton()
+        }
+        stage.gGameStatus.enable_auto_button = true
+        let button = document.querySelector(".btn-auto")
+        button.style.display = "block"
+        click(button)
+      }
+    }, 10)
   }
 }
 

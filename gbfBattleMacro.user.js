@@ -821,6 +821,7 @@ var onPage = async ()=>{
       let end = document.querySelector(".prt-command-end")
       let observer = new MutationObserver(async ()=>{
         if(end.style.display && scenarioSpeed===100){
+          observer.disconnect()
           if(pauseAutoFarm){await pauseAutoFarm[0]}
           click(end.children[0])
         }
@@ -830,14 +831,16 @@ var onPage = async ()=>{
       })
       if(settings.macro!==undefined){
         await playMacro(settings.macro)
+        await new Promise(ok=>setTimeout(ok,200))
       }
       if(settings.autoGame){
         view.battleAutoType = settings.autoGame==="full" ? 2 : 1
-        stage.gGameStatus.enable_auto_button = true
         if(settings.autoGame==="semi"){
           click(document.querySelector(`.btn-attack-start.display-on`))
           await new Promise(ok=>setTimeout(ok,500))
+          view._showAutoButton()
         }
+        stage.gGameStatus.enable_auto_button = true
         let button = document.querySelector(".btn-auto")
         button.style.display = "block"
         click(button)

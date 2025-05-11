@@ -11,13 +11,13 @@
 // @grant        GM_setValue
 // ==/UserScript==
 
-var click = e=>{
+var click = (e, crect)=>{
   let rect = e.getBoundingClientRect()
-  return e.dispatchEvent(new Event("tap",{
-    bubbles:true, cancelable:true,
+  if(!Object.values(rect).find(v=>v)){rect = crect}
+  return $(e).trigger($.Event("tap",{
     target:e, currentTarget:e,
-    x:rect.x+Math.floor(rect.width*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
-    y:rect.y+Math.floor(rect.height*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
+    x:rect && Math.floor(rect.x+rect.width*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
+    y:rect && Math.floor(rect.y+rect.height*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
   }))
 }
 var recordFunction; let recordable

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-11 g
+// @version      2025-05-11
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -88,7 +88,7 @@ var onPage = async ()=>{
       }
       if(e.cmd==="attack" && e.from==="player"){
         if(scenarioSpeed>=99){
-          newScenario.push({cmd:"wait", fps:12})
+          newScenario.push({cmd:"wait", fps:24})
           continue
         }else if(scenarioSpeed>=2){
           mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
@@ -833,6 +833,7 @@ var onPage = async ()=>{
       }
       if(settings.autoGame){
         view.battleAutoType = settings.autoGame==="full" ? 2 : 1
+        stage.gGameStatus.enable_auto_button = true
         let button = document.querySelector(".btn-auto")
         button.style.display = "block"
         click(button)

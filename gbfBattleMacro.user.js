@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-11 b
+// @version      2025-05-11 d
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -11,7 +11,15 @@
 // @grant        GM_setValue
 // ==/UserScript==
 
-var click = e=>e.dispatchEvent(new Event("tap",{bubbles:true, cancelable:true, target:e, currentTarget:e}))
+var click = e=>{
+  let rect = e.getBoundingClientRect()
+  return e.dispatchEvent(new Event("tap",{
+    bubbles:true, cancelable:true,
+    target:e, currentTarget:e,
+    x:rect.x+Math.floor(rect.width*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
+    y:rect.y+Math.floor(rect.height*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
+  }))
+}
 var recordFunction; let recordable
 let cancel = 0
 let farmingQuest

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-11 f
+// @version      2025-05-11 g
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -190,7 +190,7 @@ var onPage = async ()=>{
       ].map(o=>`<div class="listed-macro" data-value="${o.value}" data-status="none"><a style="font-size:125%">${o.name}</a><br><a>${o.description}</a></div>`).join("")}
       <div style="display:none; color:#fff" class="autoSettings">
         <div>Auto farm settings:</div>
-        <div>When starting, play macro <select data-key="macro" data-type="number" data-value=""></select> then enable <select data-key="autoGame"><option value="nothing">nothing</option><option value="semi">semi auto</option><option value="full" selected>full auto</option></select>.</div>
+        <div>When starting, play macro <select data-key="macro" data-type="number" data-value=""></select> then enable <select data-key="autoGame"><option value="">nothing</option><option value="semi">semi auto</option><option value="full" selected>full auto</option></select>.</div>
         <div>Maximum <input data-type="number" data-key="max" placeholder="infinite"> battles and <input data-type="number" data-key="maxHalfElixirs" placeholder="infinite" value="0"> half elixirs.</div>
       </div>
     </div>
@@ -769,7 +769,7 @@ var onPage = async ()=>{
         scenarioSpeeds[enemyHash] = scenarioSpeed = +speed.dataset.value
         speed.dataset.status = "selected"
         if(speed.dataset.value=="100"){
-          autoQuests[stage.pJsnData.quest_id] = autoQuestSave || {maxHalfElixirs:0}
+          autoQuests[stage.pJsnData.quest_id] = autoQuestSave || {maxHalfElixirs:0, autoGame:"full"}
           speed.parentElement.querySelector("div.autoSettings").style.display = null
           GM_setValue("autoQuests", autoQuests)
           farmingQuest = stage.pJsnData.quest_id

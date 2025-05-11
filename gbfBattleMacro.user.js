@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-11 d
+// @version      2025-05-11 e
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -13,7 +13,7 @@
 
 var click = (e, crect)=>{
   let rect = e.getBoundingClientRect()
-  if(!Object.values(rect).find(v=>v)){rect = crect}
+  if(!["x","y","width","height"].find(k=>rect[k])){rect = crect}
   return $(e).trigger($.Event("tap",{
     target:e, currentTarget:e,
     x:rect && Math.floor(rect.x+rect.width*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
@@ -298,7 +298,7 @@ var onPage = async ()=>{
             previousPos = stage.gGameStatus.command_slide.now_pos
             stage.gGameStatus.command_slide.now_pos = +button.getAttribute("ability-character-num")
           }
-          click(button)
+          click(button, {x:44+69*+button.parentElement.dataset["ability-index"], y:468, width:40, height:42})
           if(action.character){
             if(speed<=1){await wait()}
             let character

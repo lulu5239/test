@@ -89,7 +89,6 @@ var onPage = async ()=>{
         }
         continue
       }else if(e.cmd==="special" || e.cmd==="special_npc"){
-        if(scenarioSpeed>=99){continue}
         let lastDamage
         for(let a of e.list){
           if(a.damage){lastDamage=a.damage.slice(-1)[0]}
@@ -101,13 +100,14 @@ var onPage = async ()=>{
           value:+t.split.join(""),
           split:t.split,
           hp:lastDamage.hp,
-          color:lastDamage.color,
+          color:lastDamage.color || lastDamage.attr,
           critical:lastDamage.critical,
           miss:lastDamage.miss,
           guard:false,
           is_force_font_size:true,
           no_damage_motion:false,
         })))
+        if(scenarioSpeed>=3){newScenario.push({cmd:"wait", fps:24})}
         continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
@@ -139,7 +139,10 @@ var onPage = async ()=>{
         continue}
         if(e.wait){e.wait = 1}
       }
-      if(["special", "special_npc", "summon"].includes(e.cmd)){continue}
+      if(["special", "special_npc", "summon"].includes(e.cmd)){
+        newScenario.push({cmd:"wait", fps:24})
+        continue
+      }
       if(scenarioSpeed>=99 && ["super", "message", "attack"].includes(e.cmd)){continue}
       newScenario.push(e)
     }

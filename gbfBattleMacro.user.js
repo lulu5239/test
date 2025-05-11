@@ -318,7 +318,7 @@ var onPage = async ()=>{
           if(speed<=2){await wait(200)}
         }
       }else if(action.type==="attack"){
-        let button = document.querySelectorAll(`.btn-attack-start.display-on`)[0]
+        let button = document.querySelector(`.btn-attack-start.display-on`)
         if(button){
           click(button)
           let observer1; let observer2
@@ -834,6 +834,10 @@ var onPage = async ()=>{
       if(settings.autoGame){
         view.battleAutoType = settings.autoGame==="full" ? 2 : 1
         stage.gGameStatus.enable_auto_button = true
+        if(settings.autoGame==="semi"){
+          click(document.querySelector(`.btn-attack-start.display-on`))
+          await new Promise(ok=>setTimeout(ok,500))
+        }
         let button = document.querySelector(".btn-auto")
         button.style.display = "block"
         click(button)

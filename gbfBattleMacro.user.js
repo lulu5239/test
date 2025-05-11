@@ -351,6 +351,7 @@ var onPage = async ()=>{
         if(!button){continue}
         click(button)
         await wait()
+        // Selecting support summon can bug
         button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "supporter" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
         if(!button){continue}
         click(button)

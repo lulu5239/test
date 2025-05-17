@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-11
+// @version      2025-05-17
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -351,11 +351,10 @@ var onPage = async ()=>{
         if(!button){continue}
         click(button)
         await wait()
-        // Selecting support summon can bug
         button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "supporter" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
         if(!button){continue}
         click(button)
-        while(document.querySelector(".pop-usual.pop-summon-detail").style.display==="none"){await wait(100)}
+        while(document.querySelector(".pop-usual.pop-summon-detail").style.display!=="block"){await wait(100)}
         click(document.querySelector(".btn-summon-use"))
         await wait()
       }else if(action.type==="calock"){
@@ -531,6 +530,9 @@ var onPage = async ()=>{
     select.className = null
     select.addEventListener("change", ()=>{
       select.parentElement.dataset.macro = select.value
+      if(recording.children.findIndex(e=>e===select.parentElement)===select.parentElement.children.length-1){
+        playMacro(+select.value)
+      }
       select.parentElement.innerText = macros[+select.value].name
     })
   })

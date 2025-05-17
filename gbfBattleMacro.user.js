@@ -530,8 +530,11 @@ var onPage = async ()=>{
     select.className = null
     select.addEventListener("change", ()=>{
       select.parentElement.dataset.macro = select.value
-      if(Array.from(select.parentElement.children).findIndex(e=>e===select.parentElement)===select.parentElement.children.length-1){
-        playMacro(+select.value)
+      if(Array.from(select.parentElement.children).findIndex(e=>e===select)===select.parentElement.children.length-1){
+        let f = recordFunction
+        playMacro(+select.value).then(()=>{
+          recordFunction = f
+        })
       }
       select.parentElement.innerText = macros[+select.value].name
     })

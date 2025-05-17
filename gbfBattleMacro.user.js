@@ -355,12 +355,12 @@ var onPage = async ()=>{
         button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "supporter" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
         if(!button){continue}
         click(button)
-        await wait(200)
+        while(document.querySelector(".pop-usual.pop-summon-detail").style.display==="none"){await wait(100)}
         click(document.querySelector(".btn-summon-use"))
         await wait()
       }else if(action.type==="calock"){
         let button = document.querySelector(".btn-lock")
-        let n = action.lock!="false" ? 1 : 0
+        let n = action.lock=="false" ? 1 : 0
         if(button.classList.contains("lock"+(1-n))){continue}
         if(button.parentElement.style.display==="none"){
           click(document.querySelector(`.btn-command-back`))
@@ -399,7 +399,7 @@ var onPage = async ()=>{
       settings.children[1].innerText = macro.name
       settings.children[3].innerText = macro.parties?.includes(partyHash) ? "Don't show for this party" : "Show for this party"
       settings.children[3].style.display = !macro.parties ? "none" : null
-      settings.children[4].innerText = !macro.parties ? "Don't always show" : "Always show"
+      settings.children[4].innerText = !macro.parties ? "Don't show for all parties" : "Show for all parties"
       settings.children[5].innerText = macro.enemies?.includes(enemyHash) ? "Don't show for this opponent" : "Show for this opponent"
       settings.children[5].style.display = !macro.enemies ? "none" : null
       settings.children[6].innerText = !macro.enemies ? "Don't show for all opponents" : "Show for all opponents"
@@ -566,7 +566,7 @@ var onPage = async ()=>{
     }
     settings.children[3].innerText = "Don't show for this party"
     settings.children[3].style.display = !macro.parties ? "none" : null
-    settings.children[4].innerText = !macro.parties ? "Don't always show" : "Always show"
+    settings.children[4].innerText = !macro.parties ? "Don't show for all parties" : "Show for all parties"
   GM_setValue("macros", macros)})
   settings.children[5].addEventListener("click", ()=>{
     let macro = macros[+settings.dataset.macro]
@@ -587,7 +587,7 @@ var onPage = async ()=>{
     }
     settings.children[5].innerText = "Don't show for this opponent"
     settings.children[5].style.display = !macro.enemies ? "none" : null
-    settings.children[6].innerText = !macro.enemies ? "Don't show for this opponent" : "Show for this opponent"
+    settings.children[6].innerText = !macro.enemies ? "Don't show for all opponent" : "Show for all opponent"
   GM_setValue("macros", macros)})
   settings.children[7].addEventListener("click", ()=>{
     list.insertAdjacentHTML("afterbegin", `<div class="listed-macro" data-id="moveAfter">Move macro after...</div>`)

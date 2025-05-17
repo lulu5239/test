@@ -149,7 +149,7 @@ var onPage = async ()=>{
         if(e.wait){e.wait = 1}
       }
       if(["special", "special_npc", "summon"].includes(e.cmd)){
-        newScenario.push({cmd:"wait", fps:24})
+        newScenario.push({cmd:"wait", fps:e.cmd==="special_npc" ? 36 : 24})
         continue
       }
       if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
@@ -530,7 +530,7 @@ var onPage = async ()=>{
     select.className = null
     select.addEventListener("change", ()=>{
       select.parentElement.dataset.macro = select.value
-      if(recording.children.findIndex(e=>e===select.parentElement)===select.parentElement.children.length-1){
+      if(Array.from(select.parentElement.children).findIndex(e=>e===select.parentElement)===select.parentElement.children.length-1){
         playMacro(+select.value)
       }
       select.parentElement.innerText = macros[+select.value].name

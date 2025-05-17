@@ -532,6 +532,7 @@ var onPage = async ()=>{
       select.parentElement.dataset.macro = select.value
       if(Array.from(select.parentElement.children).findIndex(e=>e===select)===select.parentElement.children.length-1){
         let f = recordFunction
+        recordFunction = null
         playMacro(+select.value).then(()=>{
           recordFunction = f
         })

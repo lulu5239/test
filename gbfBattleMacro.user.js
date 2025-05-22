@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-17
+// @version      2025-05-22
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -820,10 +820,12 @@ var onPage = async ()=>{
     list.style.display = "none"
     autoFarming = true
     farmingQuest = stage.pJsnData.quest_id
+    let myCancel = cancel
     setTimeout(async ()=>{
       while(document.querySelector("#multi-btn-mask").style.display==="block" || stage.gGameStatus.ability_popup){await new Promise(ok=>setTimeout(ok,100))}
       await new Promise(ok=>setTimeout(ok,2000))
       if(pauseAutoFarm){await pauseAutoFarm[0]}
+      if(cancel!==myCancel){return}
       let settings = autoQuests[stage.pJsnData.quest_id]
       if(scenarioSpeed!==100 || !settings){return}
       let end = document.querySelector(".prt-command-end")
@@ -831,6 +833,7 @@ var onPage = async ()=>{
         if(end.style.display && scenarioSpeed===100){
           observer.disconnect()
           if(pauseAutoFarm){await pauseAutoFarm[0]}
+          if(cancel!==myCancel){return}
           click(end.children[0])
         }
       })
@@ -846,6 +849,7 @@ var onPage = async ()=>{
         if(settings.autoGame==="semi"){
           click(document.querySelector(`.btn-attack-start.display-on`))
           await new Promise(ok=>setTimeout(ok,500))
+          if(cancel!==myCancel){return}
           view._showAutoButton()
         }
         stage.gGameStatus.enable_auto_button = true

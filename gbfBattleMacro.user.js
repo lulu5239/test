@@ -149,12 +149,12 @@ var onPage = async ()=>{
         if(e.wait){e.wait = 1}
       }
       if(["special", "special_npc", "summon"].includes(e.cmd)){
-        newScenario.push({cmd:"wait", fps:e.cmd==="special_npc" ? 36 : 24})
+        newScenario.push({cmd:"wait", fps:e.cmd==="special_npc" ? 24*2.5 : 24})
         continue
       }
       if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
-        if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:48})}
-        continue
+        if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:24})}
+        else{continue}
       }
       newScenario.push(e)
     }

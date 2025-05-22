@@ -153,7 +153,7 @@ var onPage = async ()=>{
         continue
       }
       if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
-        if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:24})}
+        if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:36})}
         continue
       }
       newScenario.push(e)
@@ -351,7 +351,7 @@ var onPage = async ()=>{
         if(!button){continue}
         click(button)
         await wait()
-        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "supporter" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
+        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "supporter" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)+1}"]`)[0]
         if(!button){continue}
         click(button)
         while(document.querySelector(".pop-usual.pop-summon-detail").style.display!=="block"){await wait(100)}
@@ -843,6 +843,7 @@ var onPage = async ()=>{
       if(settings.macro!==undefined){
         await playMacro(settings.macro)
         await new Promise(ok=>setTimeout(ok,200))
+        if(cancel!==myCancel){return}
       }
       if(settings.autoGame){
         view.battleAutoType = settings.autoGame==="full" ? 2 : 1

@@ -153,7 +153,7 @@ var onPage = async ()=>{
         continue
       }
       if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
-        if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:36})}
+        if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:48})}
         continue
       }
       newScenario.push(e)

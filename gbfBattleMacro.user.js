@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-22
+// @version      2025-05-23
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -148,11 +148,11 @@ var onPage = async ()=>{
         continue}
         if(e.wait){e.wait = 1}
       }
-      if(["special", "special_npc", "summon"].includes(e.cmd)){
+      if(["special", scenarioSpeed<99 && "special_npc", "summon"].includes(e.cmd)){
         newScenario.push({cmd:"wait", fps:e.cmd==="special_npc" ? 24*2.5 : 24})
         continue
       }
-      if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
+      if(scenarioSpeed>=99 && [/*"super",*/ "message", "attack", "heal"].includes(e.cmd)){
         if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:24})}
         else{continue}
       }

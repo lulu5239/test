@@ -149,7 +149,7 @@ var onPage = async ()=>{
         if(e.wait){e.wait = 1}
       }
       if(scenarioSpeed>=99 && ["special", "special_npc"].includes(e.cmd)){
-        newScenario.push({cmd:"wait", fps:24})
+        newScenario.push({cmd:"wait", fps:24*1.5})
       }else if(["special", "special_npc", "summon"].includes(e.cmd)){
         newScenario.push({cmd:"wait", fps:e.cmd==="special_npc" ? 24*2.5 : 24})
         continue

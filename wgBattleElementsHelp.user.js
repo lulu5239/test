@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-05-17
+// @version      2025-05-25
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -47,9 +47,12 @@
   observer.observe(document, { childList: true, subtree: true });
   await p
   
-  let party = localStorage["y_WG-party"] && JSON.parse(localStorage["y_WG-party"])
-  if(!party){
-    party = localStorage["y_WG-party"] = {}
+  let party = localStorage["y_WG-party"]
+  if(!party || party==="[object Object]"){
+    localStorage["y_WG-party"] = "{}"
+    party = {}
+  }else{
+    party = JSON.parse(party)
   }
   if(path==="/home"){
     let nowHere = []

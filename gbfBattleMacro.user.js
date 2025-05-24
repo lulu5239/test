@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-17
+// @version      2025-05-25
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -148,13 +148,15 @@ var onPage = async ()=>{
         continue}
         if(e.wait){e.wait = 1}
       }
-      if(["special", "special_npc", "summon"].includes(e.cmd)){
-        newScenario.push({cmd:"wait", fps:e.cmd==="special_npc" ? 36 : 24})
+      if(scenarioSpeed>=99 && ["special", "special_npc"].includes(e.cmd)){
+        newScenario.push({cmd:"wait", fps:24*1.5})
+      }else if(["special", "special_npc", "summon"].includes(e.cmd)){
+        newScenario.push({cmd:"wait", fps:e.cmd==="special_npc" ? 24*2.5 : 24})
         continue
       }
-      if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
+      if(scenarioSpeed>=99 && [/*"super",*/ "message", "attack", "heal"].includes(e.cmd)){
         if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:24})}
-        continue
+        else{continue}
       }
       newScenario.push(e)
     }
@@ -351,7 +353,7 @@ var onPage = async ()=>{
         if(!button){continue}
         click(button)
         await wait()
-        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "supporter" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)}"]`)[0]
+        button = document.querySelectorAll(`.btn-summon-available.on[summon-id="${action.summon==="support" ? "supporter" : stage.pJsnData.summon.findIndex(s=>s.id===action.summon)+1}"]`)[0]
         if(!button){continue}
         click(button)
         while(document.querySelector(".pop-usual.pop-summon-detail").style.display!=="block"){await wait(100)}
@@ -820,10 +822,12 @@ var onPage = async ()=>{
     list.style.display = "none"
     autoFarming = true
     farmingQuest = stage.pJsnData.quest_id
+    let myCancel = cancel
     setTimeout(async ()=>{
       while(document.querySelector("#multi-btn-mask").style.display==="block" || stage.gGameStatus.ability_popup){await new Promise(ok=>setTimeout(ok,100))}
       await new Promise(ok=>setTimeout(ok,2000))
       if(pauseAutoFarm){await pauseAutoFarm[0]}
+      if(cancel!==myCancel){return}
       let settings = autoQuests[stage.pJsnData.quest_id]
       if(scenarioSpeed!==100 || !settings){return}
       let end = document.querySelector(".prt-command-end")
@@ -831,6 +835,7 @@ var onPage = async ()=>{
         if(end.style.display && scenarioSpeed===100){
           observer.disconnect()
           if(pauseAutoFarm){await pauseAutoFarm[0]}
+          if(cancel!==myCancel){return}
           click(end.children[0])
         }
       })
@@ -840,12 +845,14 @@ var onPage = async ()=>{
       if(settings.macro!==undefined){
         await playMacro(settings.macro)
         await new Promise(ok=>setTimeout(ok,200))
+        if(cancel!==myCancel){return}
       }
       if(settings.autoGame){
         view.battleAutoType = settings.autoGame==="full" ? 2 : 1
         if(settings.autoGame==="semi"){
           click(document.querySelector(`.btn-attack-start.display-on`))
           await new Promise(ok=>setTimeout(ok,500))
+          if(cancel!==myCancel){return}
           view._showAutoButton()
         }
         stage.gGameStatus.enable_auto_button = true

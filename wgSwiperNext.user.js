@@ -257,6 +257,14 @@
     for(let card of document.querySelectorAll("a.selectCard")){
       createNextAction(card)
     }
+    let originalUpdateDisenchantCount = updateDisenchantCount
+    updateDisenchantCount = (...args)=>{
+      originalUpdateDisenchantCount(...args)
+      for(let card of document.querySelectorAll("a.selectCard")){
+        if(card.querySelector(".nextAction")){continue}
+        createNextAction(card)
+      }
+    }
 
     document.querySelector("#cardActionBlock, #noCardLeft").children[1].insertAdjacentHTML("afterbegin",
       `<style>.swiperNextButton {

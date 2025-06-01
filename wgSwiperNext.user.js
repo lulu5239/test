@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-05-08
+// @version      2025-06-01
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -256,6 +256,14 @@
     }
     for(let card of document.querySelectorAll("a.selectCard")){
       createNextAction(card)
+    }
+    let originalUpdateDisenchantCount = updateDisenchantCount
+    updateDisenchantCount = (...args)=>{
+      originalUpdateDisenchantCount(...args)
+      for(let card of document.querySelectorAll("a.selectCard")){
+        if(card.querySelector(".nextAction")){continue}
+        createNextAction(card)
+      }
     }
 
     document.querySelector("#cardActionBlock, #noCardLeft").children[1].insertAdjacentHTML("afterbegin",

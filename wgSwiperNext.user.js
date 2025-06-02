@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-06-01
+// @version      2025-06-02
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -290,7 +290,7 @@
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="next"){
         button.addEventListener("click", ()=>{
-          nextCard($nextCard)
+          nextCard($nextCard[0])
         })
       continue}
       let i = button.dataset.nextaction
@@ -349,8 +349,8 @@
 
     let originalNextCard = nextCard
     nextCard = (...args)=>{
-      selectedCard = args[0][0]
-      let action = cards[args[0].data("card").id]
+      selectedCard = args[0]
+      let action = cards[$(selectedCard).data("card").id]
       document.querySelector(`#swiperNextButtons div[data-nextaction="${action!==undefined ? ""+action : "nothing"}"]`).click()
       if(settings.showTopSimps){
         document.querySelector("#topSimps button").style.display = null
@@ -360,7 +360,7 @@
     }
     if(!$nextCard){
       let card = $("a.selectCard").first()
-      if(card?.length){nextCard(card)}
+      if(card?.length){nextCard(card[0])}
     }
     
     var processCardActions = async ()=>{

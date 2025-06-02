@@ -360,7 +360,7 @@
     }
     if(!$nextCard){
       let card = $("a.selectCard").first()
-      if(card?.length){nextCard(card)}
+      if(card?.length){nextCard(card[0])}
     }
     
     var processCardActions = async ()=>{

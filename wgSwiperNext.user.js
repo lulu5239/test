@@ -555,7 +555,7 @@
         let i = ["disenchant", "portfolio", "box1", "box2", "box3"].findIndex(e=>e===action)
         if(i>=0 || action==="nothing" || action==="next"){
           document.querySelector(`#swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()
-          if(settings.keybindAutoNext && action!=="next"){nextCard($nextCard)document.querySelector(`#swiperNextButtons [data-nextaction="next"]`).click()}
+          if(settings.keybindAutoNext && action!=="next"){document.querySelector(`#swiperNextButtons [data-nextaction="next"]`).click()}
         return}
       return}
       settings[recording] = ev.key

@@ -553,13 +553,10 @@
         if(!action){return}
         action = action.slice(8)
         let i = ["disenchant", "portfolio", "box1", "box2", "box3"].findIndex(e=>e===action)
-        if(i>=0 || action==="nothing"){
+        if(i>=0 || action==="nothing" || action==="next"){
           document.querySelector(`#swiperNextButtons [data-nextaction="${action==="nothing" ? "nothing" : i}"]`).click()
-          if(settings.keybindAutoNext){nextCard($nextCard)}
+          if(settings.keybindAutoNext && action!=="next"){nextCard($nextCard)document.querySelector(`#swiperNextButtons [data-nextaction="next"]`).click()}
         return}
-        if(action==="next"){
-          nextCard($nextCard)
-        }
       return}
       settings[recording] = ev.key
       GM_setValue("settings", settings)

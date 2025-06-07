@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-25
+// @version      2025-06-07
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -866,3 +866,12 @@ var onPage = async ()=>{
 
 window.addEventListener("hashchange", onPage)
 onPage()
+
+setTimeout(async ()=>{
+  while(!requirejs.s.contexts._.defined["util/navigate"]){await new Promise(ok=>setTimeout(ok,500))}
+  let original = requirejs.s.contexts._.defined["util/navigate"].hash
+  requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
+    if(args[1]?.refresh){delete args[1].refresh}
+    return original(...args)
+  }
+}, 1000)

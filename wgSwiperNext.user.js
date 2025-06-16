@@ -49,8 +49,7 @@
   }
 
   if(path==="/swiper"){
-    document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
-      `<br><style>.swiperNextButton {
+    document.head.insertAdjacentHTML("beforeend", `<style>.swiperNextButton {
         display:inline-flex;
         color:#fff;
         background-color:#111a;
@@ -62,7 +61,9 @@
         user-select:none;
       }
       ${settings.transparentSwiperButtons ? ".tinder--buttons button {background-color: #0008}" : ""}
-      </style><div id="swiperNextButtons" style="height:${settings.biggerButtons ? "50" : "30"}px; overflow-y:hidden; margin-top: 5px;">` + [0,1,2,3,4,"swap"].map(i=>
+    </style>`)
+    document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
+      `<br><div id="swiperNextButtons" style="height:${settings.biggerButtons ? "50" : "30"}px; overflow-y:hidden; margin-top: 5px;">` + [0,1,2,3,4,"swap"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
     )

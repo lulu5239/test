@@ -60,7 +60,7 @@
         align-items:center;
         min-width:30px;
         user-select:none;
-      }</style><div id="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
+      }</style><div id="swiperNextButtons" style="height:${settings.biggerButtons ? "50" : "30"}px; overflow-y:hidden; margin-top: 5px;">` + [0,1,2,3,4,"swap"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
     )
@@ -152,6 +152,11 @@
       swiperNextButtons.appendChild(button)
     }
 
+    let wishedCards = GM_getValue("wishedCards") || []
+    let unwishlistCard = async id=>{
+      // Later...
+    }
+
     let flirtAnyways
     let originalPostServer = postServer
     postServer = (...args)=>{
@@ -163,22 +168,28 @@
       }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
-      if(nextCardData && +cardActions[""+nextCardData.card_id] && +cardActions[""+nextCardData.card_id]!==selected){
-        selectedOnce = +cardActions[""+nextCardData.card_id]
+      let nextAction = nextCardData && (settings.wishedCardDestination && wishedCards.includes(nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id] && +cardActions[""+nextCardData.card_id]!==selected)
+      if(nextAction){
+        selectedOnce = nextAction
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = "solid 3px #"+colors.selectedOnce
       }else{
         selectedOnce = null
       }
-      if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && ! flirtAnyways){
+      if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
         args[1] = settings.crushManualBattles && card.element!=="???" ? "🗑️" : "👊"
       }
       flirtAnyways = null
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
-        if(data.result.includes(" Card (\u2116 ") && action!==1 || settings.keepActions){
+        let gotCard = data.result.includes(" Card (\u2116 ")
+        if(gotCard && action!==1 || settings.keepActions){
           cardActions[card.card_id] = action
           GM_setValue("cardActions", cardActions)
+        }
+        if(gotCard && settings.unwishistObtainedCards && wishedCards.includes(card.card_id)){
+          if(settings.unwishlistObtainedCards==="confirm" && !confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){return}
+          unwishlistCard(card.card_id)
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
@@ -227,6 +238,9 @@
         document.querySelector(settings.confirmKeybindCharm ? "#deb" : ".btnDeb").click()
       }else if(action==="battle"){
         document.querySelector(".btnBattle").click()
+      }else if(action==="unwishlist"){
+        unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id)
+        showSuccessToast("Unwishlisting card.")
       }
     })
   return}
@@ -442,8 +456,9 @@
         <div data-page="visibility">
           For the destination buttons:<br>
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
-          ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
+          ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
           On the cards page:<br>
+          ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
           ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>
           <br>
           When feeding an Animu:<br>
@@ -466,6 +481,7 @@
           ${settingKeybind("battle", "Battle")}<br>
           ${settingKeybind("nothing", "Nothing (on cards page)")}<br>
           ${settingKeybind("next", "Next card (on cards page)")}<br>
+          ${settingKeybind("unwishlist", "Remove card from wishlist (on swiper page)")}<br>
           <br>
           ${settingCheckbox("keybindAutoNext", "Automatically display next card after selecting destination using keybind, from the cards page")}
         </div>

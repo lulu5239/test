@@ -154,7 +154,18 @@
 
     let wishedCards = GM_getValue("wishedCards") || []
     let unwishlistCard = async id=>{
-      // Later...
+      await fetch('https://waifugame.com/profile/wishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/javascript, */*; q=0.01',
+        },
+        body: JSON.stringify({
+          '_token': token,
+          'action': 'remove',
+          'tag': 'id:'+id,
+        })
+      });
     }
 
     let flirtAnyways

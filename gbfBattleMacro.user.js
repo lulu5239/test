@@ -79,7 +79,7 @@ var onPage = async ()=>{
   let originalPlayScenarios = view.playScenarios
   view.playScenarios = (...args)=>{
     stage.lastScenario = [...args[0].scenario]
-    let mergedDamage = []; let minimumTime = +new Date()
+    let mergedDamage = []; let minimumTime = 0
     let newScenario = scenarioSpeed && !(stage.pJsnData.multi_raid_member_info?.length>1) ? [] : args[0].scenario
     for(let e of (newScenario.length ? [] : args[0].scenario)){
       if(["recast", "chain_burst_gauge"].includes(e.cmd)){
@@ -148,12 +148,9 @@ var onPage = async ()=>{
         continue}
         if(e.wait){e.wait = 1}
       }
-      if(["special", "special_npc"].includes(e.cmd)){
-        minimumTime += 5000
-        if(scenarioSpeed>=99){continue}
-      }else if(["special", "special_npc", "summon"].includes(e.cmd)){
-        minimumTime += e.cmd==="summon" ? 2000 : 5000
-        continue
+      if(["special", "special_npc", "summon"].includes(e.cmd)){
+        minimumTime += 2000
+        if(scenarioSpeed>=99 || e.cmd==="summon"){continue}
       }
       if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
         if(e.cmd==="super"){minimumTime+=2000}
@@ -162,7 +159,7 @@ var onPage = async ()=>{
       newScenario.push(e)
     }
     args[0].scenario = newScenario
-    scenarioEndTime = minimumTime
+    scenarioEndTime = +new Date() + minimumTime
     return originalPlayScenarios.apply(view, args)
   };
   let originalInvokeAttackQueue = view.InvokeAttackQueue

@@ -148,13 +148,14 @@ var onPage = async ()=>{
         continue}
         if(e.wait){e.wait = 1}
       }
-      if(scenarioSpeed>=99 && ["special", "special_npc"].includes(e.cmd)){
-        minimumTime += 3000
+      if(["special", "special_npc"].includes(e.cmd)){
+        minimumTime += 5000
+        if(scenarioSpeed>=99){continue}
       }else if(["special", "special_npc", "summon"].includes(e.cmd)){
-        minimumTime += e.cmd==="special_npc" ? 5000 : 2000
+        minimumTime += e.cmd==="summon" ? 2000 : 5000
         continue
       }
-      if(scenarioSpeed>=99 && [/*"super",*/ "message", "attack", "heal"].includes(e.cmd)){
+      if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
         if(e.cmd==="super"){minimumTime+=2000}
         continue
       }

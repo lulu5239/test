@@ -162,7 +162,7 @@ var onPage = async ()=>{
       newScenario.push(e)
     }
     args[0].scenario = newScenario
-    let r = await originalPlayScenarios.apply(Game.view.setupView, args)
+    let r = await originalPlayScenarios.apply(Game.view.setupView, args) // await doesn't work for that function
     let t = +new Date()
     if(t-startT<minimumTime){
       await new Promise(ok=>setTimeout(ok, minimumTime - (t-startT)))

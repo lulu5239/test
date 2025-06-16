@@ -49,7 +49,7 @@
   }
 
   if(path==="/swiper"){
-    document.head.insertAdjacentHTML("beforeend", `<style>.swiperNextButton {
+    document.body.insertAdjacentHTML("beforeend", `<style>.swiperNextButton {
         display:inline-flex;
         color:#fff;
         background-color:#111a;
@@ -201,7 +201,7 @@
           cardActions[card.card_id] = action
           GM_setValue("cardActions", cardActions)
         }
-        if(gotCard && settings.unwishistObtainedCards && wishedCards.includes(""+card.card_id)){
+        if(gotCard && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card_id)){
           if(settings.unwishlistObtainedCards==="confirm" && !confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){return}
           unwishlistCard(card.card_id)
         }

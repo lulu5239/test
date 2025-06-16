@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-06-16
+// @version      2025-05-25
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -77,9 +77,9 @@ var onPage = async ()=>{
 
   let scenarioSpeed = 0
   let originalPlayScenarios = view.playScenarios
-  view.playScenarios = async (...args)=>{
+  view.playScenarios = function(...args) {
     stage.lastScenario = [...args[0].scenario]
-    let mergedDamage = []; let minimumTime = 0; let startT = +new Date()
+    let mergedDamage = []
     let newScenario = scenarioSpeed && !(stage.pJsnData.multi_raid_member_info?.length>1) ? [] : args[0].scenario
     for(let e of (newScenario.length ? [] : args[0].scenario)){
       if(["recast", "chain_burst_gauge"].includes(e.cmd)){
@@ -148,26 +148,20 @@ var onPage = async ()=>{
         continue}
         if(e.wait){e.wait = 1}
       }
-      if(["special", "special_npc"].includes(e.cmd)){
-        minimumTime += 5000
-        if(scenarioSpeed>=99){continue}
+      if(scenarioSpeed>=99 && ["special", "special_npc"].includes(e.cmd)){
+        newScenario.push({cmd:"wait", fps:24*1.5})
       }else if(["special", "special_npc", "summon"].includes(e.cmd)){
-        minimumTime += e.cmd==="summon" ? 2000 : 5000
+        newScenario.push({cmd:"wait", fps:e.cmd==="special_npc" ? 24*2.5 : 24})
         continue
       }
-      if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
-        if(e.cmd==="super"){minimumTime+=2000}
-        continue
+      if(scenarioSpeed>=99 && [/*"super",*/ "message", "attack", "heal"].includes(e.cmd)){
+        if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:24})}
+        else{continue}
       }
       newScenario.push(e)
     }
     args[0].scenario = newScenario
-    let r = await originalPlayScenarios.apply(Game.view.setupView, args)
-    let t = +new Date()
-    if(t-startT<minimumTime){
-      await new Promise(ok=>setTimeout(ok, minimumTime - (t-startT)))
-    }
-    return r
+    return originalPlayScenarios.apply(Game.view.setupView, args)
   };
   
   let macros = GM_getValue("macros") || []
@@ -872,12 +866,3 @@ var onPage = async ()=>{
 
 window.addEventListener("hashchange", onPage)
 onPage()
-
-setTimeout(async ()=>{
-  while(!requirejs.s.contexts._.defined["util/navigate"]){await new Promise(ok=>setTimeout(ok,500))}
-  let original = requirejs.s.contexts._.defined["util/navigate"].hash
-  requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
-    if(args[1]?.refresh && ["#quest/", "#raid/"].find(e=>document.location.hash?.startsWith(e))){delete args[1].refresh}
-    return original(...args)
-  }
-}, 1000)

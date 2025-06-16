@@ -60,7 +60,9 @@
         align-items:center;
         min-width:30px;
         user-select:none;
-      }</style><div id="swiperNextButtons" style="height:${settings.biggerButtons ? "50" : "30"}px; overflow-y:hidden; margin-top: 5px;">` + [0,1,2,3,4,"swap"].map(i=>
+      }
+      ${settings.transparentSwiperButtons ? ".tinder--buttons button {background-color: #0008}" : ""}
+      </style><div id="swiperNextButtons" style="height:${settings.biggerButtons ? "50" : "30"}px; overflow-y:hidden; margin-top: 5px;">` + [0,1,2,3,4,"swap"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
     )
@@ -468,6 +470,7 @@
           For the destination buttons:<br>
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
           ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
+          ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
           On the cards page:<br>
           ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
           ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>

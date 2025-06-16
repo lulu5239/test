@@ -165,13 +165,13 @@ var onPage = async ()=>{
     scenarioEndTime = minimumTime
     return originalPlayScenarios.apply(view, args)
   };
-  let originalPostProcess = view.postprocessOnPlayScenarios
-  view.postprocessOnPlayScenarios = async (...args)=>{
+  let originalInvokeAttackQueue = view.InvokeAttackQueue
+  view.InvokeAttackQueue = async (...args)=>{
     let t = +new Date()
     if(t<scenarioEndTime){
       await new Promise(ok=>setTimeout(ok, scenarioEndTime - t))
     }
-    return originalPostProcess.apply(view, args)
+    return originalInvokeAttackQueue.apply(view, args)
   }
   
   let macros = GM_getValue("macros") || []

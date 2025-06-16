@@ -172,7 +172,7 @@
       let i = wishedCards?.findIndex(c=>c===""+id)
       if(i>=0){
         wishedCards.splice(i, 1)
-        GM_setValue("wishedCards", i)
+        GM_setValue("wishedCards", wishedCards)
       }
     }
 

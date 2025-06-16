@@ -171,7 +171,7 @@
         selectedOnce = null
       }
       if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && ! flirtAnyways){
-        args[1] = settings.crushManualBattles && card.element==="???" ? "🗑️" : "👊"
+        args[1] = settings.crushManualBattles && card.element!=="???" ? "🗑️" : "👊"
       }
       flirtAnyways = null
       let originalSuccessFn = args[2]

@@ -484,7 +484,19 @@
             {value:5, name:"Legendary rarity or lower"},
             {value:6, name:"Always"},
           ])}<br>
-          ${settingCheckbox("crushManualBattles", "Crush instead of manually battling")}
+          ${settingCheckbox("crushManualBattles", "Crush instead of manually battling")}<br>
+          Unwishlist obtained cards ${settingSelect("unwishlistObtainedCards", [
+            {value:"", name:"never"},
+            {value:"confirm", name:"after confirmation"},
+            {value:"auto", name:"automatically"},
+          ])} (not functional with wishlisted tags).<br>
+          Automatically pre-select ${settingSelect("wishedCardDestination", [
+            {value:"", name:"nowhere specific"},
+            {value:1, name:"Portfolio"},
+            {value:2, name:"Box 1"},
+            {value:3, name:"Box 2"},
+            {value:4, name:"Box 3"},
+          ])} as destination for wishlisted cards (also not functional for tags).
         </div>
       </div>
       <style>
@@ -584,5 +596,11 @@
       }
     }
     GM_setValue("formations", formations)
+  }
+
+  if(path==="/profile/wishlist"){
+    if(!settings.unwishlistObtainedCards && !settings.wishedCardDestination){return}
+    let wishlist = Array.from(document.querySelectorAll("#wishedCards [data-cardid]")).map(e=>e.dataset.cardid)
+    GM_setValue("wishedCards", wishlist)
   }
 })();

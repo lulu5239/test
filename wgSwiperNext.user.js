@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-06-03
+// @version      2025-06-16
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -49,8 +49,7 @@
   }
 
   if(path==="/swiper"){
-    document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
-      `<br><style>.swiperNextButton {
+    document.body.insertAdjacentHTML("beforeend", `<style>.swiperNextButton {
         display:inline-flex;
         color:#fff;
         background-color:#111a;
@@ -60,7 +59,11 @@
         align-items:center;
         min-width:30px;
         user-select:none;
-      }</style><div id="swiperNextButtons" style="height:30px; overflow-y:hidden">` + [0,1,2,3,4,"swap"].map(i=>
+      }
+      ${settings.transparentSwiperButtons ? ".tinder--buttons button {background-color: #0008}" : ""}
+    </style>`)
+    document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
+      `<br><div id="swiperNextButtons" style="height:${settings.biggerButtons ? "50" : "30"}px; overflow-y:hidden; margin-top: 5px;">` + [0,1,2,3,4,"swap"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
       ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
     )
@@ -152,6 +155,27 @@
       swiperNextButtons.appendChild(button)
     }
 
+    let wishedCards = GM_getValue("wishedCards") || []
+    let unwishlistCard = async id=>{
+      await fetch('https://waifugame.com/profile/wishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/javascript, */*; q=0.01',
+        },
+        body: JSON.stringify({
+          '_token': token,
+          'action': 'remove',
+          'tag': 'id:'+id,
+        })
+      });
+      let i = wishedCards?.findIndex(c=>c===""+id)
+      if(i>=0){
+        wishedCards.splice(i, 1)
+        GM_setValue("wishedCards", wishedCards)
+      }
+    }
+
     let flirtAnyways
     let originalPostServer = postServer
     postServer = (...args)=>{
@@ -163,22 +187,28 @@
       }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
-      if(nextCardData && +cardActions[""+nextCardData.card_id] && +cardActions[""+nextCardData.card_id]!==selected){
-        selectedOnce = +cardActions[""+nextCardData.card_id]
+      let nextAction = nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id])
+      if(nextAction){
+        selectedOnce = nextAction
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = "solid 3px #"+colors.selectedOnce
       }else{
         selectedOnce = null
       }
-      if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && ! flirtAnyways){
-        args[1] = "👊"
+      if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
+        args[1] = settings.crushManualBattles && card.element!=="???" ? "🗑️" : "👊"
       }
       flirtAnyways = null
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
-        if(data.result.includes(" Card (\u2116 ") && action!==1 || settings.keepActions){
+        let gotCard = data.result.includes(" Card (\u2116 ")
+        if(gotCard && action!==1 || settings.keepActions){
           cardActions[card.card_id] = action
           GM_setValue("cardActions", cardActions)
+        }
+        if(gotCard && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card_id)){
+          if(settings.unwishlistObtainedCards==="confirm" && !confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){return}
+          unwishlistCard(card.card_id)
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
@@ -200,7 +230,7 @@
       if(data && charisma){
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.battlemode = (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
-        button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : "Battle") : "Disenchant"
+        button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
         updateFlirtButton()
       }
       return originalApplyEncounterStyle(...args)
@@ -227,6 +257,9 @@
         document.querySelector(settings.confirmKeybindCharm ? "#deb" : ".btnDeb").click()
       }else if(action==="battle"){
         document.querySelector(".btnBattle").click()
+      }else if(action==="unwishlist"){
+        unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id)
+        showSuccessToast("Unwishlisting card.")
       }
     })
   return}
@@ -442,8 +475,10 @@
         <div data-page="visibility">
           For the destination buttons:<br>
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
-          ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
+          ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
+          ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
           On the cards page:<br>
+          ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
           ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>
           <br>
           When feeding an Animu:<br>
@@ -466,6 +501,7 @@
           ${settingKeybind("battle", "Battle")}<br>
           ${settingKeybind("nothing", "Nothing (on cards page)")}<br>
           ${settingKeybind("next", "Next card (on cards page)")}<br>
+          ${settingKeybind("unwishlist", "Remove card from wishlist (on swiper page)")}<br>
           <br>
           ${settingCheckbox("keybindAutoNext", "Automatically display next card after selecting destination using keybind, from the cards page")}
         </div>
@@ -483,7 +519,21 @@
             {value:4, name:"Epic rarity or lower"},
             {value:5, name:"Legendary rarity or lower"},
             {value:6, name:"Always"},
-          ])}
+          ])}<br>
+          ${settingCheckbox("crushManualBattles", "Crush instead of manually battling")}<br>
+          The following features related to your wishlist works on cards (not tags) seen on your wishlist page. After enabling these options, you should go on the wishlist page.<br>
+          Unwishlist obtained cards ${settingSelect("unwishlistObtainedCards", [
+            {value:"", name:"never"},
+            {value:"confirm", name:"after confirmation"},
+            {value:"auto", name:"automatically"},
+          ])}<br>
+          Automatically pre-select ${settingSelect("wishedCardDestination", [
+            {value:"", name:"nowhere specific"},
+            {value:1, name:"Portfolio"},
+            {value:2, name:"Box 1"},
+            {value:3, name:"Box 2"},
+            {value:4, name:"Box 3"},
+          ])} as destination for wishlisted cards.
         </div>
       </div>
       <style>
@@ -583,5 +633,11 @@
       }
     }
     GM_setValue("formations", formations)
+  }
+
+  if(path==="/profile/wishlist"){
+    if(!settings.unwishlistObtainedCards && !settings.wishedCardDestination){return}
+    let wishlist = Array.from(document.querySelectorAll("#wishedCards [data-cardid]")).map(e=>e.dataset.cardid)
+    GM_setValue("wishedCards", wishlist)
   }
 })();

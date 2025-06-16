@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-06-03
+// @version      2025-06-16
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -171,7 +171,7 @@
         selectedOnce = null
       }
       if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && ! flirtAnyways){
-        args[1] = "👊"
+        args[1] = settings.crushManualBattles && card.element==="???" ? "🗑️" : "👊"
       }
       flirtAnyways = null
       let originalSuccessFn = args[2]
@@ -200,7 +200,7 @@
       if(data && charisma){
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.battlemode = (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
-        button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : "Battle") : "Disenchant"
+        button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Battle") : "Disenchant"
         updateFlirtButton()
       }
       return originalApplyEncounterStyle(...args)
@@ -483,7 +483,8 @@
             {value:4, name:"Epic rarity or lower"},
             {value:5, name:"Legendary rarity or lower"},
             {value:6, name:"Always"},
-          ])}
+          ])}<br>
+          ${settingCheckbox("crushManualBattles", "Crush instead of manually battling")}
         </div>
       </div>
       <style>

@@ -166,7 +166,7 @@ var onPage = async ()=>{
     return originalPlayScenarios.apply(view, args)
   };
   let originalPostProcess = view.postprocessOnPlayScenarios
-  view.postprocessOnPlayScenarios = (...args)=>{
+  view.postprocessOnPlayScenarios = async (...args)=>{
     let t = +new Date()
     if(t<scenarioEndTime){
       await new Promise(ok=>setTimeout(ok, scenarioEndTime - t))

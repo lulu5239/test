@@ -75,11 +75,11 @@ var onPage = async ()=>{
   cancel++
   let view = Game.view.setupView//requirejs.s.contexts._.defined["view/raid/setup"].prototype
 
-  let scenarioSpeed = 0
+  let scenarioSpeed = 0; let scenarioEndTime = 0
   let originalPlayScenarios = view.playScenarios
-  view.playScenarios = async (...args)=>{
+  view.playScenarios = (...args)=>{
     stage.lastScenario = [...args[0].scenario]
-    let mergedDamage = []; let minimumTime = 0; let startT = +new Date()
+    let mergedDamage = []; let minimumTime = +new Date()
     let newScenario = scenarioSpeed && !(stage.pJsnData.multi_raid_member_info?.length>1) ? [] : args[0].scenario
     for(let e of (newScenario.length ? [] : args[0].scenario)){
       if(["recast", "chain_burst_gauge"].includes(e.cmd)){
@@ -162,13 +162,17 @@ var onPage = async ()=>{
       newScenario.push(e)
     }
     args[0].scenario = newScenario
-    let r = await originalPlayScenarios.apply(Game.view.setupView, args) // await doesn't work for that function
-    let t = +new Date()
-    if(t-startT<minimumTime){
-      await new Promise(ok=>setTimeout(ok, minimumTime - (t-startT)))
-    }
-    return r
+    scenarioEndTime = minimumTime
+    return originalPlayScenarios.apply(view, args)
   };
+  let originalPostProcess = view.postprocessOnPlayScenarios
+  view.postprocessOnPlayScenarios = (...args)=>{
+    let t = +new Date()
+    if(t<scenarioEndTime){
+      await new Promise(ok=>setTimeout(ok, scenarioEndTime - t))
+    }
+    return originalPostProcess.apply(view, args)
+  }
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",

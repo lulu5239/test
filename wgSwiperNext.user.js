@@ -169,6 +169,11 @@
           'tag': 'id:'+id,
         })
       });
+      let i = wishedCards?.findIndex(c=>c===""+id)
+      if(i>=0){
+        wishedCards.splice(i, 1)
+        GM_setValue("wishedCards", i)
+      }
     }
 
     let flirtAnyways
@@ -516,18 +521,19 @@
             {value:6, name:"Always"},
           ])}<br>
           ${settingCheckbox("crushManualBattles", "Crush instead of manually battling")}<br>
+          The following features related to your wishlist works on cards (not tags) seen on your wishlist page. After enabling these options, you should go on the wishlist page.<br>
           Unwishlist obtained cards ${settingSelect("unwishlistObtainedCards", [
             {value:"", name:"never"},
             {value:"confirm", name:"after confirmation"},
             {value:"auto", name:"automatically"},
-          ])} (not functional with wishlisted tags).<br>
+          ])}<br>
           Automatically pre-select ${settingSelect("wishedCardDestination", [
             {value:"", name:"nowhere specific"},
             {value:1, name:"Portfolio"},
             {value:2, name:"Box 1"},
             {value:3, name:"Box 2"},
             {value:4, name:"Box 3"},
-          ])} as destination for wishlisted cards (also not functional for tags).
+          ])} as destination for wishlisted cards.
         </div>
       </div>
       <style>

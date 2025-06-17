@@ -162,15 +162,17 @@ var onPage = async ()=>{
     scenarioEndTime = +new Date() + minimumTime
     return originalPlayScenarios.apply(view, args)
   };
-  let originalCoreProcessor = view.coreprocessOnPlayScenarios
-  view.coreprocessOnPlayScenarios = async (...args)=>{
-    let r = originalCoreProcessor.apply(view, args)
-    let originalResolve = r.resolve
-    r.resolve = (...args2)=>{
-      let t = +new Date()
-      setTimeout(()=>{originalResolve.apply(r, args2)}, scenarioEndTime - t))
+  let originalPostProcessor = view.postprocessOnPlayScenarios
+  view.postprocessOnPlayScenarios = (...args)=>{
+    let o = args.find(a=>a.timeline).timeline[0]
+    let originalCall = o.call
+    o.call = f=>{
+      originalCall.apply(o, ()=>{
+        let t = +new Date()
+        setTimeout(f, scenarioEndTime - t)
+      })
     }
-    return r
+    return originalPostProcessor.apply(view, args)
   }
   
   let macros = GM_getValue("macros") || []

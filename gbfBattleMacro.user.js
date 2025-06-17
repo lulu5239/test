@@ -190,7 +190,7 @@ var onPage = async ()=>{
           })
           args2[0]()
           f()
-          view.showAttackButton()
+          if(!stage.gGameStatus.is_clear){view.showAttackButton()}
         }, scenarioEndTime - t)
       }, ...args2.slice(1)])
     }

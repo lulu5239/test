@@ -188,17 +188,18 @@ var onPage = async ()=>{
         }
         postProcessorDelayer = [args2[0]]
         setTimeout(()=>{
+          let nextF = waitingForSkillEnd[0]
           waitingForSkillEnd[0] = new Promise((ok, err)=>{
             waitingForSkillEnd[1] = ok
             waitingForSkillEnd[2] = err
           })
           let l = postProcessorDelayer
           postProcessorDelayer = null
-          for(let f of postProcessorDelayer){
+          for(let f of l){
             f()
           }
           setTimeout(()=>{
-            waitingForSkillEnd[1]()
+            nextF()
           }, 10)
         }, scenarioEndTime - +new Date())
       }, ...args2.slice(1)])

@@ -68,7 +68,13 @@ var onPage = async ()=>{
   return}
   if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   lastHandledPage = document.location.hash
-  while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelector("#tpl-prt-total-damage")){await new Promise(ok=>setTimeout(ok,100))}
+  if(true){
+    let myCancel = cancel
+    while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelector("#tpl-prt-total-damage")){
+      if(cancel!==myCancel){return}
+      await new Promise(ok=>setTimeout(ok,100))
+    }
+  }
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"
@@ -87,9 +93,9 @@ var onPage = async ()=>{
         continue
       }
       if(e.cmd==="attack" && e.from==="player"){
-        minimumTime += 900
+        minimumTime += 500
         if(scenarioSpeed>=99){
-          newScenario.push({cmd:"wait", fps:6})
+          newScenario.push({cmd:"wait", fps:12})
           continue
         }else if(scenarioSpeed>=2){
           mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
@@ -99,6 +105,10 @@ var onPage = async ()=>{
         }
         continue
       }else if(e.cmd==="special" || e.cmd==="special_npc"){
+        minimumTime += 1500
+        if(scenarioSpeed>=99){
+          newScenario.push({cmd:"wait", fps:12})
+        continue}
         let lastDamage
         for(let a of e.list){
           if(a.damage){lastDamage=a.damage.slice(-1)[0]}
@@ -117,7 +127,6 @@ var onPage = async ()=>{
           is_force_font_size:true,
           no_damage_motion:false,
         })))
-        minimumTime += 1500
         continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
@@ -141,12 +150,9 @@ var onPage = async ()=>{
         newScenario.push(e)
         continue
       }
-      if(["ability", "loop_damage", "windoweffect", "effect"].includes(e.cmd)){
-        if(scenarioSpeed>=3){
-          if(scenarioSpeed>=99 && e.cmd==="effect" && e.kind?.startsWith("burst")){
-            newScenario.push(e)
-          }
-        continue}
+      if(["ability", "loop_damage", "windoweffect", "effect", "attack"].includes(e.cmd)){
+        if(e.cmd==="ability" && e.to==="player" || e.cmd==="attack"){minimumTime+=1000}
+        if(scenarioSpeed>=3){continue}
         if(e.wait){e.wait = 1}
       }
       if(["summon", "chain_cutin"].includes(e.cmd)){
@@ -883,7 +889,7 @@ setTimeout(async ()=>{
   while(!requirejs.s.contexts._.defined["util/navigate"]){await new Promise(ok=>setTimeout(ok,500))}
   let original = requirejs.s.contexts._.defined["util/navigate"].hash
   requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
-    if(args[1]?.refresh && ["#quest/", "#raid/"].find(e=>document.location.hash?.startsWith(e))){delete args[1].refresh}
+    if(args[1]?.refresh && ["#quest/", "#raid/"].find(e=>document.location.hash?.startsWith(e))){delete args[1].refresh; cancel++}
     return original(...args)
   }
 }, 1000)

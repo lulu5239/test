@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-06-16
+// @version      2025-06-17
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -93,7 +93,7 @@ var onPage = async ()=>{
         continue
       }
       if(e.cmd==="attack" && e.from==="player"){
-        minimumTime += 500
+        minimumTime += 800
         if(scenarioSpeed>=99){
           newScenario.push({cmd:"wait", fps:12})
           continue
@@ -105,7 +105,7 @@ var onPage = async ()=>{
         }
         continue
       }else if(e.cmd==="special" || e.cmd==="special_npc"){
-        minimumTime += 1500
+        minimumTime += 2500
         if(scenarioSpeed>=99){
           newScenario.push({cmd:"wait", fps:12})
         continue}
@@ -151,11 +151,12 @@ var onPage = async ()=>{
         continue
       }
       if(["ability", "loop_damage", "windoweffect", "effect", "attack"].includes(e.cmd)){
-        if(e.cmd==="ability" && e.to==="player" || e.cmd==="attack"){minimumTime+=1000}
+        if(scenarioSpeed>=99 && e.cmd==="effect" && e.kind?.startsWith("burst")){minimumTime+=1000}
+        else if(e.cmd==="ability" && e.to==="player" || e.cmd==="attack"){minimumTime+=1000}
         if(scenarioSpeed>=3){continue}
         if(e.wait){e.wait = 1}
       }
-      if(["summon", "chain_cutin"].includes(e.cmd)){
+      if(["summon", "summon_simple", "chain_cutin"].includes(e.cmd)){
         minimumTime += e.cmd==="chain_cutin" ? 500 : 1000
         continue
       }

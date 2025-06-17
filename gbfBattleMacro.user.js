@@ -87,8 +87,9 @@ var onPage = async ()=>{
         continue
       }
       if(e.cmd==="attack" && e.from==="player"){
-        minimumTime += 500
+        minimumTime += 900
         if(scenarioSpeed>=99){
+          newScenario.push({cmd:"wait", fps:6})
           continue
         }else if(scenarioSpeed>=2){
           mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
@@ -116,7 +117,7 @@ var onPage = async ()=>{
           is_force_font_size:true,
           no_damage_motion:false,
         })))
-        minimumTime += 1000
+        minimumTime += 1500
         continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
@@ -148,8 +149,8 @@ var onPage = async ()=>{
         continue}
         if(e.wait){e.wait = 1}
       }
-      if(["summon"].includes(e.cmd)){
-        minimumTime += 1000
+      if(["summon", "chain_cutin"].includes(e.cmd)){
+        minimumTime += e.cmd==="chain_cutin" ? 500 : 1000
         continue
       }
       if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){

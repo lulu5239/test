@@ -188,8 +188,9 @@ var onPage = async ()=>{
             waitingForSkillEnd[1] = ok
             waitingForSkillEnd[2] = err
           })
-          f()
           args2[0]()
+          f()
+          view.showAttackButton()
         }, scenarioEndTime - t)
       }, ...args2.slice(1)])
     }
@@ -358,6 +359,7 @@ var onPage = async ()=>{
           let p = waitingForSkillEnd[0]
           click(button)
           await p
+          await wait(10)
         }
       }else if(action.type==="summon"){
         let back = document.querySelector(`.btn-command-back`)

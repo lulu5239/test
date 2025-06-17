@@ -24,7 +24,7 @@ var recordFunction; let recordable
 let cancel = 0
 let farmingQuest
 let lastHandledPage; let stageObserver
-let waitingForSkillEnd
+let waitingForSkillEnd = []
 waitingForSkillEnd[0] = new Promise((ok, err)=>{
   waitingForSkillEnd[1] = ok
   waitingForSkillEnd[2] = err

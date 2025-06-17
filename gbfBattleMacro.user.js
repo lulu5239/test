@@ -176,24 +176,31 @@ var onPage = async ()=>{
     return originalPlayScenarios.apply(view, args)
   };
   let originalPostProcessor = view.postprocessOnPlayScenarios
+  let postProcessorDelayer = null
   view.postprocessOnPlayScenarios = (...args)=>{
     let o = args[2].timeline[0]
     let originalCall = o.call
     o.call = (...args2)=>{
       originalCall.apply(o, [()=>{
-        let t = +new Date()
+        if(postProcessorDelayer){
+          postProcessorDelayer.push(args2[0])
+          return;
+        }
+        postProcessorDelayer = [args2[0]]
         setTimeout(()=>{
-          let f = waitingForSkillEnd[1]
           waitingForSkillEnd[0] = new Promise((ok, err)=>{
             waitingForSkillEnd[1] = ok
             waitingForSkillEnd[2] = err
           })
-          args2[0]()
-          setTimeout(()=>{
-            if(!stage.gGameStatus.is_clear){view.showAttackButton()}
+          let l = postProcessorDelayer
+          postProcessorDelayer = null
+          for(let f of postProcessorDelayer){
             f()
+          }
+          setTimeout(()=>{
+            waitingForSkillEnd[1]()
           }, 10)
-        }, scenarioEndTime - t)
+        }, scenarioEndTime - +new Date())
       }, ...args2.slice(1)])
     }
     let r = originalPostProcessor.apply(view, args)

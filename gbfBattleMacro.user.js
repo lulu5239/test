@@ -87,8 +87,8 @@ var onPage = async ()=>{
         continue
       }
       if(e.cmd==="attack" && e.from==="player"){
+        minimumTime += 500
         if(scenarioSpeed>=99){
-          newScenario.push({cmd:"wait", fps:24})
           continue
         }else if(scenarioSpeed>=2){
           mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
@@ -116,7 +116,7 @@ var onPage = async ()=>{
           is_force_font_size:true,
           no_damage_motion:false,
         })))
-        if(scenarioSpeed>=3){newScenario.push({cmd:"wait", fps:24})}
+        minimumTime += 1000
         continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
@@ -148,9 +148,9 @@ var onPage = async ()=>{
         continue}
         if(e.wait){e.wait = 1}
       }
-      if(["special", "special_npc", "summon"].includes(e.cmd)){
-        minimumTime += 2000
-        if(scenarioSpeed>=99 || e.cmd==="summon"){continue}
+      if(["summon"].includes(e.cmd)){
+        minimumTime += 1000
+        continue
       }
       if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
         if(e.cmd==="super"){minimumTime+=2000}
@@ -167,10 +167,10 @@ var onPage = async ()=>{
     let o = args[2].timeline[0]
     let originalCall = o.call
     o.call = (...args2)=>{
-      originalCall.apply(o, ()=>{
+      originalCall.apply(o, [()=>{
         let t = +new Date()
         setTimeout(args2[0], scenarioEndTime - t)
-      }, ...args2.slice(1))
+      }, ...args2.slice(1)])
     }
     return originalPostProcessor.apply(view, args)
   }

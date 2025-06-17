@@ -189,8 +189,10 @@ var onPage = async ()=>{
             waitingForSkillEnd[2] = err
           })
           args2[0]()
-          f()
-          if(!stage.gGameStatus.is_clear){view.showAttackButton()}
+          setTimeout(()=>{
+            if(!stage.gGameStatus.is_clear){view.showAttackButton()}
+            f()
+          }, 10)
         }, scenarioEndTime - t)
       }, ...args2.slice(1)])
     }
@@ -359,7 +361,6 @@ var onPage = async ()=>{
           let p = waitingForSkillEnd[0]
           click(button)
           await p
-          await wait(10)
         }
       }else if(action.type==="summon"){
         let back = document.querySelector(`.btn-command-back`)

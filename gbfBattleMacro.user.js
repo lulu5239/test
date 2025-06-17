@@ -164,13 +164,13 @@ var onPage = async ()=>{
   };
   let originalPostProcessor = view.postprocessOnPlayScenarios
   view.postprocessOnPlayScenarios = (...args)=>{
-    let o = args.find(a=>a.timeline).timeline[0]
+    let o = args[2].timeline[0]
     let originalCall = o.call
-    o.call = f=>{
+    o.call = (...args2)=>{
       originalCall.apply(o, ()=>{
         let t = +new Date()
-        setTimeout(f, scenarioEndTime - t)
-      })
+        setTimeout(args2[0], scenarioEndTime - t)
+      }, ...args2.slice(1))
     }
     return originalPostProcessor.apply(view, args)
   }

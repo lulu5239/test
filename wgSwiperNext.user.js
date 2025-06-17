@@ -78,7 +78,8 @@
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){
         button.addEventListener("click", ()=>{
-          swiperNextButtons.scrollTo(0,swiperNextButtons.scrollTop<15 ? 30 : 0)
+          let size = button.parentElement.style.height.slice(0, -2)
+          swiperNextButtons.scrollTo(0,swiperNextButtons.scrollTop<size/2 ? size : 0)
         })
       continue}
       let i = +button.dataset.nextaction

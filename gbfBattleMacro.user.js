@@ -196,7 +196,9 @@ var onPage = async ()=>{
         }, scenarioEndTime - t)
       }, ...args2.slice(1)])
     }
-    return originalPostProcessor.apply(view, args)
+    let r = originalPostProcessor.apply(view, args)
+    o.call = originalCall
+    return r
   }
   
   let macros = GM_getValue("macros") || []

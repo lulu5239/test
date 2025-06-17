@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-06-16
+// @version      2025-06-17
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*

@@ -24,6 +24,11 @@ var recordFunction; let recordable
 let cancel = 0
 let farmingQuest
 let lastHandledPage; let stageObserver
+let waitingForSkillEnd
+waitingForSkillEnd[0] = new Promise((ok, err)=>{
+  waitingForSkillEnd[1] = ok
+  waitingForSkillEnd[2] = err
+})
 
 var onPage = async ()=>{
   if(document.location.hash===lastHandledPage){return}
@@ -105,7 +110,7 @@ var onPage = async ()=>{
         }
         continue
       }else if(e.cmd==="special" || e.cmd==="special_npc"){
-        minimumTime += 2500
+        minimumTime += 2000
         if(scenarioSpeed>=99){
           newScenario.push({cmd:"wait", fps:12})
         continue}
@@ -177,7 +182,15 @@ var onPage = async ()=>{
     o.call = (...args2)=>{
       originalCall.apply(o, [()=>{
         let t = +new Date()
-        setTimeout(args2[0], scenarioEndTime - t)
+        setTimeout(()=>{
+          let f = waitingForSkillEnd[1]
+          waitingForSkillEnd[0] = new Promise((ok, err)=>{
+            waitingForSkillEnd[1] = ok
+            waitingForSkillEnd[2] = err
+          })
+          f()
+          args2[0]()
+        }, scenarioEndTime - t)
       }, ...args2.slice(1)])
     }
     return originalPostProcessor.apply(view, args)
@@ -342,25 +355,9 @@ var onPage = async ()=>{
       }else if(action.type==="attack"){
         let button = document.querySelector(`.btn-attack-start.display-on`)
         if(button){
+          let p = waitingForSkillEnd[0]
           click(button)
-          let observer1; let observer2
-          await new Promise((ok,err)=>{
-            observer1 = new MutationObserver(()=>{
-              if(cancel>myCancel || button.classList.contains("display-on")){ok()}
-            })
-            observer1.observe(button, {
-              attributes:true,
-            })
-            let end = document.querySelector(".prt-command-end")
-            observer2 = new MutationObserver(()=>{
-              if(cancel>myCancel || end.style.display){ok()}
-            })
-            observer2.observe(end, {
-              attributes:true,
-            })
-          })
-          observer1.disconnect()
-          observer2.disconnect()
+          await p
         }
       }else if(action.type==="summon"){
         let back = document.querySelector(`.btn-command-back`)
@@ -890,6 +887,7 @@ setTimeout(async ()=>{
   while(!requirejs.s.contexts._.defined["util/navigate"]){await new Promise(ok=>setTimeout(ok,500))}
   let original = requirejs.s.contexts._.defined["util/navigate"].hash
   requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
+    waitingForSkillEnd[2]()
     if(args[1]?.refresh && ["#quest/", "#raid/"].find(e=>document.location.hash?.startsWith(e))){delete args[1].refresh; cancel++}
     return original(...args)
   }

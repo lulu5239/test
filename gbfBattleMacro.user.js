@@ -901,7 +901,7 @@ setTimeout(async ()=>{
   let original = requirejs.s.contexts._.defined["util/navigate"].hash
   requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
     waitingForSkillEnd[2]()
-    if(args[1]?.refresh && ["quest/", "raid/", "mypage"].find(e=>args[0]?replace("#","").startsWith(e))){delete args[1].refresh; cancel++}
+    if(args[1]?.refresh && ["quest/", "raid/", "mypage"].find(e=>args[0]?.replace("#","").startsWith(e))){delete args[1].refresh; cancel++}
     return original(...args)
   }
 }, 1000)

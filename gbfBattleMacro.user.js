@@ -110,7 +110,7 @@ var onPage = async ()=>{
         }
         continue
       }else if(e.cmd==="special" || e.cmd==="special_npc"){
-        minimumTime += 2000
+        minimumTime += 2100
         if(scenarioSpeed>=99){
           newScenario.push({cmd:"wait", fps:12})
         continue}
@@ -188,7 +188,7 @@ var onPage = async ()=>{
         }
         postProcessorDelayer = [args2[0]]
         setTimeout(()=>{
-          let nextF = waitingForSkillEnd[0]
+          let nextF = waitingForSkillEnd[1]
           waitingForSkillEnd[0] = new Promise((ok, err)=>{
             waitingForSkillEnd[1] = ok
             waitingForSkillEnd[2] = err
@@ -901,7 +901,7 @@ setTimeout(async ()=>{
   let original = requirejs.s.contexts._.defined["util/navigate"].hash
   requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
     waitingForSkillEnd[2]()
-    if(args[1]?.refresh && ["#quest/", "#raid/"].find(e=>document.location.hash?.startsWith(e))){delete args[1].refresh; cancel++}
+    if(args[1]?.refresh && ["#quest/", "#raid/", "#mypage"].find(e=>args[0]?.startsWith(e))){delete args[1].refresh; cancel++}
     return original(...args)
   }
 }, 1000)

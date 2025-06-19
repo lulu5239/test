@@ -269,7 +269,7 @@ let onPage = async ()=>{
       <div style="display:none; color:#fff" class="autoSettings">
         <div>Auto farm settings:</div>
         <div>When starting, play macro <select data-key="macro" data-type="number" data-value=""></select> then enable <select data-key="autoGame"><option value="">nothing</option><option value="semi">semi auto</option><option value="full" selected>full auto</option></select>.</div>
-        <div>Maximum <input data-type="number" data-key="max" placeholder="infinite"> battles and <input data-type="number" data-key="maxHalfElixirs" placeholder="infinite" value="0"> half elixirs.</div>
+        <div>Maximum <input data-type="number" data-key="max" placeholder="infinite"> battles and <input data-type="number" data-key="maxHalfElixirs" data-default="0" placeholder="infinite"> half elixirs.</div>
       </div>
     </div>
     <div id="pause-auto-farm" style="text-align:center; display:none; font-size:200%"><button>Pause auto farm</button></div>
@@ -850,7 +850,9 @@ let onPage = async ()=>{
   }
   for(let e of document.querySelectorAll("#macro-speed div.autoSettings select, #macro-speed div.autoSettings input")){
     let settings = autoQuests[stage.pJsnData.quest_id]
-    if(settings?.[e.dataset.key]!==undefined){
+    if(!settings && e.dataset.default){
+      e.value = e.dataset.default
+    }else if(settings?.[e.dataset.key]!==undefined){
       if(e.dataset.key==="macro"){
         e.dataset.value = settings[e.dataset.key]
       }else{
@@ -919,6 +921,8 @@ let onPage = async ()=>{
         let button = document.querySelector(".btn-auto")
         button.style.display = "block"
         click(button)
+      }else{
+        document.querySelector("#macros-list").style.display = null
       }
     }, 10)
   }

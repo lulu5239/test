@@ -908,7 +908,7 @@ setTimeout(async ()=>{ // Don't refresh page when entering battle
   let original = requirejs.s.contexts._.defined["util/navigate"].hash
   requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
     cancel++; waitingForSkillEnd[2]()
-    if(["quest/", "raid/", "mypage", "event/"].find(e=>args[0]?.replace("#","").startsWith(e))){
+    if(["quest/", "raid/", "mypage", "event/", "raid_multi/"].find(e=>args[0]?.replace("#","").startsWith(e))){
       if(args[1]?.refresh){delete args[1].refresh}
     }else{
       if(originalUnloader){originalUnloader.apply(requirejs.s.contexts._.defined["model/cjs-loader"], [])}

@@ -29,7 +29,7 @@ waitingForSkillEnd[0] = new Promise((ok, err)=>{
   waitingForSkillEnd[1] = ok
   waitingForSkillEnd[2] = err
 })
-let originalUnloader; let reloadables = {}
+let originalUnloader; let reloadables = {quest_clear:null}
 
 let onPage = async ()=>{
   if(document.location.hash===lastHandledPage){return}

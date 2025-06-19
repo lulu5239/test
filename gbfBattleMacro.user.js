@@ -74,13 +74,13 @@ var onPage = async ()=>{
   return}
   if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   lastHandledPage = document.location.hash
-  if(!editedLoader){
+  if(!editedLoader){ // Don't reload some files every time
     let myCancel = cancel
-    while(!requirejs.s.contexts._.defined["model/cjs-loader"]){await new Promise(ok=>setTimeout(ok,500)); if(cancel!==myCancel){return}}
+    while(!requirejs.s.contexts._.defined["model/cjs-loader"]){await new Promise(ok=>setTimeout(ok,50)); if(cancel!==myCancel){return}}
     let original = requirejs.s.contexts._.defined["model/cjs-loader"].loadFiles
-    requirejs.s.contexts._.defined["model/cjs-loader"].hash = (...args)=>{
-      //
-      return original.apply(requirejs.s.contexts._.defined["model/cjs-loader"], ...args)
+    requirejs.s.contexts._.defined["model/cjs-loader"].loadFiles = (...args)=>{
+      let l = args[0].filter(name=>!lib[name])
+      return original.apply(requirejs.s.contexts._.defined["model/cjs-loader"].loadFiles, [l, ...args.slice(1)])
     }
     editedLoader = true
   }
@@ -907,12 +907,12 @@ var onPage = async ()=>{
 window.addEventListener("hashchange", onPage)
 onPage()
 
-setTimeout(async ()=>{
+setTimeout(async ()=>{ // Don't refresh page when entering battle
   while(!requirejs.s.contexts._.defined["util/navigate"]){await new Promise(ok=>setTimeout(ok,500))}
   let original = requirejs.s.contexts._.defined["util/navigate"].hash
   requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
     waitingForSkillEnd[2]()
     if(args[1]?.refresh && ["quest/", "raid/", "mypage"].find(e=>args[0]?.replace("#","").startsWith(e))){delete args[1].refresh; cancel++}
-    return original.apply(requirejs.s.contexts._.defined["util/navigate"], ...args)
+    return original.apply(requirejs.s.contexts._.defined["util/navigate"], args)
   }
 }, 1000)

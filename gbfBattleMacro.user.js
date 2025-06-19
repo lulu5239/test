@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-06-19
+// @version      2025-06-20
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -11,7 +11,7 @@
 // @grant        GM_setValue
 // ==/UserScript==
 
-var click = (e, crect)=>{
+let click = (e, crect)=>{
   let rect = e.getBoundingClientRect()
   if(!["x","y","width","height"].find(k=>rect[k])){rect = crect}
   return $(e).trigger($.Event("tap",{
@@ -20,7 +20,7 @@ var click = (e, crect)=>{
     y:rect && Math.floor(rect.y+rect.height*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
   }))
 }
-var recordFunction; let recordable
+let recordFunction; let recordable
 let cancel = 0
 let farmingQuest
 let lastHandledPage; let stageObserver
@@ -29,9 +29,9 @@ waitingForSkillEnd[0] = new Promise((ok, err)=>{
   waitingForSkillEnd[1] = ok
   waitingForSkillEnd[2] = err
 })
-let originalUnloader
+let originalUnloader; let reloadables = {}
 
-var onPage = async ()=>{
+let onPage = async ()=>{
   if(document.location.hash===lastHandledPage){return}
   if(document.location.hash?.startsWith("#result") && farmingQuest){
     lastHandledPage = document.location.hash
@@ -79,6 +79,30 @@ var onPage = async ()=>{
     while(!requirejs.s.contexts._.defined["model/cjs-loader"]){await new Promise(ok=>setTimeout(ok,100)); if(cancel!==myCancel){return}}
     originalUnloader = requirejs.s.contexts._.defined["model/cjs-loader"].clear
     requirejs.s.contexts._.defined["model/cjs-loader"].clear = ()=>{}
+    setTimeout(()=>{
+      for(let m in reloadables){
+        if(reloadables[m] || !lib[m]){continue}
+        let script = Array.from(document.querySelectorAll(`body script[type="text/javascript"]`)).find(s=>s.innerHTML.includes(m))
+        if(script){
+          reloadables[m] = script.innerHTML
+          script.remove()
+        }
+      }
+    }, 5000)
+  }else{
+    let remove = []
+    for(let m in reloadables){
+      if(!reloadables[m]){continue}
+      let script = document.createElement("script")
+      script.innerHTML = reloadables[m]
+      document.body.appendChild(script)
+      remove.push(script)
+    }
+    setTimeout(()=>{
+      for(let script of remove){
+        script.remove()
+      }
+    }, 2000)
   }
   if(true){
     let myCancel = cancel

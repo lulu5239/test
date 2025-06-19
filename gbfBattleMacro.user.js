@@ -922,7 +922,9 @@ let onPage = async ()=>{
         button.style.display = "block"
         click(button)
       }else{
+        autoFarming = false
         document.querySelector("#macros-list").style.display = null
+        document.querySelector("#pause-auto-farm").style.display = "none"
       }
     }, 10)
   }

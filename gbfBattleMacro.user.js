@@ -29,8 +29,7 @@ waitingForSkillEnd[0] = new Promise((ok, err)=>{
   waitingForSkillEnd[1] = ok
   waitingForSkillEnd[2] = err
 })
-let editedLoader = false
-let imagesExtraCache = {}
+let originalUnloader
 
 var onPage = async ()=>{
   if(document.location.hash===lastHandledPage){return}
@@ -75,30 +74,11 @@ var onPage = async ()=>{
   return}
   if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   lastHandledPage = document.location.hash
-  if(!editedLoader){ // Don't reload some files every time
+  if(!originalUnloader){ // Don't reload some files every time
     let myCancel = cancel
-    while(!requirejs.s.contexts._.defined["model/cjs-loader"]){await new Promise(ok=>setTimeout(ok,50)); if(cancel!==myCancel){return}}
-    Game.test = [] // debug
-    let original = requirejs.s.contexts._.defined["model/cjs-loader"].loadFiles
-    requirejs.s.contexts._.defined["model/cjs-loader"].loadFiles = (...args)=>{
-      let l = []
-      for(let name of args[0]){
-        if(imagesExtraCache[name]){
-          images[name] = imagesExtraCache[name]
-        }else{
-          l.push(name)
-        }
-      }
-      let r = original.apply(requirejs.s.contexts._.defined["model/cjs-loader"].loadFiles, [l, ...args.slice(1)])
-      r.then(()=>{
-        for(let name of l){
-          imagesExtraCache[name] = images[name]
-        }
-      })
-      Game.test.push([args[0], l]) // debug
-      return r
-    }
-    editedLoader = true
+    while(!requirejs.s.contexts._.defined["model/cjs-loader"]){await new Promise(ok=>setTimeout(ok,100)); if(cancel!==myCancel){return}}
+    originalUnloader = requirejs.s.contexts._.defined["model/cjs-loader"].clear
+    requirejs.s.contexts._.defined["model/cjs-loader"].clear = ()=>{}
   }
   if(true){
     let myCancel = cancel
@@ -927,8 +907,12 @@ setTimeout(async ()=>{ // Don't refresh page when entering battle
   while(!requirejs.s.contexts._.defined["util/navigate"]){await new Promise(ok=>setTimeout(ok,500))}
   let original = requirejs.s.contexts._.defined["util/navigate"].hash
   requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
-    waitingForSkillEnd[2]()
-    if(args[1]?.refresh && ["quest/", "raid/", "mypage"].find(e=>args[0]?.replace("#","").startsWith(e))){delete args[1].refresh; cancel++}
+    cancel++; waitingForSkillEnd[2]()
+    if(["quest/", "raid/", "mypage", "event/"].find(e=>args[0]?.replace("#","").startsWith(e))){
+      if(args[1]?.refresh){delete args[1].refresh}
+    }else{
+      if(originalUnloader){originalUnloader.apply(requirejs.s.contexts._.defined["model/cjs-loader"], [])}
+    }
     return original.apply(requirejs.s.contexts._.defined["util/navigate"], args)
   }
 }, 1000)

@@ -29,6 +29,7 @@ waitingForSkillEnd[0] = new Promise((ok, err)=>{
   waitingForSkillEnd[1] = ok
   waitingForSkillEnd[2] = err
 })
+let editedLoader = false
 
 var onPage = async ()=>{
   if(document.location.hash===lastHandledPage){return}
@@ -73,6 +74,16 @@ var onPage = async ()=>{
   return}
   if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   lastHandledPage = document.location.hash
+  if(!editedLoader){
+    let myCancel = cancel
+    while(!requirejs.s.contexts._.defined["model/cjs-loader"]){await new Promise(ok=>setTimeout(ok,500)); if(cancel!==myCancel){return}}
+    let original = requirejs.s.contexts._.defined["model/cjs-loader"].loadFiles
+    requirejs.s.contexts._.defined["model/cjs-loader"].hash = (...args)=>{
+      //
+      return original.apply(requirejs.s.contexts._.defined["model/cjs-loader"], ...args)
+    }
+    editedLoader = true
+  }
   if(true){
     let myCancel = cancel
     while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelector("#tpl-prt-total-damage")){
@@ -902,6 +913,6 @@ setTimeout(async ()=>{
   requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
     waitingForSkillEnd[2]()
     if(args[1]?.refresh && ["quest/", "raid/", "mypage"].find(e=>args[0]?.replace("#","").startsWith(e))){delete args[1].refresh; cancel++}
-    return original(...args)
+    return original.apply(requirejs.s.contexts._.defined["util/navigate"], ...args)
   }
 }, 1000)

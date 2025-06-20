@@ -196,7 +196,7 @@ let onPage = async ()=>{
         minimumTime += e.cmd==="chain_cutin" ? 500 : 1000
         continue
       }
-      if(scenarioSpeed>=99 && [/*"super",*/ "message", "attack", "heal"].includes(e.cmd)){
+      if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
         if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:24})}
         else{continue}
       }

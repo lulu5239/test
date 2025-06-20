@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-05-25
+// @version      2025-06-20
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -11,7 +11,7 @@
 // @grant        GM_setValue
 // ==/UserScript==
 
-var click = (e, crect)=>{
+let click = (e, crect)=>{
   let rect = e.getBoundingClientRect()
   if(!["x","y","width","height"].find(k=>rect[k])){rect = crect}
   return $(e).trigger($.Event("tap",{
@@ -20,12 +20,18 @@ var click = (e, crect)=>{
     y:rect && Math.floor(rect.y+rect.height*(0.5+(Math.random()*Math.random()*Math.sign(Math.random()-0.5)/2))),
   }))
 }
-var recordFunction; let recordable
+let recordFunction; let recordable
 let cancel = 0
 let farmingQuest
 let lastHandledPage; let stageObserver
+let waitingForSkillEnd = []
+waitingForSkillEnd[0] = new Promise((ok, err)=>{
+  waitingForSkillEnd[1] = ok
+  waitingForSkillEnd[2] = err
+})
+let originalUnloader; let reloadables = {quest_clear:null}
 
-var onPage = async ()=>{
+let onPage = async ()=>{
   if(document.location.hash===lastHandledPage){return}
   if(document.location.hash?.startsWith("#result") && farmingQuest){
     lastHandledPage = document.location.hash
@@ -68,18 +74,54 @@ var onPage = async ()=>{
   return}
   if(document.querySelector("#macros-list") || !document.location.hash?.startsWith("#battle") && !document.location.hash?.startsWith("#raid")){return}
   lastHandledPage = document.location.hash
-  while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelector("#tpl-prt-total-damage")){await new Promise(ok=>setTimeout(ok,100))}
+  if(!originalUnloader){ // Don't reload some files every time
+    let myCancel = cancel
+    while(!requirejs.s.contexts._.defined["model/cjs-loader"]){await new Promise(ok=>setTimeout(ok,100)); if(cancel!==myCancel){return}}
+    originalUnloader = requirejs.s.contexts._.defined["model/cjs-loader"].clear
+    requirejs.s.contexts._.defined["model/cjs-loader"].clear = ()=>{}
+    setTimeout(()=>{
+      for(let m in reloadables){
+        if(reloadables[m] || !lib[m]){continue}
+        let script = Array.from(document.querySelectorAll(`body script[type="text/javascript"]`)).find(s=>s.innerHTML.includes(m))
+        if(script){
+          reloadables[m] = script.innerHTML
+          script.remove()
+        }
+      }
+    }, 5000)
+  }else{
+    let remove = []
+    for(let m in reloadables){
+      if(!reloadables[m]){continue}
+      let script = document.createElement("script")
+      script.innerHTML = reloadables[m]
+      document.body.appendChild(script)
+      remove.push(script)
+    }
+    setTimeout(()=>{
+      for(let script of remove){
+        script.remove()
+      }
+    }, 2000)
+  }
+  if(true){
+    let myCancel = cancel
+    while(typeof(stage)=="undefined" || !stage?.pJsnData || !document.querySelector("#tpl-prt-total-damage")){
+      if(cancel!==myCancel){return}
+      await new Promise(ok=>setTimeout(ok,100))
+    }
+  }
   
   document.querySelector(".cnt-raid").style.paddingBottom = "0px"
   document.querySelector(".prt-raid-log").style.pointerEvents = "none"
   cancel++
   let view = Game.view.setupView//requirejs.s.contexts._.defined["view/raid/setup"].prototype
 
-  let scenarioSpeed = 0
+  let scenarioSpeed = 0; let scenarioEndTime = 0
   let originalPlayScenarios = view.playScenarios
-  view.playScenarios = function(...args) {
-    stage.lastScenario = [...args[0].scenario]
-    let mergedDamage = []
+  view.playScenarios = (...args)=>{
+    //stage.lastScenario = [...args[0].scenario]
+    let mergedDamage = []; let minimumTime = 0
     let newScenario = scenarioSpeed && !(stage.pJsnData.multi_raid_member_info?.length>1) ? [] : args[0].scenario
     for(let e of (newScenario.length ? [] : args[0].scenario)){
       if(["recast", "chain_burst_gauge"].includes(e.cmd)){
@@ -87,8 +129,9 @@ var onPage = async ()=>{
         continue
       }
       if(e.cmd==="attack" && e.from==="player"){
+        minimumTime += 800
         if(scenarioSpeed>=99){
-          newScenario.push({cmd:"wait", fps:24})
+          newScenario.push({cmd:"wait", fps:12})
           continue
         }else if(scenarioSpeed>=2){
           mergedDamage.splice(0, 0, ...e.damage.reduce((r,l)=>[...r, ...l], []))
@@ -98,6 +141,10 @@ var onPage = async ()=>{
         }
         continue
       }else if(e.cmd==="special" || e.cmd==="special_npc"){
+        minimumTime += 2100
+        if(scenarioSpeed>=99){
+          newScenario.push({cmd:"wait", fps:12})
+        continue}
         let lastDamage
         for(let a of e.list){
           if(a.damage){lastDamage=a.damage.slice(-1)[0]}
@@ -116,7 +163,6 @@ var onPage = async ()=>{
           is_force_font_size:true,
           no_damage_motion:false,
         })))
-        if(scenarioSpeed>=3){newScenario.push({cmd:"wait", fps:24})}
         continue
       }else if(mergedDamage.length){
         let total = mergedDamage.reduce((p,o)=>p+o.value, 0)
@@ -140,29 +186,59 @@ var onPage = async ()=>{
         newScenario.push(e)
         continue
       }
-      if(["ability", "loop_damage", "windoweffect", "effect"].includes(e.cmd)){
-        if(scenarioSpeed>=3){
-          if(scenarioSpeed>=99 && e.cmd==="effect" && e.kind?.startsWith("burst")){
-            newScenario.push(e)
-          }
-        continue}
+      if(["ability", "loop_damage", "windoweffect", "effect", "attack"].includes(e.cmd)){
+        if(scenarioSpeed>=99 && e.cmd==="effect" && e.kind?.startsWith("burst")){minimumTime+=1000}
+        else if(e.cmd==="ability" && e.to==="player" || e.cmd==="attack"){minimumTime+=1000}
+        if(scenarioSpeed>=3){continue}
         if(e.wait){e.wait = 1}
       }
-      if(scenarioSpeed>=99 && ["special", "special_npc"].includes(e.cmd)){
-        newScenario.push({cmd:"wait", fps:24*1.5})
-      }else if(["special", "special_npc", "summon"].includes(e.cmd)){
-        newScenario.push({cmd:"wait", fps:e.cmd==="special_npc" ? 24*2.5 : 24})
+      if(["summon", "summon_simple", "chain_cutin"].includes(e.cmd)){
+        minimumTime += e.cmd==="chain_cutin" ? 500 : 1000
         continue
       }
-      if(scenarioSpeed>=99 && [/*"super",*/ "message", "attack", "heal"].includes(e.cmd)){
-        if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:24})}
-        else{continue}
+      if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
+        if(e.cmd==="super"){minimumTime+=2000}
+        continue
       }
       newScenario.push(e)
     }
     args[0].scenario = newScenario
-    return originalPlayScenarios.apply(Game.view.setupView, args)
+    scenarioEndTime = +new Date() + minimumTime
+    return originalPlayScenarios.apply(view, args)
   };
+  let originalPostProcessor = view.postprocessOnPlayScenarios
+  let postProcessorDelayer = null
+  view.postprocessOnPlayScenarios = (...args)=>{
+    let o = args[2].timeline[0]
+    let originalCall = o.call
+    o.call = (...args2)=>{
+      originalCall.apply(o, [()=>{
+        if(postProcessorDelayer){
+          postProcessorDelayer.push(args2[0])
+          return;
+        }
+        postProcessorDelayer = [args2[0]]
+        setTimeout(()=>{
+          let nextF = waitingForSkillEnd[1]
+          waitingForSkillEnd[0] = new Promise((ok, err)=>{
+            waitingForSkillEnd[1] = ok
+            waitingForSkillEnd[2] = err
+          })
+          let l = postProcessorDelayer
+          postProcessorDelayer = null
+          for(let f of l){
+            f()
+          }
+          setTimeout(()=>{
+            nextF()
+          }, 10)
+        }, scenarioEndTime - +new Date())
+      }, ...args2.slice(1)])
+    }
+    let r = originalPostProcessor.apply(view, args)
+    o.call = originalCall
+    return r
+  }
   
   let macros = GM_getValue("macros") || []
   document.querySelector(".contents").insertAdjacentHTML("beforeend",
@@ -193,7 +269,7 @@ var onPage = async ()=>{
       <div style="display:none; color:#fff" class="autoSettings">
         <div>Auto farm settings:</div>
         <div>When starting, play macro <select data-key="macro" data-type="number" data-value=""></select> then enable <select data-key="autoGame"><option value="">nothing</option><option value="semi">semi auto</option><option value="full" selected>full auto</option></select>.</div>
-        <div>Maximum <input data-type="number" data-key="max" placeholder="infinite"> battles and <input data-type="number" data-key="maxHalfElixirs" placeholder="infinite" value="0"> half elixirs.</div>
+        <div>Maximum <input data-type="number" data-key="max" placeholder="infinite"> battles and <input data-type="number" data-key="maxHalfElixirs" data-default="0" placeholder="infinite"> half elixirs.</div>
       </div>
     </div>
     <div id="pause-auto-farm" style="text-align:center; display:none; font-size:200%"><button>Pause auto farm</button></div>
@@ -323,25 +399,9 @@ var onPage = async ()=>{
       }else if(action.type==="attack"){
         let button = document.querySelector(`.btn-attack-start.display-on`)
         if(button){
+          let p = waitingForSkillEnd[0]
           click(button)
-          let observer1; let observer2
-          await new Promise((ok,err)=>{
-            observer1 = new MutationObserver(()=>{
-              if(cancel>myCancel || button.classList.contains("display-on")){ok()}
-            })
-            observer1.observe(button, {
-              attributes:true,
-            })
-            let end = document.querySelector(".prt-command-end")
-            observer2 = new MutationObserver(()=>{
-              if(cancel>myCancel || end.style.display){ok()}
-            })
-            observer2.observe(end, {
-              attributes:true,
-            })
-          })
-          observer1.disconnect()
-          observer2.disconnect()
+          await p
         }
       }else if(action.type==="summon"){
         let back = document.querySelector(`.btn-command-back`)
@@ -790,7 +850,9 @@ var onPage = async ()=>{
   }
   for(let e of document.querySelectorAll("#macro-speed div.autoSettings select, #macro-speed div.autoSettings input")){
     let settings = autoQuests[stage.pJsnData.quest_id]
-    if(settings?.[e.dataset.key]!==undefined){
+    if(!settings && e.dataset.default){
+      e.value = e.dataset.default
+    }else if(settings?.[e.dataset.key]!==undefined){
       if(e.dataset.key==="macro"){
         e.dataset.value = settings[e.dataset.key]
       }else{
@@ -859,6 +921,10 @@ var onPage = async ()=>{
         let button = document.querySelector(".btn-auto")
         button.style.display = "block"
         click(button)
+      }else{
+        autoFarming = false
+        document.querySelector("#macros-list").style.display = null
+        document.querySelector("#pause-auto-farm").style.display = "none"
       }
     }, 10)
   }
@@ -866,3 +932,17 @@ var onPage = async ()=>{
 
 window.addEventListener("hashchange", onPage)
 onPage()
+
+setTimeout(async ()=>{ // Don't refresh page when entering battle
+  while(!requirejs.s.contexts._.defined["util/navigate"]){await new Promise(ok=>setTimeout(ok,500))}
+  let original = requirejs.s.contexts._.defined["util/navigate"].hash
+  requirejs.s.contexts._.defined["util/navigate"].hash = (...args)=>{
+    cancel++; waitingForSkillEnd[2]()
+    if(["quest/", "raid/", "mypage", "event/", "raid_multi/"].find(e=>args[0]?.replace("#","").startsWith(e))){
+      if(args[1]?.refresh){delete args[1].refresh}
+    }else{
+      if(originalUnloader){originalUnloader.apply(requirejs.s.contexts._.defined["model/cjs-loader"], [])}
+    }
+    return original.apply(requirejs.s.contexts._.defined["util/navigate"], args)
+  }
+}, 1000)

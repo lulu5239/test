@@ -120,7 +120,7 @@ let onPage = async ()=>{
   let scenarioSpeed = 0; let scenarioEndTime = 0
   let originalPlayScenarios = view.playScenarios
   view.playScenarios = (...args)=>{
-    stage.lastScenario = [...args[0].scenario]
+    //stage.lastScenario = [...args[0].scenario]
     let mergedDamage = []; let minimumTime = 0
     let newScenario = scenarioSpeed && !(stage.pJsnData.multi_raid_member_info?.length>1) ? [] : args[0].scenario
     for(let e of (newScenario.length ? [] : args[0].scenario)){
@@ -196,9 +196,9 @@ let onPage = async ()=>{
         minimumTime += e.cmd==="chain_cutin" ? 500 : 1000
         continue
       }
-      if(scenarioSpeed>=99 && ["super", "message", "attack", "heal"].includes(e.cmd)){
-        if(e.cmd==="super"){minimumTime+=2000}
-        continue
+      if(scenarioSpeed>=99 && [/*"super",*/ "message", "attack", "heal"].includes(e.cmd)){
+        if(e.cmd==="super"){newScenario.push({cmd:"wait", fps:24})}
+        else{continue}
       }
       newScenario.push(e)
     }

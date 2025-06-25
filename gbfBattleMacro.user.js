@@ -402,7 +402,7 @@ let onPage = async ()=>{
           let p = waitingForSkillEnd[0]
           click(button)
           await p
-          while(!button.classList.contains("display-on") && !stage.gGameStatus.finished){
+          while(!button.classList.contains("display-on") && !stage.gGameStatus.finish){
             p = waitingForSkillEnd[0]
             await p
           }

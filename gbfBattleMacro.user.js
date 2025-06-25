@@ -29,7 +29,7 @@ waitingForSkillEnd[0] = new Promise((ok, err)=>{
   waitingForSkillEnd[1] = ok
   waitingForSkillEnd[2] = err
 })
-let originalUnloader; let reloadables = {quest_clear:null}
+let originalUnloader; let reloadables = {}
 
 let onPage = async ()=>{
   if(document.location.hash===lastHandledPage){return}
@@ -79,17 +79,18 @@ let onPage = async ()=>{
     while(!requirejs.s.contexts._.defined["model/cjs-loader"]){await new Promise(ok=>setTimeout(ok,100)); if(cancel!==myCancel){return}}
     originalUnloader = requirejs.s.contexts._.defined["model/cjs-loader"].clear
     requirejs.s.contexts._.defined["model/cjs-loader"].clear = ()=>{}
-    setTimeout(()=>{
-      for(let m in reloadables){
-        if(reloadables[m] || !lib[m]){continue}
-        let script = Array.from(document.querySelectorAll(`body script[type="text/javascript"]`)).find(s=>s.innerHTML.includes(m))
-        if(script){
-          reloadables[m] = script.innerHTML
-          script.remove()
-        }
+  }
+  setTimeout(()=>{
+    for(let m in images){
+      if(reloadables[m] || !lib[m]){continue}
+      let script = Array.from(document.querySelectorAll(`body script[type="text/javascript"]`)).find(s=>s.innerHTML.includes(lib[m]+""))
+      if(script){
+        reloadables[m] = script.innerHTML
+        script.remove()
       }
-    }, 5000)
-  }else{
+    }
+  }, 5000)
+  if(true){
     let remove = []
     for(let m in reloadables){
       if(!reloadables[m]){continue}

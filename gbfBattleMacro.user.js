@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Battle macros
-// @version      2025-06-25
+// @version      2025-06-26
 // @description  Use skills in a specific order by pressing less buttons.
 // @author       Lulu5239
 // @updateURL    https://github.com/lulu5239/test/raw/refs/heads/master/gbfBattleMacro.user.js
@@ -29,7 +29,7 @@ waitingForSkillEnd[0] = new Promise((ok, err)=>{
   waitingForSkillEnd[1] = ok
   waitingForSkillEnd[2] = err
 })
-let originalUnloader; let reloadables = {quest_clear:null}
+let originalUnloader; let reloadables = {}
 
 let onPage = async ()=>{
   if(document.location.hash===lastHandledPage){return}
@@ -78,18 +78,18 @@ let onPage = async ()=>{
     let myCancel = cancel
     while(!requirejs.s.contexts._.defined["model/cjs-loader"]){await new Promise(ok=>setTimeout(ok,100)); if(cancel!==myCancel){return}}
     originalUnloader = requirejs.s.contexts._.defined["model/cjs-loader"].clear
-    requirejs.s.contexts._.defined["model/cjs-loader"].clear = ()=>{}
-    setTimeout(()=>{
-      for(let m in reloadables){
+    requirejs.s.contexts._.defined["model/cjs-loader"].clear = ()=>{
+      for(let m in images){
         if(reloadables[m] || !lib[m]){continue}
-        let script = Array.from(document.querySelectorAll(`body script[type="text/javascript"]`)).find(s=>s.innerHTML.includes(m))
+        let script = Array.from(document.querySelectorAll(`body script[type="text/javascript"]`)).find(s=>s.innerHTML.includes(lib[m]+""))
         if(script){
           reloadables[m] = script.innerHTML
           script.remove()
         }
       }
-    }, 5000)
-  }else{
+    }
+  }
+  if(true){
     let remove = []
     for(let m in reloadables){
       if(!reloadables[m]){continue}

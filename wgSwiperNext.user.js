@@ -384,6 +384,9 @@
     let originalNextCard = nextCard
     nextCard = (...args)=>{
       selectedCard = args[0]
+      if(selectedCard.length){
+        selectedCard = selectedCard[0]
+      }
       let action = cards[$(selectedCard).data("card").id]
       document.querySelector(`#swiperNextButtons div[data-nextaction="${action!==undefined ? ""+action : "nothing"}"]`).click()
       if(settings.showTopSimps){

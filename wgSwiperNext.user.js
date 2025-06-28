@@ -262,6 +262,7 @@
         unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id)
         showSuccessToast("Unwishlisting card.")
       }else if(action==="cardInfos"){
+        document.querySelector("#options").click()
         document.querySelector(".btnDetails").click()
       }else if(action==="openMenu"){
         document.querySelector("#options").click()
@@ -507,7 +508,7 @@
           ${settingKeybind("deb", "Debonaire charm")}<br>
           ${settingCheckbox("confirmKeybindDeb", "Show confirmation menu when Deb charming using keybind")}<br>
           ${settingKeybind("battle", "Battle")}<br>
-          ${settingKeybind("cardInfos", "Open card infos")}<br>
+          ${settingKeybind("cardInfos", "Open card details")}<br>
           ${settingKeybind("openMenu", "Open actions menu")}<br>
           ${settingKeybind("nothing", "Nothing (on cards page)")}<br>
           ${settingKeybind("next", "Next card (on cards page)")}<br>

@@ -197,7 +197,7 @@
         selectedOnce = null
       }
       if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
-        args[1] = settings.crushManualBattles && card.element!=="???" ? "🗑️" : "👊"
+        args[1] = settings.crushManualBattles && card.card.element!=="???" ? "🗑️" : "👊"
       }
       flirtAnyways = null
       let originalSuccessFn = args[2]
@@ -503,6 +503,8 @@
           ${settingKeybind("deb", "Debonaire charm")}<br>
           ${settingCheckbox("confirmKeybindDeb", "Show confirmation menu when Deb charming using keybind")}<br>
           ${settingKeybind("battle", "Battle")}<br>
+          ${settingKeybind("cardInfos", "Open card infos")}<br>
+          ${settingKeybind("openMenu", "Open actions menu")}<br>
           ${settingKeybind("nothing", "Nothing (on cards page)")}<br>
           ${settingKeybind("next", "Next card (on cards page)")}<br>
           ${settingKeybind("unwishlist", "Remove card from wishlist (on swiper page)")}<br>

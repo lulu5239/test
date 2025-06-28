@@ -261,6 +261,10 @@
       }else if(action==="unwishlist"){
         unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id)
         showSuccessToast("Unwishlisting card.")
+      }else if(action==="cardInfos"){
+        document.querySelector(".butDetails").click()
+      }else if(action==="openMenu"){
+        document.querySelector("#options").click()
       }
     })
   return}

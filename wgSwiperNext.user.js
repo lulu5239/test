@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-06-17
+// @version      2025-06-28
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -197,7 +197,7 @@
         selectedOnce = null
       }
       if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
-        args[1] = settings.crushManualBattles && card.element!=="???" ? "🗑️" : "👊"
+        args[1] = settings.crushManualBattles && card.card.element!=="???" ? "🗑️" : "👊"
       }
       flirtAnyways = null
       let originalSuccessFn = args[2]
@@ -261,6 +261,11 @@
       }else if(action==="unwishlist"){
         unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id)
         showSuccessToast("Unwishlisting card.")
+      }else if(action==="cardInfos"){
+        document.querySelector("#options").click()
+        document.querySelector(".btnDetails").click()
+      }else if(action==="openMenu"){
+        document.querySelector("#options").click()
       }
     })
   return}
@@ -384,6 +389,9 @@
     let originalNextCard = nextCard
     nextCard = (...args)=>{
       selectedCard = args[0]
+      if(selectedCard.length){
+        selectedCard = selectedCard[0]
+      }
       let action = cards[$(selectedCard).data("card").id]
       document.querySelector(`#swiperNextButtons div[data-nextaction="${action!==undefined ? ""+action : "nothing"}"]`).click()
       if(settings.showTopSimps){
@@ -500,6 +508,8 @@
           ${settingKeybind("deb", "Debonaire charm")}<br>
           ${settingCheckbox("confirmKeybindDeb", "Show confirmation menu when Deb charming using keybind")}<br>
           ${settingKeybind("battle", "Battle")}<br>
+          ${settingKeybind("cardInfos", "Open card details")}<br>
+          ${settingKeybind("openMenu", "Open actions menu")}<br>
           ${settingKeybind("nothing", "Nothing (on cards page)")}<br>
           ${settingKeybind("next", "Next card (on cards page)")}<br>
           ${settingKeybind("unwishlist", "Remove card from wishlist (on swiper page)")}<br>

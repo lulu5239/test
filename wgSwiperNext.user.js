@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-06-26
+// @version      2025-06-28
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -262,7 +262,7 @@
         unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id)
         showSuccessToast("Unwishlisting card.")
       }else if(action==="cardInfos"){
-        document.querySelector(".butDetails").click()
+        document.querySelector(".btnDetails").click()
       }else if(action==="openMenu"){
         document.querySelector("#options").click()
       }

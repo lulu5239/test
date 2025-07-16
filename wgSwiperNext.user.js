@@ -653,6 +653,7 @@
   if(path==="/home"){
     let formations = GM_getValue("formations") ? GM_getValue("formations") : localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
     let select = document.querySelector("#formationform #party")
+    let levelingUp = []
     for(let formation of select.querySelector("optgroup").children){
       if(formation.value==="default"){continue}
       let data = formations[formation.value.slice(2)]
@@ -666,7 +667,6 @@
         }
         if(settings.levelUpSlots){
           let l = Array.from(document.querySelectorAll(".page-content div.card[data-nameonly]"))
-          let levelingUp = []
           for(let i in l){
             let card = l[i]
             let level = +card.querySelector(".levelBadge.badge").innerText.slice(3)
@@ -689,7 +689,7 @@
     }
     GM_setValue("formations", formations)
 
-    if(settings.levelUpSlots){
+    if(settings.levelUpSlots && levelingUp.length){
       switchFormation = async ()=>{
         select.disabled = true
         select.insertAdjacentHTML("afterend", `<span style="display: block" id="switchingWaitText">Switching party...</span>`)

@@ -52,7 +52,7 @@
     let r = await fetch("/formation/change",{
       method:"POST",
       headers:{"content-type":"application/x-www-form-urlencoded"},
-      body:"_token="+token+"&selected_formation=f-"+id
+      body:"_token="+token+"&selected_formation="+id
     })
     let formation = formations[id]
     if(settings.levelUpSlots && formation?.levelUpSlots?.length){
@@ -154,7 +154,7 @@
         if(switchingFormation || thisFormation===formation){return}
         switchingFormation = true
         button.style.border = "solid 2px #ee4"
-        let r = await setFormation(id, formations).catch(e=>{
+        let r = await setFormation("f-"+id, formations).catch(e=>{
           showErrorToast("Couldn't switch party.")
           switchingFormation = false
           button.style.border = null
@@ -690,9 +690,9 @@
     GM_setValue("formations", formations)
 
     if(settings.levelUpSlots){
-      window.switchFormation = async ()=>{
+      switchFormation = async ()=>{
         select.disabled = true
-        select.insertAdjacentHTML("afterend", `<a style="display: block" id="switchingWaitText">Switching party...</a>`)
+        select.insertAdjacentHTML("afterend", `<span style="display: block" id="switchingWaitText">Switching party...</span>`)
         await setFormation(select.value).catch(e=>{
           select.parentElement.remove(document.querySelector("#switchingWaitText"))
           select.disabled = false
@@ -701,7 +701,7 @@
         })
         document.location.reload()
       }
-      select.setAttribute("onsubmit", "window.switchFormation()")
+      select.setAttribute("onchange", "switchFormation()")
     }
   }
 

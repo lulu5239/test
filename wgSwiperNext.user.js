@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-06-28
+// @version      2025-07-16
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -45,6 +45,31 @@
       thing.removeAttribute("id")
       p.id = "waifuFeed"
       return r
+    }
+  }
+
+  let setFormation = async (id, formations=GM_getValue("formations")||{})=>{
+    let r = await fetch("/formation/change",{
+      method:"POST",
+      headers:{"content-type":"application/x-www-form-urlencoded"},
+      body:"_token="+token+"&selected_formation="+id
+    })
+    let formation = formations[id.slice(2)]
+    if(settings.levelUpSlots && formation?.levelUpSlots?.length){
+      let levelingUp = GM_getValue("levelingUp") || []
+      for(let i in levelingUp){
+        await fetch('https://waifugame.com/am/'+levelingUp[i], {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            '_token': token,
+            'action': 'swap',
+            'slot': formation.levelUpSlots[i]
+          })
+        });
+      }
     }
   }
 
@@ -129,11 +154,7 @@
         if(switchingFormation || thisFormation===formation){return}
         switchingFormation = true
         button.style.border = "solid 2px #ee4"
-        let r = await fetch("/formation/change",{
-          method:"POST",
-          headers:{"content-type":"application/x-www-form-urlencoded"},
-          body:"_token="+token+"&selected_formation=f-"+id
-        }).catch(e=>{
+        let r = await setFormation("f-"+id, formations).catch(e=>{
           showErrorToast("Couldn't switch party.")
           switchingFormation = false
           button.style.border = null
@@ -544,7 +565,8 @@
             {value:2, name:"Box 1"},
             {value:3, name:"Box 2"},
             {value:4, name:"Box 3"},
-          ])} as destination for wishlisted cards.
+          ])} as destination for wishlisted cards.<br>
+          ${settingCheckbox("levelUpSlots", "When switching party, keep the Animus that didn't reach level 120")}
         </div>
       </div>
       <style>
@@ -630,7 +652,9 @@
 
   if(path==="/home"){
     let formations = GM_getValue("formations") ? GM_getValue("formations") : localStorage["y_WG-formations"] ? JSON.parse(localStorage["y_WG-formations"]) : {}
-    for(let formation of document.querySelector("#party").querySelector("optgroup").children){
+    let select = document.querySelector("#formationform #party")
+    let levelingUp = []
+    for(let formation of select.querySelector("optgroup").children){
       if(formation.value==="default"){continue}
       let data = formations[formation.value.slice(2)]
       if(!data){
@@ -641,9 +665,44 @@
         for(let i of [2,3,4]){
           data[["perception", "charisma", "luck"][i-2]] = +document.querySelector(`a#im${i} .icon`).innerText
         }
+        if(settings.levelUpSlots){
+          let l = Array.from(document.querySelectorAll(".page-content div.card[data-nameonly]"))
+          for(let i in l){
+            let card = l[i]
+            let level = +card.querySelector(".levelBadge.badge").innerText.slice(3)
+            if(level < 120){
+              if(!data.levelUpSlots){
+                data.levelUpSlots = []
+              }else{
+                let pos = data.levelUpSlots.findIndex(e=>e===i)
+                if(pos>=0){
+                  data.levelUpSlots.splice(pos, 1)
+                }
+              }
+              data.levelUpSlots.push(i)
+              levelingUp.push(card.dataset.amid)
+            }
+          }
+          GM_setValue("levelingUp", levelingUp)
+        }else{delete data.levelUpSlots}
       }
     }
     GM_setValue("formations", formations)
+
+    if(settings.levelUpSlots && levelingUp.length){
+      switchFormation = async ()=>{
+        select.disabled = true
+        select.insertAdjacentHTML("afterend", `<span style="display: block" id="switchingWaitText">Switching party...</span>`)
+        await setFormation(select.value, formations).catch(e=>{
+          select.parentElement.remove(document.querySelector("#switchingWaitText"))
+          select.disabled = false
+          showErrorToast("Error when switching party.")
+          throw e
+        })
+        document.location.reload()
+      }
+      select.setAttribute("onchange", "switchFormation()")
+    }
   }
 
   if(path==="/profile/wishlist"){

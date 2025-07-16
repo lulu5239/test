@@ -54,7 +54,7 @@
       headers:{"content-type":"application/x-www-form-urlencoded"},
       body:"_token="+token+"&selected_formation="+id
     })
-    let formation = formations[id]
+    let formation = formations[id.slice(2)]
     if(settings.levelUpSlots && formation?.levelUpSlots?.length){
       let levelingUp = GM_getValue("levelingUp") || []
       for(let i in levelingUp){
@@ -693,7 +693,7 @@
       switchFormation = async ()=>{
         select.disabled = true
         select.insertAdjacentHTML("afterend", `<span style="display: block" id="switchingWaitText">Switching party...</span>`)
-        await setFormation(select.value).catch(e=>{
+        await setFormation(select.value, formations).catch(e=>{
           select.parentElement.remove(document.querySelector("#switchingWaitText"))
           select.disabled = false
           showErrorToast("Error when switching party.")

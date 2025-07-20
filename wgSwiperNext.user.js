@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-07-16
+// @version      2025-07-20
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -667,20 +667,18 @@
         }
         if(settings.levelUpSlots){
           let l = Array.from(document.querySelectorAll(".page-content div.card[data-nameonly]"))
+          let newLevelUpSlots = []
           for(let i in l){
             let card = l[i]
             let level = +card.querySelector(".levelBadge.badge").innerText.slice(3)
             if(level < 120){
-              if(!data.levelUpSlots){
-                data.levelUpSlots = []
-              }else{
-                let pos = data.levelUpSlots.findIndex(e=>e===i)
-                if(pos>=0){
-                  data.levelUpSlots.splice(pos, 1)
-                }
-              }
-              data.levelUpSlots.push(i)
+              newLevelUpSlots.push(i)
               levelingUp.push(card.dataset.amid)
+            }
+          }
+          for(let i of (data.levelUpSlots||[])){
+            if(!newLevelUpSlots.includes(i)){
+              newLevelUpSlots.push(i)
             }
           }
           GM_setValue("levelingUp", levelingUp)

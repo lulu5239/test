@@ -681,6 +681,7 @@
               newLevelUpSlots.push(i)
             }
           }
+          data.levelUpSlots = newLevelUpSlots
           GM_setValue("levelingUp", levelingUp)
         }else{delete data.levelUpSlots}
       }

@@ -104,6 +104,11 @@
     }
   }
 
+  let registerSW = navigator.serviceWorker.register
+  if(settings.fixServiceWorker){
+    navigator.serviceWorker.register = url=>{}
+  }
+
   if(true){ // Fixes bugs
     areYouSure = (text, continueFunction, cancelFunction)=>{
       $('#areYouSureTrigger').click();
@@ -563,7 +568,11 @@
           ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>
           <br>
           When feeding an Animu:<br>
-          ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}
+          ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}<br>
+          <br>
+          Off-topic, but you currently have <a id="swcount"></a> registered service workers and they might lag your browser.<br>
+          <button id="unregistersw">Unregister service workers</button><button id="registersw">Register a service worker</button><br>
+          ${settingCheckbox("fixServiceWorker", "Stop creating service workers")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -680,6 +689,25 @@
         }
       })
     }
+    let updateSWcount = ()=>{
+      navigator.serviceWorker?.getRegistrations().then(l=>document.querySelector("#swcount").innerText = ""+l.length)
+    }
+    document.querySelector("#unregistersw").addEventListener("click", ()=>{
+      let n = 0
+      for(let registration of registrations){
+        if(registration.scope.length > document.location.origin.length + 1){
+          registration.unregister()
+          n++
+        }
+      }
+      updateSWcount()
+      showSuccessToast(`Removed ${n} service workers`)
+    })
+    document.querySelector("#registersw").addEventListener("click", ()=>{
+      registerSW("/_service-worker.js")
+      updateSWcount()
+      showSuccessToast("Created a service worker for the entire website")
+    })
 
     document.addEventListener("keydown", ev=>{
       if(!recording){

@@ -692,7 +692,9 @@
     let updateSWcount = ()=>{
       navigator.serviceWorker?.getRegistrations().then(l=>document.querySelector("#swcount").innerText = ""+l.length)
     }
-    document.querySelector("#unregistersw").addEventListener("click", ()=>{
+    updateSWcount()
+    document.querySelector("#unregistersw").addEventListener("click", async ()=>{
+      let registrations = await navigator.serviceWorker.getRegistrations()
       let n = 0
       for(let registration of registrations){
         if(registration.scope.length > document.location.origin.length + 1){

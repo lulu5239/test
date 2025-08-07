@@ -73,6 +73,76 @@
     }
   }
 
+  let unwishlistCard = async (id, wl=GM_getValue("wishedCards") || [])=>{
+    await fetch('https://waifugame.com/profile/wishlist', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+      },
+      body: JSON.stringify({
+        '_token': token,
+        'action': 'remove',
+        'tag': 'id:'+id,
+      })
+    });
+    let i = wishedCards?.findIndex(c=>c===""+id)
+    if(i>=0){
+      wishedCards.splice(i, 1)
+      GM_setValue("wishedCards", wishedCards)
+    }
+  }
+  let unwishlistManyCards = async (ids, editStatus, wl)=>{
+    for(let i in ids){
+      let tnow = +new Date()
+      await unwishlistCard(ids[i], wl)
+      if(editStatus){editStatus((+i+1)+"/"+ids.length)}
+      let t = +new Date() - tnow
+      if(t < 0.7){ // The rate-limits are 90 requests per minute
+        await new Promise(ok=>setTimeout(ok, 0.7 - t))
+      }
+    }
+  }
+
+  if(true){ // Fixes bugs
+    areYouSure = (text, continueFunction, cancelFunction)=>{
+      $('#areYouSureTrigger').click();
+      $('#areYouSure .areYouSureText').html(text);
+      $('#areYouSure .continueText i.fa-spin').remove();
+
+      function cleanupHandlers() {
+        $("#areYouSure .continueText").unbind('click');
+        $("#areYouSure .cancelText").unbind('click');
+      }
+      cleanupHandlers()
+
+      if (continueFunction) {
+        $('#areYouSure .continueText').on('click', (...a)=>{
+          cleanupHandlers()
+          if(!$("#areYouSure.menu-active").length){return}
+          continueFunction(...a)
+          // Disable buttons to prevent double-clicking
+          $('#areYouSure .continueText')
+            .prepend("<i class='fa fa-spinner fa-spin'></i> ")
+            .attr('disabled', 'disabled')
+        });
+      }
+
+      if (cancelFunction) {
+        $('#areYouSure .cancelText').on('click', (...a)=>{
+          cleanupHandlers()
+          if(!$("#areYouSure.menu-active").length){return}
+          cancelFunction(...a)
+        });
+      } else {
+        $('#areYouSure .cancelText').on('click', function() {
+          $('a.close-menu').first().click();
+          cleanupHandlers()
+        });
+      }
+    }
+  }
+
   if(path==="/swiper"){
     document.body.insertAdjacentHTML("beforeend", `<style>.swiperNextButton {
         display:inline-flex;
@@ -178,36 +248,6 @@
     }
 
     let wishedCards = GM_getValue("wishedCards") || []
-    let unwishlistCard = async id=>{
-      await fetch('https://waifugame.com/profile/wishlist', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json, text/javascript, */*; q=0.01',
-        },
-        body: JSON.stringify({
-          '_token': token,
-          'action': 'remove',
-          'tag': 'id:'+id,
-        })
-      });
-      let i = wishedCards?.findIndex(c=>c===""+id)
-      if(i>=0){
-        wishedCards.splice(i, 1)
-        GM_setValue("wishedCards", wishedCards)
-      }
-    }
-    let unwishlistManyCards = async (ids, editStatus)=>{
-      for(let i in ids){
-        let tnow = +new Date()
-        await unwishlistCard(ids[i])
-        if(editStatus){editStatus((+i+1)+"/"+ids.length)}
-        let t = +new Date() - tnow
-        if(t < 0.7){ // The rate-limits are 90 requests per minute
-          await new Promise(ok=>setTimeout(ok, 0.7 - t))
-        }
-      }
-    }
 
     let flirtAnyways
     let originalPostServer = postServer
@@ -241,7 +281,7 @@
         }
         if(gotCard && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card_id)){
           if(settings.unwishlistObtainedCards==="confirm" && !confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){return}
-          unwishlistCard(card.card_id)
+          unwishlistCard(card.card_id, wishedCards)
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
@@ -291,7 +331,7 @@
       }else if(action==="battle"){
         document.querySelector(".btnBattle").click()
       }else if(action==="unwishlist"){
-        unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id)
+        unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id, wishedCards)
         showSuccessToast("Unwishlisting card.")
       }else if(action==="cardInfos"){
         document.querySelector("#options").click()
@@ -665,6 +705,7 @@
     bulkSelect.parentElement.addEventListener("change", ev=>{
       if(ev.target!==bulkSelect){return}
       if(bulkSelect.value==="unwishlist"){
+        let wishedCards = GM_getValue("wishedCards") || []
         let ids = Object.keys(multiSelection).map(id=>document.querySelector(`[data-pivotselect="${id}"]`).dataset.cardid).filter(id=>wishedCards.includes(id))
         ids = ids.filter((id,i)=>!ids.slice(0, i).includes(id))
         if(!ids.length){return showErrorToast("None of the cards you selected are in your wishlist!")}
@@ -672,7 +713,7 @@
           let menu = document.querySelector("#areYouSure")
           await unwishlistManyCards(ids, txt=>{
             menu.querySelector(".areYouSureText").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
-          })
+          }, wishedCards)
           menu.querySelector(".close-menu").click()
         })
       }else{

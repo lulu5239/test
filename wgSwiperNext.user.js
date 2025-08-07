@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-07-20
+// @version      2025-08-07
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -29,7 +29,7 @@
   }
   var settings = GM_getValue("settings") || {}
 
-  if(settings.manualRerollOnly){
+  if(settings.manualRerollOnly && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     ReRollGifts = (...args)=>{
       if(!args[0] && document.querySelector(".giftableItem")){return}
@@ -195,6 +195,17 @@
       if(i>=0){
         wishedCards.splice(i, 1)
         GM_setValue("wishedCards", wishedCards)
+      }
+    }
+    let unwishlistManyCards = async (ids, editStatus)=>{
+      for(let i in ids){
+        let tnow = +new Date()
+        await unwishlistCard(ids[i])
+        if(editStatus){editStatus((+i+1)+"/"+ids.length)}
+        let t = +new Date() - tnow
+        if(t < 0.7){ // The rate-limits are 90 requests per minute
+          await new Promise(ok=>setTimeout(ok, 0.7 - t))
+        }
       }
     }
 
@@ -648,6 +659,25 @@
       option.children[1].style.display = "block"
       recording = null
     })
+
+    let bulkSelect = document.querySelector("#bulk_action")
+    bulkSelect.querySelector(`[value="unprotect"]`).insertAdjacentHTML("afterend", `<option value="unwishlist">Remove from wishlist</option>`)
+    bulkSelect.parentElement.addEventListener("change", ev=>{
+      if(ev.target!==bulkSelect){return}
+      if(bulkSelect.value==="unwishlist"){
+        let ids = Object.keys(multiSelection).map(id=>id).filter(id=>wishedCards.includes(id))
+        areYouSure("Do you want to remove from your wishlist", async ()=>{
+          let menu = document.querySelector("#areYouSure")
+          await unwishlistManyCards(ids, txt=>{
+            menu.querySelector("a").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
+          })
+          menu.querySelector(".close-menu").click()
+        })
+      }else{
+        return
+      }
+      ev.preventDefault()
+    }, {capture: true})
   return}
 
   if(path==="/home"){

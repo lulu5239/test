@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-07-16
+// @version      2025-08-07
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -29,7 +29,7 @@
   }
   var settings = GM_getValue("settings") || {}
 
-  if(settings.manualRerollOnly){
+  if(settings.manualRerollOnly && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     ReRollGifts = (...args)=>{
       if(!args[0] && document.querySelector(".giftableItem")){return}
@@ -68,6 +68,81 @@
             'action': 'swap',
             'slot': formation.levelUpSlots[i]
           })
+        });
+      }
+    }
+  }
+
+  let unwishlistCard = async (id, wl=GM_getValue("wishedCards") || [])=>{
+    await fetch('https://waifugame.com/profile/wishlist', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+      },
+      body: JSON.stringify({
+        '_token': token,
+        'action': 'remove',
+        'tag': 'id:'+id,
+      })
+    });
+    let i = wl?.findIndex(c=>c===""+id)
+    if(i>=0){
+      wl.splice(i, 1)
+      GM_setValue("wishedCards", wl)
+    }
+  }
+  let unwishlistManyCards = async (ids, editStatus, wl)=>{
+    for(let i in ids){
+      let tnow = +new Date()
+      await unwishlistCard(ids[i], wl)
+      if(editStatus){editStatus((+i+1)+"/"+ids.length)}
+      let t = +new Date() - tnow
+      if(t < 0.7){ // The rate-limits are 90 requests per minute
+        await new Promise(ok=>setTimeout(ok, 0.7 - t))
+      }
+    }
+  }
+
+  navigator.serviceWorker.originalRegister = navigator.serviceWorker.register
+  if(settings.fixServiceWorker){
+    navigator.serviceWorker.register = url=>{}
+  }
+
+  if(true){ // Fixes bugs
+    areYouSure = (text, continueFunction, cancelFunction)=>{
+      $('#areYouSureTrigger').click();
+      $('#areYouSure .areYouSureText').html(text);
+      $('#areYouSure .continueText i.fa-spin').remove();
+
+      function cleanupHandlers() {
+        $("#areYouSure .continueText").unbind('click');
+        $("#areYouSure .cancelText").unbind('click');
+      }
+      cleanupHandlers()
+
+      if (continueFunction) {
+        $('#areYouSure .continueText').on('click', (...a)=>{
+          cleanupHandlers()
+          if(!$("#areYouSure.menu-active").length){return}
+          continueFunction(...a)
+          // Disable buttons to prevent double-clicking
+          $('#areYouSure .continueText')
+            .prepend("<i class='fa fa-spinner fa-spin'></i> ")
+            .attr('disabled', 'disabled')
+        });
+      }
+
+      if (cancelFunction) {
+        $('#areYouSure .cancelText').on('click', (...a)=>{
+          cleanupHandlers()
+          if(!$("#areYouSure.menu-active").length){return}
+          cancelFunction(...a)
+        });
+      } else {
+        $('#areYouSure .cancelText').on('click', function() {
+          $('a.close-menu').first().click();
+          cleanupHandlers()
         });
       }
     }
@@ -178,25 +253,6 @@
     }
 
     let wishedCards = GM_getValue("wishedCards") || []
-    let unwishlistCard = async id=>{
-      await fetch('https://waifugame.com/profile/wishlist', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json, text/javascript, */*; q=0.01',
-        },
-        body: JSON.stringify({
-          '_token': token,
-          'action': 'remove',
-          'tag': 'id:'+id,
-        })
-      });
-      let i = wishedCards?.findIndex(c=>c===""+id)
-      if(i>=0){
-        wishedCards.splice(i, 1)
-        GM_setValue("wishedCards", wishedCards)
-      }
-    }
 
     let flirtAnyways
     let originalPostServer = postServer
@@ -230,7 +286,7 @@
         }
         if(gotCard && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card_id)){
           if(settings.unwishlistObtainedCards==="confirm" && !confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){return}
-          unwishlistCard(card.card_id)
+          unwishlistCard(card.card_id, wishedCards)
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
@@ -280,7 +336,7 @@
       }else if(action==="battle"){
         document.querySelector(".btnBattle").click()
       }else if(action==="unwishlist"){
-        unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id)
+        unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id, wishedCards)
         showSuccessToast("Unwishlisting card.")
       }else if(action==="cardInfos"){
         document.querySelector("#options").click()
@@ -512,7 +568,11 @@
           ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>
           <br>
           When feeding an Animu:<br>
-          ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}
+          ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}<br>
+          <br>
+          Off-topic, but you currently have <a id="swcount"></a> registered service workers and they might lag your browser.<br>
+          <button id="unregistersw">Unregister bad service workers</button><button id="registersw">Register a service worker</button> <button id="unregisterallsw">Unregister all service workers</button><br>
+          ${settingCheckbox("fixServiceWorker", "Stop creating service workers")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -629,6 +689,29 @@
         }
       })
     }
+    let updateSWcount = ()=>{
+      navigator.serviceWorker?.getRegistrations().then(l=>document.querySelector("#swcount").innerText = ""+l.length)
+    }
+    updateSWcount()
+    let unregisterSW = async all=>{
+      let registrations = await navigator.serviceWorker.getRegistrations()
+      let n = 0
+      for(let registration of registrations){
+        if(all || registration.scope.length > document.location.origin.length + 1){
+          registration.unregister()
+          n++
+        }
+      }
+      updateSWcount()
+      showSuccessToast(`Removed ${n} service workers`)
+    }
+    document.querySelector("#unregistersw").addEventListener("click", ()=>unregisterSW())
+    document.querySelector("#unregisterallsw").addEventListener("click", ()=>unregisterSW(true))
+    document.querySelector("#registersw").addEventListener("click", ()=>{
+      navigator.serviceWorker.originalRegister("/_service-worker.js")
+      updateSWcount()
+      showSuccessToast("Created a service worker for the entire website")
+    })
 
     document.addEventListener("keydown", ev=>{
       if(!recording){
@@ -648,6 +731,28 @@
       option.children[1].style.display = "block"
       recording = null
     })
+
+    let bulkSelect = document.querySelector("#bulk_action")
+    bulkSelect.querySelector(`[value="unprotect"]`).insertAdjacentHTML("afterend", `<option value="unwishlist">Remove from wishlist</option>`)
+    bulkSelect.parentElement.addEventListener("change", ev=>{
+      if(ev.target!==bulkSelect){return}
+      if(bulkSelect.value==="unwishlist"){
+        let wishedCards = GM_getValue("wishedCards") || []
+        let ids = Object.keys(multiSelection).map(id=>document.querySelector(`[data-pivotselect="${id}"]`).dataset.cardid).filter(id=>wishedCards.includes(id))
+        ids = ids.filter((id,i)=>!ids.slice(0, i).includes(id))
+        if(!ids.length){return showErrorToast("None of the cards you selected are in your wishlist!")}
+        areYouSure(`Do you want to remove ${ids.length} cards from your wishlist?`, async ()=>{
+          let menu = document.querySelector("#areYouSure")
+          await unwishlistManyCards(ids, txt=>{
+            menu.querySelector(".areYouSureText").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
+          }, wishedCards)
+          menu.querySelector(".close-menu").click()
+        })
+      }else{
+        return
+      }
+      ev.preventDefault()
+    }, {capture: true})
   return}
 
   if(path==="/home"){
@@ -667,22 +772,21 @@
         }
         if(settings.levelUpSlots){
           let l = Array.from(document.querySelectorAll(".page-content div.card[data-nameonly]"))
+          let newLevelUpSlots = []
           for(let i in l){
             let card = l[i]
             let level = +card.querySelector(".levelBadge.badge").innerText.slice(3)
             if(level < 120){
-              if(!data.levelUpSlots){
-                data.levelUpSlots = []
-              }else{
-                let pos = data.levelUpSlots.findIndex(e=>e===i)
-                if(pos>=0){
-                  data.levelUpSlots.splice(pos, 1)
-                }
-              }
-              data.levelUpSlots.push(i)
+              newLevelUpSlots.push(i)
               levelingUp.push(card.dataset.amid)
             }
           }
+          for(let i of (data.levelUpSlots||[])){
+            if(!newLevelUpSlots.includes(i)){
+              newLevelUpSlots.push(i)
+            }
+          }
+          data.levelUpSlots = newLevelUpSlots
           GM_setValue("levelingUp", levelingUp)
         }else{delete data.levelUpSlots}
       }
@@ -709,5 +813,24 @@
     if(!settings.unwishlistObtainedCards && !settings.wishedCardDestination){return}
     let wishlist = Array.from(document.querySelectorAll("#wishedCards [data-cardid]")).map(e=>e.dataset.cardid)
     GM_setValue("wishedCards", wishlist)
+  }
+
+  if(path==="/hotel"){
+    let bye = document.querySelector("#multiGoodbye")
+    bye.insertAdjacentHTML("beforebegin", `<button id="multiUnwishlist" class="btn font-14 btn-block rounded-s text-center mb-2">Unwishlist</button>`)
+    bye.parentElement.parentElement.parentElement.style.marginBottom = "100px"
+    document.querySelector("#multiUnwishlist").addEventListener("click", ()=>{
+      let wishedCards = GM_getValue("wishedCards") || []
+      let ids = Array.from(document.querySelectorAll(".hotelListing.animu-selected a")).map(e=>e.dataset.cardid).filter(id=>wishedCards.includes(id))
+      ids = ids.filter((id,i)=>!ids.slice(0, i).includes(id))
+      if(!ids.length){return showErrorToast("None of the cards you selected are in your wishlist!")}
+      areYouSure(`Do you want to remove ${ids.length} cards from your wishlist?`, async ()=>{
+        let menu = document.querySelector("#areYouSure")
+        await unwishlistManyCards(ids, txt=>{
+          menu.querySelector(".areYouSureText").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
+        }, wishedCards)
+        menu.querySelector(".close-menu").click()
+      })
+    })
   }
 })();

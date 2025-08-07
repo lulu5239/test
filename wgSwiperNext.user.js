@@ -86,10 +86,10 @@
         'tag': 'id:'+id,
       })
     });
-    let i = wishedCards?.findIndex(c=>c===""+id)
+    let i = wl?.findIndex(c=>c===""+id)
     if(i>=0){
-      wishedCards.splice(i, 1)
-      GM_setValue("wishedCards", wishedCards)
+      wl.splice(i, 1)
+      GM_setValue("wishedCards", wl)
     }
   }
   let unwishlistManyCards = async (ids, editStatus, wl)=>{

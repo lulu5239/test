@@ -665,11 +665,13 @@
     bulkSelect.parentElement.addEventListener("change", ev=>{
       if(ev.target!==bulkSelect){return}
       if(bulkSelect.value==="unwishlist"){
-        let ids = Object.keys(multiSelection).map(id=>id).filter(id=>wishedCards.includes(id))
-        areYouSure("Do you want to remove from your wishlist", async ()=>{
+        let ids = Object.keys(multiSelection).map(id=>document.querySelector(`[data-pivotselect="${id}"]`).dataset.cardid).filter(id=>wishedCards.includes(id))
+        ids = ids.filter((id,i)=>!ids.slice(0, i).includes(id))
+        if(!ids.length){return showErrorToast("None of the cards you selected are in your wishlist!")}
+        areYouSure(`Do you want to remove ${ids.length} cards from your wishlist?`, async ()=>{
           let menu = document.querySelector("#areYouSure")
           await unwishlistManyCards(ids, txt=>{
-            menu.querySelector("a").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
+            menu.querySelector(".areYouSureText").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
           })
           menu.querySelector(".close-menu").click()
         })

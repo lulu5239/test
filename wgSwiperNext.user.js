@@ -104,7 +104,7 @@
     }
   }
 
-  let registerSW = navigator.serviceWorker.register
+  navigator.serviceWorker.originalRegister = navigator.serviceWorker.register
   if(settings.fixServiceWorker){
     navigator.serviceWorker.register = url=>{}
   }
@@ -571,7 +571,7 @@
           ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}<br>
           <br>
           Off-topic, but you currently have <a id="swcount"></a> registered service workers and they might lag your browser.<br>
-          <button id="unregistersw">Unregister service workers</button><button id="registersw">Register a service worker</button><br>
+          <button id="unregistersw">Unregister bad service workers</button><button id="registersw">Register a service worker</button> <button id="unregisterallsw">Unregister all service workers</button><br>
           ${settingCheckbox("fixServiceWorker", "Stop creating service workers")}
         </div>
         <div data-page="keybinds">
@@ -693,20 +693,22 @@
       navigator.serviceWorker?.getRegistrations().then(l=>document.querySelector("#swcount").innerText = ""+l.length)
     }
     updateSWcount()
-    document.querySelector("#unregistersw").addEventListener("click", async ()=>{
+    let unregisterSW = async all=>{
       let registrations = await navigator.serviceWorker.getRegistrations()
       let n = 0
       for(let registration of registrations){
-        if(registration.scope.length > document.location.origin.length + 1){
+        if(all || registration.scope.length > document.location.origin.length + 1){
           registration.unregister()
           n++
         }
       }
       updateSWcount()
       showSuccessToast(`Removed ${n} service workers`)
-    })
+    }
+    document.querySelector("#unregistersw").addEventListener("click", ()=>unregisterSW())
+    document.querySelector("#unregisterallsw").addEventListener("click", ()=>unregisterSW(true))
     document.querySelector("#registersw").addEventListener("click", ()=>{
-      registerSW("/_service-worker.js")
+      navigator.serviceWorker.originalRegister("/_service-worker.js")
       updateSWcount()
       showSuccessToast("Created a service worker for the entire website")
     })

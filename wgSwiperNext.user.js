@@ -782,4 +782,23 @@
     let wishlist = Array.from(document.querySelectorAll("#wishedCards [data-cardid]")).map(e=>e.dataset.cardid)
     GM_setValue("wishedCards", wishlist)
   }
+
+  if(path==="/hotel"){
+    let bye = document.querySelector("#multiGoodbye")
+    bye.insertAdjacentHTML("beforebegin", `<button id="multiUnwishlist" class="btn font-14 btn-block rounded-s text-center mb-2">Unwishlist</button>`)
+    bye.parentElement.parentElement.parentElement.style.marginBottom = "100px"
+    document.querySelector("#multiUnwishlist").addEventListener("click", ()=>{
+      let wishedCards = GM_getValue("wishedCards") || []
+      let ids = Array.from(document.querySelectorAll(".hotelListing.animu-selected a")).map(e=>e.dataset.cardid).filter(id=>wishedCards.includes(id))
+      ids = ids.filter((id,i)=>!ids.slice(0, i).includes(id))
+      if(!ids.length){return showErrorToast("None of the cards you selected are in your wishlist!")}
+      areYouSure(`Do you want to remove ${ids.length} cards from your wishlist?`, async ()=>{
+        let menu = document.querySelector("#areYouSure")
+        await unwishlistManyCards(ids, txt=>{
+          menu.querySelector(".areYouSureText").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
+        }, wishedCards)
+        menu.querySelector(".close-menu").click()
+      })
+    })
+  }
 })();

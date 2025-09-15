@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-08-07
+// @version      2025-09-16
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -107,45 +107,6 @@
   navigator.serviceWorker.originalRegister = navigator.serviceWorker.register
   if(settings.fixServiceWorker){
     navigator.serviceWorker.register = url=>{}
-  }
-
-  if(true){ // Fixes bugs
-    areYouSure = (text, continueFunction, cancelFunction)=>{
-      $('#areYouSureTrigger').click();
-      $('#areYouSure .areYouSureText').html(text);
-      $('#areYouSure .continueText i.fa-spin').remove();
-
-      function cleanupHandlers() {
-        $("#areYouSure .continueText").unbind('click');
-        $("#areYouSure .cancelText").unbind('click');
-      }
-      cleanupHandlers()
-
-      if (continueFunction) {
-        $('#areYouSure .continueText').on('click', (...a)=>{
-          cleanupHandlers()
-          if(!$("#areYouSure.menu-active").length){return}
-          continueFunction(...a)
-          // Disable buttons to prevent double-clicking
-          $('#areYouSure .continueText')
-            .prepend("<i class='fa fa-spinner fa-spin'></i> ")
-            .attr('disabled', 'disabled')
-        });
-      }
-
-      if (cancelFunction) {
-        $('#areYouSure .cancelText').on('click', (...a)=>{
-          cleanupHandlers()
-          if(!$("#areYouSure.menu-active").length){return}
-          cancelFunction(...a)
-        });
-      } else {
-        $('#areYouSure .cancelText').on('click', function() {
-          $('a.close-menu').first().click();
-          cleanupHandlers()
-        });
-      }
-    }
   }
 
   if(path==="/swiper"){

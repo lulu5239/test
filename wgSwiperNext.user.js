@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-09-16
+// @version      2025-11-10
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -509,6 +509,12 @@
       }, true)
     })
 
+    if(settings.cardsListFixedSize){
+      let list = document.querySelector("#cardListing")
+      list.style.height = settings.cardsListFixedSize+"px"
+      list.style.overflowY = "scroll"
+    }
+
     let settingCheckbox = (key, name, checked)=>(`<label><input type="checkbox" ${checked || checked===undefined && settings[key] ? "checked" : ""} data-key="${key}"> ${name}</label>`)
     let settingKeybind = (key, name)=>(`<div style="inline-block" data-key="${"keybind."+key}"><button class="btn"></button> <button class="btn"><i class="fa fa-times"></i></button> ${name}</div>`)
     let settingSelect = (key, list)=>(`<select style="display:inline-block" class="btn" data-key="${key}">`+list.map(o=>`<option value="${o.value}"${settings[key]==o.value ? " selected" : ""}>${o.name}</option>`)+`</select>`)
@@ -527,6 +533,12 @@
           On the cards page:<br>
           ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
           ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>
+          If you want the list of cards (not far above these settings) to have a fixed size (meaning less scrolling):<br>
+          ${settingSelect("cardsListFixedSize", [
+            {value:"", name:"Variable size for cards list"},
+            {value:"500", name:"Fixed size (500 pixels)"},
+            {value:"1000", name:"Fixed size (1000 pixels)"},
+          ])}<br>
           <br>
           When feeding an Animu:<br>
           ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}<br>

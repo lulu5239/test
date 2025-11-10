@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-11-10
+// @version      2025-11-11
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -133,14 +133,23 @@
     let selected = 1
     let selectedOnce = null
     let getSelected = ()=>(selectedOnce===null ? selected : selectedOnce)
-    let updateFlirtButton = ()=>{
-      document.querySelector("#love .fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : "heart")
+    let mainButton = document.querySelector("#love")
+    if(settings.swapFlirtCrush){
+      let love = mainButton
+      mainButton = document.querySelector("#nope")
+      mainButton.style.width = mainButton.style.height = "70px"
+      // Fix size for #love
+      mainButton.parentElement.insertBefore(mainButton, love)
+      mainButton.parentElement.insertBefore(love, document.querySelector("#deb"))
+    }
+    let updateMainButton = ()=>{
+      mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush ? "trash" : "heart")
     }
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){
         button.addEventListener("click", ()=>{
           let size = button.parentElement.style.height.slice(0, -2)
-          swiperNextButtons.scrollTo(0,swiperNextButtons.scrollTop<size/2 ? size : 0)
+          swiperNextButtons.scrollTo(0, swiperNextButtons.scrollTop<size/2 ? size : 0)
         })
       continue}
       let i = +button.dataset.nextaction
@@ -150,7 +159,7 @@
             document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
             selectedOnce = null
             button.style.border = "solid 3px #"+colors.selected
-            updateFlirtButton()
+            updateMainButton()
           }
         return}
         if(selectedOnce===i){
@@ -165,7 +174,7 @@
         selectedOnce = i
         button.style.border = "solid 2px #"+colors.selectedOnce
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 2px #"+colors.selectedNotNow
-        updateFlirtButton()
+        updateMainButton()
       })
       if(i===1){
         button.style.border = "solid 2px #"+colors.selected
@@ -270,7 +279,7 @@
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.battlemode = (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
         button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
-        updateFlirtButton()
+        updateMainButton()
       }
       return originalApplyEncounterStyle(...args)
     }
@@ -533,6 +542,8 @@
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
           ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
           ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
+          On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
+          ${settingCheckbox("swapFlirtCrush", "Swap flirt and crush buttons")}<br>
           On the cards page:<br>
           ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
           ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>

@@ -510,7 +510,7 @@
     })
 
     if(settings.cardsListFixedSize){
-      let list = document.querySelector("#cardListing")
+      let list = document.querySelector("#searchResults")
       list.style.height = settings.cardsListFixedSize+"px"
       list.style.overflowY = "scroll"
     }
@@ -657,7 +657,7 @@
           settings[key] = option.value
         }
         GM_setValue("settings", settings)
-        if(["showTopSimps"].includes(key)){
+        if(["showTopSimps", "cardsListFixedSize"].includes(key)){
           showSuccessToast("Refresh the page to see the changes.")
         }
       })

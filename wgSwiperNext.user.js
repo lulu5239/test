@@ -137,10 +137,10 @@
     if(settings.swapFlirtCrush){
       let love = mainButton
       mainButton = document.querySelector("#nope")
-      mainButton.style.width = mainButton.style.height = "70px"
-      // Fix size for #love
-      mainButton.parentElement.insertBefore(mainButton, love)
-      mainButton.parentElement.insertBefore(love, document.querySelector("#deb"))
+      mainButton.style.width = mainButton.style.height = "90px"
+      love.style.width = love.style.height = "50px"
+      mainButton.parentElement.parentElement.insertBefore(mainButton.parentElement, love.parentElement)
+      mainButton.parentElement.parentElement.insertBefore(love.parentElement, document.querySelector("#deb").parentElement)
     }
     let updateMainButton = ()=>{
       mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush ? "trash" : "heart")

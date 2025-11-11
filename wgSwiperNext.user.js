@@ -145,7 +145,7 @@
       mainButton.parentElement.parentElement.insertBefore(love.parentElement, document.querySelector("#deb").parentElement)
     }
     let updateMainButton = ()=>{
-      mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && !(getSelected()>0)) ? "trash" : "heart")
+      mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0) ? "trash" : "heart")
     }
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-08-07
+// @version      2025-11-11
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -109,45 +109,6 @@
     navigator.serviceWorker.register = url=>{}
   }
 
-  if(true){ // Fixes bugs
-    areYouSure = (text, continueFunction, cancelFunction)=>{
-      $('#areYouSureTrigger').click();
-      $('#areYouSure .areYouSureText').html(text);
-      $('#areYouSure .continueText i.fa-spin').remove();
-
-      function cleanupHandlers() {
-        $("#areYouSure .continueText").unbind('click');
-        $("#areYouSure .cancelText").unbind('click');
-      }
-      cleanupHandlers()
-
-      if (continueFunction) {
-        $('#areYouSure .continueText').on('click', (...a)=>{
-          cleanupHandlers()
-          if(!$("#areYouSure.menu-active").length){return}
-          continueFunction(...a)
-          // Disable buttons to prevent double-clicking
-          $('#areYouSure .continueText')
-            .prepend("<i class='fa fa-spinner fa-spin'></i> ")
-            .attr('disabled', 'disabled')
-        });
-      }
-
-      if (cancelFunction) {
-        $('#areYouSure .cancelText').on('click', (...a)=>{
-          cleanupHandlers()
-          if(!$("#areYouSure.menu-active").length){return}
-          cancelFunction(...a)
-        });
-      } else {
-        $('#areYouSure .cancelText').on('click', function() {
-          $('a.close-menu').first().click();
-          cleanupHandlers()
-        });
-      }
-    }
-  }
-
   if(path==="/swiper"){
     document.body.insertAdjacentHTML("beforeend", `<style>.swiperNextButton {
         display:inline-flex;
@@ -172,14 +133,25 @@
     let selected = 1
     let selectedOnce = null
     let getSelected = ()=>(selectedOnce===null ? selected : selectedOnce)
-    let updateFlirtButton = ()=>{
-      document.querySelector("#love .fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : "heart")
+    let mainButton = document.querySelector("#love")
+    if(settings.swapFlirtCrush){
+      let love = mainButton
+      mainButton = document.querySelector("#nope")
+      mainButton.style.width = mainButton.style.height = "90px"
+      mainButton.querySelector(".fa").style.fontSize = "48px"
+      love.style.width = love.style.height = "50px"
+      love.querySelector(".fa").style.fontSize = "32px"
+      mainButton.parentElement.parentElement.insertBefore(mainButton.parentElement, love.parentElement)
+      mainButton.parentElement.parentElement.insertBefore(love.parentElement, document.querySelector("#deb").parentElement)
+    }
+    let updateMainButton = ()=>{
+      mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0) ? "trash" : "heart")
     }
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){
         button.addEventListener("click", ()=>{
           let size = button.parentElement.style.height.slice(0, -2)
-          swiperNextButtons.scrollTo(0,swiperNextButtons.scrollTop<size/2 ? size : 0)
+          swiperNextButtons.scrollTo(0, swiperNextButtons.scrollTop<size/2 ? size : 0)
         })
       continue}
       let i = +button.dataset.nextaction
@@ -189,7 +161,7 @@
             document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
             selectedOnce = null
             button.style.border = "solid 3px #"+colors.selected
-            updateFlirtButton()
+            updateMainButton()
           }
         return}
         if(selectedOnce===i){
@@ -204,7 +176,7 @@
         selectedOnce = i
         button.style.border = "solid 2px #"+colors.selectedOnce
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 2px #"+colors.selectedNotNow
-        updateFlirtButton()
+        updateMainButton()
       })
       if(i===1){
         button.style.border = "solid 2px #"+colors.selected
@@ -273,7 +245,9 @@
       }else{
         selectedOnce = null
       }
-      if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
+      if(action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination){
+        args[1] = "😘"
+      }else if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
         args[1] = settings.crushManualBattles && card.card.element!=="???" ? "🗑️" : "👊"
       }
       flirtAnyways = null
@@ -309,7 +283,7 @@
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.battlemode = (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
         button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
-        updateFlirtButton()
+        updateMainButton()
       }
       return originalApplyEncounterStyle(...args)
     }
@@ -397,6 +371,9 @@
       }
       table.smallerTable th, table.smallerTable td {
         padding: 5px;
+      }
+      #searchResults .selectCard {
+        position: relative;
       }
       </style><div id="swiperNextButtons" style="height:40px; width:100%; margin-left:10px; margin-bottom:10px">` + ["nothing",0,1,2,3,4,"next"].map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="nothing" ? "Nothing" : i==="next" ? '<i class="fa fa-angle-right"></i>' : "Box "+(i-1)}</div>`
@@ -548,6 +525,12 @@
       }, true)
     })
 
+    if(settings.cardsListFixedSize){
+      let list = document.querySelector("#searchResults")
+      list.style.height = settings.cardsListFixedSize+"px"
+      list.style.overflowY = "scroll"
+    }
+
     let settingCheckbox = (key, name, checked)=>(`<label><input type="checkbox" ${checked || checked===undefined && settings[key] ? "checked" : ""} data-key="${key}"> ${name}</label>`)
     let settingKeybind = (key, name)=>(`<div style="inline-block" data-key="${"keybind."+key}"><button class="btn"></button> <button class="btn"><i class="fa fa-times"></i></button> ${name}</div>`)
     let settingSelect = (key, list)=>(`<select style="display:inline-block" class="btn" data-key="${key}">`+list.map(o=>`<option value="${o.value}"${settings[key]==o.value ? " selected" : ""}>${o.name}</option>`)+`</select>`)
@@ -563,9 +546,17 @@
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
           ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
           ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
+          On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
+          ${settingCheckbox("swapFlirtCrush", "Swap flirt and crush buttons")}<br>
           On the cards page:<br>
           ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
           ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>
+          If you want the list of cards (not far above these settings) to have a fixed size (meaning less scrolling):<br>
+          ${settingSelect("cardsListFixedSize", [
+            {value:"", name:"Variable size for cards list"},
+            {value:"500", name:"Fixed size (500 pixels)"},
+            {value:"1000", name:"Fixed size (1000 pixels)"},
+          ])}<br>
           <br>
           When feeding an Animu:<br>
           ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}<br>
@@ -613,6 +604,7 @@
             {value:6, name:"Always"},
           ])}<br>
           ${settingCheckbox("crushManualBattles", "Crush instead of manually battling")}<br>
+          ${settingCheckbox("neverCrushWithDestination", "Never crush encounters if a destination is set")}<br>
           The following features related to your wishlist works on cards (not tags) seen on your wishlist page. After enabling these options, you should go on the wishlist page.<br>
           Unwishlist obtained cards ${settingSelect("unwishlistObtainedCards", [
             {value:"", name:"never"},
@@ -684,7 +676,7 @@
           settings[key] = option.value
         }
         GM_setValue("settings", settings)
-        if(["showTopSimps"].includes(key)){
+        if(["showTopSimps", "cardsListFixedSize"].includes(key)){
           showSuccessToast("Refresh the page to see the changes.")
         }
       })

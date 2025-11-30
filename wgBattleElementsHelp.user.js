@@ -152,7 +152,8 @@
     document.querySelector("#partyView p.font-italic").innerText = "You can heal your Animus from this page."
     if(localStorage["y_WG-autoBattle"]){
       document.querySelector(".page-content .content.mt-5 table").insertAdjacentHTML("beforebegin",
-        `<div><label><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label> <label>until level <input type="number" min="1" max="120">${GM_getValue("objectiveLevel") || 120}</label></div>`
+        `<style>.autoBattleButton { background-color: #000; border: solid 2px #700 }</style>` +
+        `<div><label><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label> <label>until level <input type="number" min="1" max="120">${GM_getValue("objectiveLevel") || 120}</input></label></div>`
       )
       let box = document.querySelector(`.page-content .content.mt-5 label input[type="checkbox"]`)
       box.addEventListener("change", ()=>{

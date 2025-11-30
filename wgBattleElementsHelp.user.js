@@ -16,6 +16,8 @@
 (async ()=>{
   //'use strict';
 
+  const maximumLevel = 120
+
   let path = document.location.pathname
   if(path.startsWith("/index.php/")){
     path = path.slice(10)
@@ -153,7 +155,7 @@
     if(localStorage["y_WG-autoBattle"]){
       document.querySelector(".page-content .content.mt-5 table").insertAdjacentHTML("beforebegin",
         `<style>.autoBattleButton { background-color: #000; border: solid 2px #700 }</style>` +
-        `<div><label><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label> <label>until level <input type="number" min="1" max="120">${GM_getValue("objectiveLevel") || 120}</input></label></div>`
+        `<div><label><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label> <label>until level <input type="number" min="1" max="120" value="${GM_getValue("objectiveLevel") || maximumLevel}"></label></div>`
       )
       let box = document.querySelector(`.page-content .content.mt-5 label input[type="checkbox"]`)
       box.addEventListener("change", ()=>{
@@ -185,7 +187,7 @@
   }
   localStorage["y_WG-party"] = JSON.stringify(previousParty)
   window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID || localStorage["y_WG-autoBattle"]==="all"
-  window.battleHelpVars.objectiveLevel = GM_getValue("objectiveLevel") || 120
+  window.battleHelpVars.objectiveLevel = GM_getValue("objectiveLevel") || maximumLevel
   
   let handleSwapParty = (cards=[])=>{
     for(let card of cards){
@@ -193,7 +195,7 @@
       party[card.id].level = card.lvl
       party[card.id].id = card.id
     }
-    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
+    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<maximumLevel && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
@@ -308,7 +310,7 @@
       if(!battleHelpVars.auto || document.querySelector("#action_block").style.display==="none"){return}
       if(document.querySelector("#swapForXPoption").dataset.card){
         document.querySelector("#btn_swapForXP").click()
-      }else if(!window.battleHelpVars.usingBest || currentCard.hp<50 && currentCard.level<120){
+      }else if(!window.battleHelpVars.usingBest || currentCard.hp<50 && currentCard.level<maximumLevel){
         document.querySelector("#btn_swapToBest").click()
       }else{
         document.querySelector("#btn_bestMove").click()
@@ -392,8 +394,8 @@
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max
     for(let card of Object.values(party)){
-      if(!card.hp || card.noPP || card.level<120 && card.hp<50 || window.battleHelpVars.objectiveLevel && card.level>=window.battleHelpVars.objectiveLevel){delete card.goodATT; continue}
-      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<120 ? 5 : 1)
+      if(!card.hp || card.noPP || card.level<maximumLevel && card.hp<50 || card.level<maximumLevel && window.battleHelpVars.objectiveLevel && card.level>=window.battleHelpVars.objectiveLevel){delete card.goodATT; continue}
+      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<maximumLevel ? 5 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
     let card = max!==undefined && Object.values(party).filter(card=>card.goodATT===max).sort((c1,c2)=>c2.hp-c1.hp)[0]

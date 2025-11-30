@@ -185,6 +185,7 @@
   }
   localStorage["y_WG-party"] = JSON.stringify(previousParty)
   window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID || localStorage["y_WG-autoBattle"]==="all"
+  window.battleHelpVars.objectiveLevel = GM_getValue("objectiveLevel") || 120
   
   let handleSwapParty = (cards=[])=>{
     for(let card of cards){
@@ -209,12 +210,12 @@
         if(!battles){continue}
         let i = battles.findIndex(b=>b.id===battleID)
         if(i>=0){
-          battles.splice(i,1)
+          battles.splice(i, 1)
           localStorage["y_WG-battles"] = JSON.stringify(battles)
         }
-        let lowest = Object.values(party).reduce((p,c)=>(c.level<p ? c.level : p),999)
+        let lowest = Object.values(party).reduce((p,c)=>(c.level<p ? c.level : p), 999)
         battles.reverse()
-        let battle = battles.find(b=>b.level<=lowest) || battles.reduce((p,b)=>(b.level<p.level ? b : p),{level:999})
+        let battle = battles.find(b=>b.level<=lowest) || battles.reduce((p,b)=>(b.level<p.level ? b : p), {level:999})
         if(!battle?.element){continue}
         document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}, lv. ${battle.level}</p></button>`)
         document.querySelector("#btn_nextBattle").addEventListener("click", ()=>{
@@ -223,12 +224,12 @@
           }
           document.location.href = "/battle/"+battle.id
         })
-        if(localStorage["y_WG-autoBattle"]==="all" && winText?.includes("<br")){
+        if(localStorage["y_WG-autoBattle"]==="all" && winText?.includes("<br") && (!window.battleHelpVars.objectiveLevel || lowest<window.battleHelpVars.objectiveLevel)){
           let cancel
           setTimeout(()=>{
             if(cancel){return}
             document.location.href = "/battle/"+battle.id
-          }, 3000)
+          }, 2500 + Math.random())
           for(let e of document.querySelectorAll("#winner_block a, #winner_block button")){
             e.addEventListener("click", ()=>{cancel=true})
           }
@@ -279,7 +280,7 @@
       }
     }
     setTimeout(async ()=>{
-      if(fullStats.p2?.card.shard_sponsor_user_id==403880 && !localStorage["y_WG-autoBattle"] && !document.querySelectorAll("#unlockAutoBattle").length){
+      if(fullStats.p2?.card.shard_sponsor_user_id==403880 && !localStorage["y_WG-autoBattle"] && !document.querySelector("#unlockAutoBattle")){
         narate("Oh, you are battling against one of <span>my developer's cards</span>;<br>I <i>(the user-script)</i> don't want to see that...<br>Please do it <span>fast</span>!")
         document.querySelector("#battle_view_player").insertAdjacentHTML("afterbegin", `<div style="width:100%; text-align:center; overflow:hidden; padding:10px;"><button id="unlockAutoBattle" class="btn" style="margin-top:-150px; background-color:#000; filter:drop-shadow(0 0 10px #ff0); display:inline-flex; align-items:center">Unlock auto-battle</button></div>`)
         setTimeout(()=>{
@@ -292,6 +293,7 @@
             }else{
               localStorage["y_WG-autoBattle"] = true
               button.innerText = "Auto-battle"
+              button.style.filter = "drop-shadow(0 0 10px #f0f)"
               showSuccessToast("Unlocked auto-battle!")
             }
           })
@@ -390,7 +392,7 @@
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max
     for(let card of Object.values(party)){
-      if(!card.hp || card.noPP || card.level<120 && card.hp<50){delete card.goodATT; continue}
+      if(!card.hp || card.noPP || card.level<120 && card.hp<50 || window.battleHelpVars.objectiveLevel && card.level>=window.battleHelpVars.objectiveLevel){delete card.goodATT; continue}
       card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<120 ? 5 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }

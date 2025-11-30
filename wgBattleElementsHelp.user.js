@@ -24,14 +24,15 @@
   }
   if(path.endsWith("/")){path = path.slice(0, -1)} // forfeit button redirects to slightly different page
 
+  let makeFeedable = path==="/battle" ? ".showCardInfo" : path.startsWith("/quests/") ? ".page-content .content :nth-child(2 of .partyView)" : false
   // Wait for scripts to exist
   let ok; let p = new Promise(f=>{ok=f})
   let observer = new MutationObserver((mutations, obs) => {
     if (typeof(startCountdown)!=="undefined") {
       obs.disconnect();
       ok()
-    }else if(path==="/battle"){ // Edit class before scripts runs
-      for(let card of document.querySelectorAll(".showCardInfo")){
+    }else if(makeFeedable){ // Edit class before scripts runs
+      for(let card of document.querySelectorAll(makeFeedable)){
         card.classList.remove("showCardInfo")
         card.addEventListener("click", ()=>{
           let hp = card.parentElement.querySelector("center").innerText.split("\n")[1].slice(0,-4)

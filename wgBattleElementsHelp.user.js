@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-05-25
+// @version      2025-11-30
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -290,7 +290,9 @@
           button.style.marginTop = "10px"
         },5000)
       }
-      if(busy){await new Promise(ok=>setTimeout(ok,500))}
+      for(let i=0; i<10; i++){
+        if(busy){await new Promise(ok=>setTimeout(ok, 500))}else{break}
+      }
       if(busy){return}
       window.scrollTo(0, 185)
       if(!battleHelpVars.auto || document.querySelector("#action_block").style.display==="none"){return}
@@ -381,7 +383,7 @@
     let max
     for(let card of Object.values(party)){
       if(!card.hp || card.noPP || card.level<120 && card.hp<50){delete card.goodATT; continue}
-      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<120 ? 2 : 1)
+      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<120 ? 5 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
     let card = max!==undefined && Object.values(party).filter(card=>card.goodATT===max).sort((c1,c2)=>c2.hp-c1.hp)[0]

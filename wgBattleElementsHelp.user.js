@@ -376,7 +376,7 @@
     let card = document.querySelector("#swapForXPoption").dataset.card
     if(!card){return}
     window.battleHelpVars.usingBest = false
-    actionSwapList.querySelector(`button[data-swapto="${card}"]`).click()
+    actionSwapList.querySelector(`button[data-swapto="${card}"]`)?.click()
   })
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_swapToBest" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Swap to best</button><div>`)
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
@@ -397,7 +397,7 @@
     if(!card){
       return showErrorToast("No card to swap to...")
     }
-    actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
+    actionSwapList.querySelector(`button[data-swapto="${card.id}"]`)?.click()
   })
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)

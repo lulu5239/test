@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-11-30
+// @version      2025-12-01
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -9,7 +9,8 @@
 // @downloadURL  https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
 // @updateURL    https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
 // @run-at       document-start
-// @grant        none
+// @grant        GM_getValue
+// @grant        GM_setValue
 // ==/UserScript==
 
 (async ()=>{
@@ -19,6 +20,7 @@
   if(path.startsWith("/index.php/")){
     path = path.slice(10)
   }
+  if(path.endsWith("/")){path = path.slice(0, -1)} // forfeit button redirects to slightly different page
 
   // Wait for scripts to exist
   let ok; let p = new Promise(f=>{ok=f})
@@ -103,7 +105,7 @@
   }
   var magicElements = ["grass","fire","water","electric","psychic","ice","music","dark","light"]
    
-  if(path==="/battle" || path==="/battle/"){
+  if(path==="/battle"){
     let list = []
     for(let card of document.querySelectorAll("img.battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()
@@ -143,17 +145,22 @@
           }
           button.click()
         })
+        text.style.display = null
       }
     }
     localStorage["y_WG-battles"] = JSON.stringify(list)
     document.querySelector("#partyView p.font-italic").innerText = "You can heal your Animus from this page."
     if(localStorage["y_WG-autoBattle"]){
       document.querySelector(".page-content .content.mt-5 table").insertAdjacentHTML("beforebegin",
-        `<label style="display:block"><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label>`
+        `<div><label><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label> <label>until level <input type="number" min="1" max="120">${GM_getValue("objectiveLevel") || 120}</label></div>`
       )
-      let box = document.querySelector(".page-content .content.mt-5 label input")
+      let box = document.querySelector(`.page-content .content.mt-5 label input[type="checkbox"]`)
       box.addEventListener("change", ()=>{
         localStorage["y_WG-autoBattle"] = box.checked ? "all" : true
+      })
+      let level = document.querySelector(`.page-content .content.mt-5 label input[type="number"]`)
+      level.addEventListener("change", ()=>{
+        GM_setValue("objectiveLevel", +level.value)
       })
     }
   return}

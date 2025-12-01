@@ -24,7 +24,7 @@
   }
   if(path.endsWith("/")){path = path.slice(0, -1)} // forfeit button redirects to slightly different page
 
-  let makeFeedable = path==="/battle" ? ".showCardInfo" : path.startsWith("/quests/") ? ".page-content .content :nth-child(2 of .partyView)" : false
+  let makeFeedable = path==="/battle" || path.startsWith("/profile/") ? ".showCardInfo" : path.startsWith("/quests/") ? ".page-content .content :nth-child(2 of .partyView) .showCardInfo" : false
   // Wait for scripts to exist
   let ok; let p = new Promise(f=>{ok=f})
   let observer = new MutationObserver((mutations, obs) => {
@@ -35,15 +35,15 @@
       for(let card of document.querySelectorAll(makeFeedable)){
         card.classList.remove("showCardInfo")
         card.addEventListener("click", ()=>{
-          let hp = card.parentElement.querySelector("center").innerText.split("\n")[1].slice(0,-4)
+          let hp = card.parentElement.querySelector("center")?.innerText.split("\n")[1].slice(0,-4) || "some "
           showWaifuMenu({
-            name:card.parentElement.dataset["tippy-content"],
-            id:card.parentElement.dataset.anniemay,
-            cardID:card.dataset.cardid,
-            xpText:card.parentElement.querySelector("span").innerText,
-            relXP:0,
-            hpText:hp+"%",
-            relHP:hp,
+            name: card.parentElement.dataset["tippy-content"] || card.dataset.nameonly,
+            id: card.parentElement.dataset.anniemay || card.parentElement.dataset.amid,
+            cardID: card.dataset.cardid,
+            xpText: card.parentElement.querySelector("span")?.innerText || "unloaded",
+            relXP: 0,
+            hpText: hp+"%",
+            relHP: hp,
           }, true)
         })
       }

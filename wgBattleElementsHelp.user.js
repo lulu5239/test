@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-05-25
+// @version      2025-12-01
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -9,36 +9,41 @@
 // @downloadURL  https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
 // @updateURL    https://raw.githubusercontent.com/lulu5239/test/refs/heads/master/wgBattleElementsHelp.user.js
 // @run-at       document-start
-// @grant        none
+// @grant        GM_getValue
+// @grant        GM_setValue
 // ==/UserScript==
 
 (async ()=>{
   //'use strict';
 
+  const maximumLevel = 120
+
   let path = document.location.pathname
   if(path.startsWith("/index.php/")){
     path = path.slice(10)
   }
+  if(path.endsWith("/")){path = path.slice(0, -1)} // forfeit button redirects to slightly different page
 
+  let makeFeedable = path==="/battle" ? ".showCardInfo" : path.startsWith("/profile/") ? ".content .row.no-gutters .showCardInfo" : path.startsWith("/quests/") ? ".page-content .content :nth-child(2 of .partyView) .showCardInfo" : false
   // Wait for scripts to exist
   let ok; let p = new Promise(f=>{ok=f})
   let observer = new MutationObserver((mutations, obs) => {
     if (typeof(startCountdown)!=="undefined") {
       obs.disconnect();
       ok()
-    }else if(path==="/battle"){ // Edit class before scripts runs
-      for(let card of document.querySelectorAll(".showCardInfo")){
+    }else if(makeFeedable){ // Edit class before scripts runs
+      for(let card of document.querySelectorAll(makeFeedable)){
         card.classList.remove("showCardInfo")
         card.addEventListener("click", ()=>{
-          let hp = card.parentElement.querySelector("center").innerText.split("\n")[1].slice(0,-4)
+          let hp = card.parentElement.querySelector("center")?.innerText.split("\n")[1].slice(0,-4) || "some "
           showWaifuMenu({
-            name:card.parentElement.dataset["tippy-content"],
-            id:card.parentElement.dataset.anniemay,
-            cardID:card.dataset.cardid,
-            xpText:card.parentElement.querySelector("span").innerText,
-            relXP:0,
-            hpText:hp+"%",
-            relHP:hp,
+            name: card.parentElement.dataset["tippy-content"] || card.dataset.nameonly,
+            id: card.parentElement.dataset.anniemay || card.dataset.amid,
+            cardID: card.dataset.cardid,
+            xpText: card.parentElement.querySelector("span")?.innerText || "unloaded",
+            relXP: 0,
+            hpText: hp+"%",
+            relHP: hp,
           }, true)
         })
       }
@@ -46,6 +51,16 @@
   });
   observer.observe(document, { childList: true, subtree: true });
   await p
+
+  if(path.startsWith("/profile/") && !document.querySelector("#aboutMeEditor")){
+    document.querySelector("#waifuMenu .menu-title .color-highlight").innerText = ["Observe", "Stalk", "Learn from", "Watch", "Interrogate"][Math.floor(Math.random()*5)]
+    let menu = document.querySelector("#waifuMenu .content")
+    for(let remove of ["#waifuFeed", ".progress", ".btnAutoLevel", ".btnDojo", ".btnOpenSwap"]){
+      let element = menu.querySelector(remove)
+      if(!element){continue}
+      element.style.display = "none"
+    }
+  return}
   
   let party = localStorage["y_WG-party"]
   if(!party || party==="[object Object]"){
@@ -103,7 +118,7 @@
   }
   var magicElements = ["grass","fire","water","electric","psychic","ice","music","dark","light"]
    
-  if(path==="/battle" || path==="/battle/"){
+  if(path==="/battle"){
     let list = []
     for(let card of document.querySelectorAll("img.battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()
@@ -143,17 +158,23 @@
           }
           button.click()
         })
+        text.style.display = null
       }
     }
     localStorage["y_WG-battles"] = JSON.stringify(list)
     document.querySelector("#partyView p.font-italic").innerText = "You can heal your Animus from this page."
     if(localStorage["y_WG-autoBattle"]){
       document.querySelector(".page-content .content.mt-5 table").insertAdjacentHTML("beforebegin",
-        `<label style="display:block"><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label>`
+        `<style>.autoBattleButton { background-color: #000; border: solid 2px #700 }</style>` +
+        `<div><label><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label> <label>until level <input type="number" min="1" max="120" value="${GM_getValue("objectiveLevel") || maximumLevel}"></label></div>`
       )
-      let box = document.querySelector(".page-content .content.mt-5 label input")
+      let box = document.querySelector(`.page-content .content.mt-5 label input[type="checkbox"]`)
       box.addEventListener("change", ()=>{
         localStorage["y_WG-autoBattle"] = box.checked ? "all" : true
+      })
+      let level = document.querySelector(`.page-content .content.mt-5 label input[type="number"]`)
+      level.addEventListener("change", ()=>{
+        GM_setValue("objectiveLevel", +level.value)
       })
     }
   return}
@@ -177,6 +198,7 @@
   }
   localStorage["y_WG-party"] = JSON.stringify(previousParty)
   window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID || localStorage["y_WG-autoBattle"]==="all"
+  window.battleHelpVars.objectiveLevel = GM_getValue("objectiveLevel") || maximumLevel
   
   let handleSwapParty = (cards=[])=>{
     for(let card of cards){
@@ -184,7 +206,7 @@
       party[card.id].level = card.lvl
       party[card.id].id = card.id
     }
-    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<120 && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
+    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<maximumLevel && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
@@ -201,12 +223,12 @@
         if(!battles){continue}
         let i = battles.findIndex(b=>b.id===battleID)
         if(i>=0){
-          battles.splice(i,1)
+          battles.splice(i, 1)
           localStorage["y_WG-battles"] = JSON.stringify(battles)
         }
-        let lowest = Object.values(party).reduce((p,c)=>(c.level<p ? c.level : p),999)
+        let lowest = Object.values(party).reduce((p,c)=>(c.level<p ? c.level : p), 999)
         battles.reverse()
-        let battle = battles.find(b=>b.level<=lowest) || battles.reduce((p,b)=>(b.level<p.level ? b : p),{level:999})
+        let battle = battles.find(b=>b.level<=lowest) || battles.reduce((p,b)=>(b.level<p.level ? b : p), {level:999})
         if(!battle?.element){continue}
         document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}, lv. ${battle.level}</p></button>`)
         document.querySelector("#btn_nextBattle").addEventListener("click", ()=>{
@@ -215,12 +237,12 @@
           }
           document.location.href = "/battle/"+battle.id
         })
-        if(localStorage["y_WG-autoBattle"]==="all" && winText?.includes("<br")){
+        if(localStorage["y_WG-autoBattle"]==="all" && winText?.includes("<br") && (!window.battleHelpVars.objectiveLevel || lowest<window.battleHelpVars.objectiveLevel)){
           let cancel
           setTimeout(()=>{
             if(cancel){return}
             document.location.href = "/battle/"+battle.id
-          }, 3000)
+          }, 2500 + Math.random())
           for(let e of document.querySelectorAll("#winner_block a, #winner_block button")){
             e.addEventListener("click", ()=>{cancel=true})
           }
@@ -271,7 +293,7 @@
       }
     }
     setTimeout(async ()=>{
-      if(fullStats.p2?.card.shard_sponsor_user_id==403880 && !localStorage["y_WG-autoBattle"] && !document.querySelectorAll("#unlockAutoBattle").length){
+      if(fullStats.p2?.card.shard_sponsor_user_id==403880 && !localStorage["y_WG-autoBattle"] && !document.querySelector("#unlockAutoBattle")){
         narate("Oh, you are battling against one of <span>my developer's cards</span>;<br>I <i>(the user-script)</i> don't want to see that...<br>Please do it <span>fast</span>!")
         document.querySelector("#battle_view_player").insertAdjacentHTML("afterbegin", `<div style="width:100%; text-align:center; overflow:hidden; padding:10px;"><button id="unlockAutoBattle" class="btn" style="margin-top:-150px; background-color:#000; filter:drop-shadow(0 0 10px #ff0); display:inline-flex; align-items:center">Unlock auto-battle</button></div>`)
         setTimeout(()=>{
@@ -284,19 +306,22 @@
             }else{
               localStorage["y_WG-autoBattle"] = true
               button.innerText = "Auto-battle"
+              button.style.filter = "drop-shadow(0 0 10px #f0f)"
               showSuccessToast("Unlocked auto-battle!")
             }
           })
           button.style.marginTop = "10px"
         },5000)
       }
-      if(busy){await new Promise(ok=>setTimeout(ok,500))}
+      for(let i=0; i<10; i++){
+        if(busy){await new Promise(ok=>setTimeout(ok, 500))}else{break}
+      }
       if(busy){return}
       window.scrollTo(0, 185)
       if(!battleHelpVars.auto || document.querySelector("#action_block").style.display==="none"){return}
       if(document.querySelector("#swapForXPoption").dataset.card){
         document.querySelector("#btn_swapForXP").click()
-      }else if(!window.battleHelpVars.usingBest || currentCard.hp<50 && currentCard.level<120){
+      }else if(!window.battleHelpVars.usingBest || currentCard.hp<50 && currentCard.level<maximumLevel){
         document.querySelector("#btn_swapToBest").click()
       }else{
         document.querySelector("#btn_bestMove").click()
@@ -374,14 +399,14 @@
     let card = document.querySelector("#swapForXPoption").dataset.card
     if(!card){return}
     window.battleHelpVars.usingBest = false
-    actionSwapList.querySelector(`button[data-swapto="${card}"]`).click()
+    actionSwapList.querySelector(`button[data-swapto="${card}"]`)?.click()
   })
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_swapToBest" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Swap to best</button><div>`)
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max
     for(let card of Object.values(party)){
-      if(!card.hp || card.noPP || card.level<120 && card.hp<50){delete card.goodATT; continue}
-      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<120 ? 2 : 1)
+      if(!card.hp || card.noPP || card.level<maximumLevel && card.hp<50 || card.level<maximumLevel && window.battleHelpVars.objectiveLevel && card.level>=window.battleHelpVars.objectiveLevel){delete card.goodATT; continue}
+      card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<maximumLevel ? 5 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
     let card = max!==undefined && Object.values(party).filter(card=>card.goodATT===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
@@ -395,7 +420,7 @@
     if(!card){
       return showErrorToast("No card to swap to...")
     }
-    actionSwapList.querySelector(`button[data-swapto="${card.id}"]`).click()
+    actionSwapList.querySelector(`button[data-swapto="${card.id}"]`)?.click()
   })
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)

@@ -38,7 +38,7 @@
           let hp = card.parentElement.querySelector("center")?.innerText.split("\n")[1].slice(0,-4) || "some "
           showWaifuMenu({
             name: card.parentElement.dataset["tippy-content"] || card.dataset.nameonly,
-            id: card.parentElement.dataset.anniemay || card.parentElement.dataset.amid,
+            id: card.parentElement.dataset.anniemay || card.dataset.amid,
             cardID: card.dataset.cardid,
             xpText: card.parentElement.querySelector("span")?.innerText || "unloaded",
             relXP: 0,
@@ -51,6 +51,15 @@
   });
   observer.observe(document, { childList: true, subtree: true });
   await p
+
+  if(path.startsWith("/profile/") && !document.querySelector("#aboutMeEditor")){
+    let menu = document.querySelector("#waifuMenu .content")
+    for(let remove of ["#waifuFeed", ".progress", ".btnAutoLevel", ".btnDojo", ".btnOpenSwap"]){
+      let element = menu.querySelector(remove)
+      if(!element){continue}
+      element.style.display = "none"
+    }
+  return}
   
   let party = localStorage["y_WG-party"]
   if(!party || party==="[object Object]"){

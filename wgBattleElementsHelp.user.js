@@ -53,6 +53,7 @@
   await p
 
   if(path.startsWith("/profile/") && !document.querySelector("#aboutMeEditor")){
+    document.querySelector("#waifuMenu .menu-title .color-highlight").innerText = ["Observe", "Stalk", "Learn from", "Watch", "Interrogate"][Math.floor(Math.random()*5)]
     let menu = document.querySelector("#waifuMenu .content")
     for(let remove of ["#waifuFeed", ".progress", ".btnAutoLevel", ".btnDojo", ".btnOpenSwap"]){
       let element = menu.querySelector(remove)

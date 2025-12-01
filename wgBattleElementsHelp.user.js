@@ -24,7 +24,7 @@
   }
   if(path.endsWith("/")){path = path.slice(0, -1)} // forfeit button redirects to slightly different page
 
-  let makeFeedable = path==="/battle" || path.startsWith("/profile/") ? ".showCardInfo" : path.startsWith("/quests/") ? ".page-content .content :nth-child(2 of .partyView) .showCardInfo" : false
+  let makeFeedable = path==="/battle" ? ".showCardInfo" : path.startsWith("/profile/") ? ".content .row.no-gutters .showCardInfo" : path.startsWith("/quests/") ? ".page-content .content :nth-child(2 of .partyView) .showCardInfo" : false
   // Wait for scripts to exist
   let ok; let p = new Promise(f=>{ok=f})
   let observer = new MutationObserver((mutations, obs) => {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-11-11
+// @version      2025-12-07
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -47,6 +47,22 @@
       return r
     }
   }
+
+  navigator.serviceWorker.originalRegister = navigator.serviceWorker.register
+  if(settings.fixServiceWorker){
+    navigator.serviceWorker.register = url=>{}
+  }
+
+  if(path==="/festival"){
+    if(settings.fasterWheels){
+      for(let name of [".wheel-of-disappointment", ".wheel-of-bigshot"]){
+        let e = document.querySelector(name)
+        if(!e){continue}
+        e.superWheel.o.duration = 1000
+        e.superWheel.rotates = 1
+      }
+    }
+  return}
 
   let setFormation = async (id, formations=GM_getValue("formations")||{})=>{
     let r = await fetch("/formation/change",{
@@ -102,11 +118,6 @@
         await new Promise(ok=>setTimeout(ok, 0.7 - t))
       }
     }
-  }
-
-  navigator.serviceWorker.originalRegister = navigator.serviceWorker.register
-  if(settings.fixServiceWorker){
-    navigator.serviceWorker.register = url=>{}
   }
 
   if(path==="/swiper"){
@@ -563,7 +574,9 @@
           <br>
           Off-topic, but you currently have <a id="swcount"></a> registered service workers and they might lag your browser.<br>
           <button id="unregistersw">Unregister bad service workers</button><button id="registersw">Register a service worker</button> <button id="unregisterallsw">Unregister all service workers</button><br>
-          ${settingCheckbox("fixServiceWorker", "Stop creating service workers")}
+          ${settingCheckbox("fixServiceWorker", "Stop creating service workers")}<br>
+          <br>
+          ${settingCheckbox("fasterWheels", "Make wheels on festival page less slow")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>

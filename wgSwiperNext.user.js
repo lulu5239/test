@@ -22,10 +22,10 @@
   }
 
   var colors = {
-    selected:"7fa",
-    selectedNotNow:"69b",
-    selectedOnce:"c42",
-    selectedCharisma:"4e4",
+    selected: "7fa",
+    selectedNotNow: "69b",
+    selectedOnce: "c42",
+    selectedCharisma: "4e4",
   }
   var settings = GM_getValue("settings") || {}
 
@@ -58,6 +58,10 @@
       for(let name of [".wheel-of-disappointment", ".wheel-of-bigshot"]){
         let e = document.querySelector(name)
         if(!e){continue}
+        for(let i=0; i<10; i++){
+          if(e.superWheel){break}
+          await new Promise(ok=>setTimeout(ok, 500))
+        }
         e.superWheel.o.duration = 1000
         e.superWheel.rotates = 1
       }

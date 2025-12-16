@@ -126,22 +126,22 @@
 
   if(path==="/swiper"){
     document.body.insertAdjacentHTML("beforeend", `<style>.swiperNextButton {
-        display:inline-flex;
-        color:#fff;
-        background-color:#111a;
-        padding-left:5px;
-        padding-right:5px;
-        height:100%;
-        align-items:center;
-        min-width:30px;
-        user-select:none;
+        display: inline-flex;
+        color: #fff;
+        background-color: #111a;
+        padding-left: 5px;
+        padding-right: 5px;
+        height: ${settings.biggerButtons ? "50" : "30"}px;
+        align-items: center;
+        min-width: 30px;
+        user-select: none;
       }
       ${settings.transparentSwiperButtons ? ".tinder--buttons button {background-color: #0008}" : ""}
     </style>`)
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
-      `<br><div id="swiperNextButtons" style="height:${settings.biggerButtons ? "50" : "30"}px; overflow-y:hidden; margin-top: 5px;">` + [0,1,2,3,4,"swap"].map(i=>
+      `<br><div id="swiperNextButtons" style="height:${(settings.biggerButtons ? 50 : 30) * (swiper.swiperAllButtonLines ? 2 : 1)}px; overflow-y:hidden; margin-top: 5px;">` + [0, 1, 2, 3, 4, "swap"].slice(0, settings.swiperAllButtonLines ? 99 : -1).map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
-      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
+      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"${settings.swiperAllButtonLines ? ' style="display:none"' : ""}><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
     )
     let swiperNextButtons = document.querySelector("#swiperNextButtons")
     
@@ -561,6 +561,7 @@
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
           ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
           ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
+          ${settingCheckbox("swiperAllButtonLines", "Always display the buttons for both destination and charisma selection")}<br>
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
           ${settingCheckbox("swapFlirtCrush", "Swap flirt and crush buttons")}<br>
           On the cards page:<br>

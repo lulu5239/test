@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-12
+// @version      2025-12-17
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -279,9 +279,9 @@
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
-          let xp = +words[words.findIndex(c=>c==="+" || c==="and")+1]
+          let xp = +words[words.findIndex(words.includes("+") ? (c=>c==="+") : (c=>c==="and"))+1]
           charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1) /(data.result.endsWith(" (300% BOOST)") ? 3 : data.result.endsWith(" (200% BOOST)") ? 2 : 1)
-          if(formation && charisma!==formation?.charisma){
+          if(formation && charisma!==formation?.charisma && charisma===charisma){
             formation.charisma = charisma
             GM_setValue("formations", formations)
             swiperNextButtons.querySelector(`div[data-formation="${Object.keys(formations).find(k=>(formations[k]===formation))}"]`).innerText = charisma

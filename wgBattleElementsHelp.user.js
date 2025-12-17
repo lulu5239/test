@@ -85,17 +85,17 @@
         `<div class="ppBar progress mt-1 mb-1" style="height: 15px; background-color: #282f35; position: relative;">
           <div class="progress-bar border-0 text-left pl-2" role="progressbar" style="width: 0%; background-color: #9955cc; color: #fff; position: absolute; top: 0px; left: 0px; height: 100%;" data-part="color"></div>
           <span style="position: absolute; left: 5px; top: 8px" data-part="text">Not loaded PP...</span>
-          <button style="position: absolute; right: 2px; top: 8px; border: solid 2px #f0f; corner-radius: 2px" data-part="restore">Restore</button>
+          <button style="position: absolute; right: 2px; top: 0px; height: 100%; border: solid 2px #f0f9; border-radius: 2px" data-part="restore">Restore</button>
         </div>`
       )
       ppBar = document.querySelector("#waifuMenu .ppBar")
       document.querySelector("#waifuMenu .xpBar").parentElement.classList.remove("mb-4")
       ppBar.querySelector(`[data-part="restore"]`).addEventListener("click", async ev=>{
-        let id = null // selected Animu ID
+        let id = document.querySelector("#waifuMenu").dataset.amid
         let data = party[id]
         if(!data){return showErrorToast("Not available for this Animu...")}
         // Put in areYouSure :
-        let r await fetch(`/dojo/${id}`, {
+        let r = await fetch(`/dojo/${id}`, {
           method: "POST",
           body: `_token=${token}&learn=${encodeURIComponent(`${"11" /* learned move ID? */}_gg`)}`,
           headers: {"content-type":"application/x-www-form-urlencoded"},
@@ -200,9 +200,9 @@
       let button = card.parentElement.parentElement.querySelector("a.btn")
       let battleID = button.href.split("/").slice(-1)[0]
       list.push({
-        id:battleID,
+        id: battleID,
         element,
-        level:+card.parentElement.querySelector("span.bg-highlight").innerText.slice(3)
+        level: +card.parentElement.querySelector("span.bg-highlight").innerText.slice(3)
       })
       if(localStorage["y_WG-autoBattle"]){
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`

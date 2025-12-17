@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-07
+// @version      2025-12-17
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -126,22 +126,22 @@
 
   if(path==="/swiper"){
     document.body.insertAdjacentHTML("beforeend", `<style>.swiperNextButton {
-        display:inline-flex;
-        color:#fff;
-        background-color:#111a;
-        padding-left:5px;
-        padding-right:5px;
-        height:100%;
-        align-items:center;
-        min-width:30px;
-        user-select:none;
+        display: inline-flex;
+        color: #fff;
+        background-color: #111a;
+        padding-left: 5px;
+        padding-right: 5px;
+        height: ${settings.biggerButtons ? "50" : "30"}px;
+        align-items: center;
+        min-width: 30px;
+        user-select: none;
       }
       ${settings.transparentSwiperButtons ? ".tinder--buttons button {background-color: #0008}" : ""}
     </style>`)
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
-      `<br><div id="swiperNextButtons" style="height:${settings.biggerButtons ? "50" : "30"}px; overflow-y:hidden; margin-top: 5px;">` + [0,1,2,3,4,"swap"].map(i=>
+      `<br><div id="swiperNextButtons" style="height:${(settings.biggerButtons ? 50 : 30) * (settings.swiperAllButtonLines ? 2 : 1)}px; overflow-y:hidden; margin-top: 5px;">` + [0, 1, 2, 3, 4, "swap"].slice(0, settings.swiperAllButtonLines ? -1 : 99).map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
-      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
+      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"${settings.swiperAllButtonLines ? ' style="display:none"' : ""}><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
     )
     let swiperNextButtons = document.querySelector("#swiperNextButtons")
     
@@ -262,7 +262,7 @@
       }
       if(action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination){
         args[1] = "😘"
-      }else if(action===0 && args[1]==="😘" && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
+      }else if(action===0 && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘") && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
         args[1] = settings.crushManualBattles && card.card.element!=="???" ? "🗑️" : "👊"
       }
       flirtAnyways = null
@@ -279,9 +279,9 @@
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
-          let xp = +words[words.findIndex(c=>c==="+" || c==="and")+1]
+          let xp = +words[words.findIndex(words.includes("+") ? (c=>c==="+") : (c=>c==="and"))+1]
           charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1) /(data.result.endsWith(" (300% BOOST)") ? 3 : data.result.endsWith(" (200% BOOST)") ? 2 : 1)
-          if(formation && charisma!==formation?.charisma){
+          if(formation && charisma!==formation?.charisma && charisma===charisma){
             formation.charisma = charisma
             GM_setValue("formations", formations)
             swiperNextButtons.querySelector(`div[data-formation="${Object.keys(formations).find(k=>(formations[k]===formation))}"]`).innerText = charisma
@@ -561,6 +561,7 @@
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
           ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
           ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
+          ${settingCheckbox("swiperAllButtonLines", "Always display the buttons for both destination and charisma selection")}<br>
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
           ${settingCheckbox("swapFlirtCrush", "Swap flirt and crush buttons")}<br>
           On the cards page:<br>

@@ -108,9 +108,6 @@
             move.pp = move.maxpp
           }
           localStorage["y_WG-party"] = JSON.stringify(party)
-          ppBar.querySelector(`[data-part="text"]`).innerText = `100 % PP`
-          ppBar.querySelector(`[data-part="color"]`).style.width = `100%`
-          ppBar.querySelector(`[data-part="restore"]`).style.display = "none"
           document.querySelector("a.close-menu").click()
         })
       })

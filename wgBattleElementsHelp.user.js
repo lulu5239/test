@@ -319,8 +319,10 @@
       if(e.a==="narate" && winText===true){
         winText = e.p.text
       continue}
-      if(e.a==="forceswap"){
-        currentCard = party[Object.values(party).find(c=>c.name===e.p.swap.name && c.level===e.p.swap.lv)]
+      if(e.a==="forceswap" && e.t==="player1"){
+        let swap = party[Object.values(party).find(c=>c.name===e.p.swap.name && c.level===e.p.swap.lv)]
+        if(!swap){continue}
+        currentCard = swap
       continue}
       if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){

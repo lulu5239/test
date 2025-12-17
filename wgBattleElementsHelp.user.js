@@ -76,22 +76,23 @@
     let r = originalShowWaifuMenu(...a)
     let ppBar = document.querySelector("#waifuMenu .ppBar")
     let data = party[a[0].id]
-    if(!data){
+    if(!data?.moves){
       ppBar.parentElement.style.display = "none"
       return r
     }
     if(!ppBar){
       document.querySelector("#waifuMenu .xpBar").parentElement.insertAdjacentHTML("afterend",
         `<div class="ppBar progress mt-1 mb-1" style="height: 15px; background-color: #282f35; position: relative;">
-          <div class="progress-bar border-0 text-left pl-2" role="progressbar" style="width: 0%; background-color: #9955cc; color: #fff; position: relative; top: 0px; left: 0px; height: 100%;" data-part="color"></div>
-          <span style="position: relative; left: 5px; top: 1px" data-part="text">Not loaded PP...</span>
+          <div class="progress-bar border-0 text-left pl-2" role="progressbar" style="width: 0%; background-color: #9955cc; color: #fff; position: absolute; top: 0px; left: 0px; height: 100%;" data-part="color"></div>
+          <span style="position: absolute; left: 5px; top: 6px" data-part="text">Not loaded PP...</span>
         </div>`
       )
       ppBar = document.querySelector("#waifuMenu .ppBar")
+      document.querySelector("#waifuMenu .xpBar").parentElement.classList.remove("mb-4")
     }
     let percent = Math.round(data.moves.reduce((p, move)=>{p + move.pp/move.maxpp}, 0) / data.moves.length *100)
     ppBar.querySelector(`span[data-part="text"]`).innerText = `${percent} %`
-    ppBar.querySelector(`span[data-part="color"]`).style.width = `${percent}%`
+    ppBar.querySelector(`div[data-part="color"]`).style.width = `${percent}%`
     return r
   }
   

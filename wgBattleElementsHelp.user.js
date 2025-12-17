@@ -194,7 +194,7 @@
       c.level = card.lvl
       delete c.stats
     }
-    party[card.id] = c
+    party[card.id] = {...c}
   }
   localStorage["y_WG-party"] = JSON.stringify(previousParty)
   window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID || localStorage["y_WG-autoBattle"]==="all"

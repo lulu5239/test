@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-17
+// @version      2025-12-18
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -143,9 +143,20 @@
     "><":{text:"Both damages more", good:0},
     "<>":{text:"Both damages less", good:0},
   }
-  var magicElements = ["grass","fire","water","electric","psychic","ice","music","dark","light"]
+  var magicElements = ["grass", "fire", "water", "electric", "psychic", "ice", "music", "dark", "light"]
    
   if(path==="/battle"){
+    if(document.location.search==="?healed"){
+      for(let Animu of document.querySelectorAll(`#partyView [data-anniemay]`)){
+        let data = party[Animu.dataset.anniemay]
+        if(!data?.moves){continue}
+        for(let move of data.moves){
+          move.pp = move.maxpp
+        }
+      }
+      localStorage["y_WG-party"] = JSON.stringify(party)
+    }
+    
     let list = []
     for(let card of document.querySelectorAll("img.battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()

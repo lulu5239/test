@@ -94,16 +94,21 @@
         let id = document.querySelector("#waifuMenu").dataset.amid
         let data = party[id]
         if(!data){return showErrorToast("Not available for this Animu...")}
-        // Put in areYouSure :
-        let r = await fetch(`/dojo/${id}`, {
-          method: "POST",
-          body: `_token=${token}&learn=${encodeURIComponent(`${"11" /* learned move ID? */}_gg`)}`,
-          headers: {"content-type":"application/x-www-form-urlencoded"},
+        areYouSure("Do you want to restore this Animu's PP? It'll cost some GG (and maybe change a move).", async ()=>{
+          let r = await fetch(`/dojo/${id}`, {
+            method: "POST",
+            body: `_token=${token}&learn=${encodeURIComponent(`11_gg`)}`,
+            headers: {"content-type": "application/x-www-form-urlencoded"},
+          }).catch(e=>{
+            showErrorToast("There was an error...")
+            throw e
+          })
+          showSuccessToast("Restored PP!")
+          for(let move of data.moves){
+            move.pp = move.maxpp
+          }
+          localStorage["y_WG-party"] = JSON.stringify(party)
         })
-        showSuccessToast("Restored PP!")
-        for(let move of data.moves){
-          move.pp = move.maxpp
-        }
       })
     }
     let percent = Math.round(data.moves.reduce((p, move)=>p + move.pp/move.maxpp, 0) / data.moves.length *100)
@@ -148,16 +153,16 @@
   
   var advantages = `normal >< normal;fight > normal;light < normal;wind >> fight;bug <> fight;tech > fight;dark < fight;light < fight;fight << wind;earth <> wind;bug << wind;grass << wind;electric >> wind;ice > wind;fight < poison;poison <> poison;earth >> poison;bug < poison;blood < poison;psychic > poison;dark > poison;light >< poison;normal < earth;wind <> earth;poison <<< earth;metal >< earth;grass >> earth;fire <<< earth;water > earth;electric <<< earth;ice > earth;music < earth;normal > bug;fight <> bug;wind >>> bug;earth < bug;tech << bug;grass << bug;fire >>> bug;ice > bug;normal < metal;fight > metal;wind < metal;poison < metal;earth >< metal;bug < metal;metal <> metal;grass <<< metal;fire >> metal;water > metal;electric >> metal;psychic < metal;ice <<< metal;music > metal;tech > blood;grass > blood;fire > blood;water << blood;normal > tech;wind < tech;bug >>> tech;tech >< tech;fire < tech;water >>> tech;electric > tech;psychic > tech;ice < tech;music << tech;wind >> grass;poison > grass;earth << grass;bug >> grass;metal >> grass;tech < grass;grass <> grass;fire >> grass;electric < grass;ice > grass;earth >> fire;bug << fire;metal << fire;grass << fire;fire <> fire;water >> fire;ice << fire;blood >> water;tech << water;grass > water;water <> water;fire << water;electric > water;ice <> water;wind << electric;earth >> electric;metal << electric;electric <> electric;fight < psychic;bug > psychic;blood > psychic;psychic <> psychic;dark >> psychic;light > psychic;fight > ice;metal >> ice;fire >> ice;water <> ice;ice <> ice;music < ice;tech >> music;electric < music;normal < dark;psychic <<< dark;music > dark;dark <> dark;light >< dark;poison >< light;blood < light;dark >< light;light <> light`.split(";").map(e=>e.split(" "))
   var advantagesSymbols = {
-    ">":{text:"More damage", good:1},
-    ">>":{text:"Good", good:2},
-    ">>>":{text:"Perfect", good:3},
-    "!>":{text:"Less defense", good:-0.9},
-    "<":{text:"Less damage", good:-1},
-    "<<":{text:"Bad", good:-2},
-    "<<<":{text:"Very bad", good:-3},
-    "!<":{text:"More defense", good:0.9},
-    "><":{text:"Both damages more", good:0},
-    "<>":{text:"Both damages less", good:0},
+    ">": {text:"More damage", good:1},
+    ">>": {text:"Good", good:2},
+    ">>>": {text:"Perfect", good:3},
+    "!>": {text:"Less defense", good:-0.9},
+    "<": {text:"Less damage", good:-1},
+    "<<": {text:"Bad", good:-2},
+    "<<<": {text:"Very bad", good:-3},
+    "!<": {text:"More defense", good:0.9},
+    "><": {text:"Both damages more", good:0},
+    "<>": {text:"Both damages less", good:0},
   }
   var magicElements = ["grass", "fire", "water", "electric", "psychic", "ice", "music", "dark", "light"]
    

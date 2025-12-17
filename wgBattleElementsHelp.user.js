@@ -396,7 +396,7 @@
     if(!args[0].faked){lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]}
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap){
-      let card = party[Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)]
+      let card = Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
       if(card){currentCard = card}
     }
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){

@@ -77,7 +77,7 @@
     let ppBar = document.querySelector("#waifuMenu .ppBar")
     let data = party[a[0].id]
     if(!data?.moves){
-      ppBar.parentElement.style.display = "none"
+      if(ppBar){ppBar.style.display = "none"}
       return r
     }
     if(!ppBar){

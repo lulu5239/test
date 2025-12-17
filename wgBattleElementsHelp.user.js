@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-17
+// @version      2025-12-18
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -85,14 +85,37 @@
         `<div class="ppBar progress mt-1 mb-1" style="height: 15px; background-color: #282f35; position: relative;">
           <div class="progress-bar border-0 text-left pl-2" role="progressbar" style="width: 0%; background-color: #9955cc; color: #fff; position: absolute; top: 0px; left: 0px; height: 100%;" data-part="color"></div>
           <span style="position: absolute; left: 5px; top: 8px" data-part="text">Not loaded PP...</span>
+          <button style="position: absolute; right: 2px; top: 0px; height: 100%; border: solid 2px #f0f9; border-radius: 2px" data-part="restore">Restore</button>
         </div>`
       )
       ppBar = document.querySelector("#waifuMenu .ppBar")
       document.querySelector("#waifuMenu .xpBar").parentElement.classList.remove("mb-4")
+      ppBar.querySelector(`[data-part="restore"]`).addEventListener("click", async ev=>{
+        let id = document.querySelector("#waifuMenu").dataset.amid
+        let data = party[id]
+        if(!data){return showErrorToast("Not available for this Animu...")}
+        areYouSure("Do you want to restore this Animu's PP? It'll cost some GG (and maybe change a move).", async ()=>{
+          let r = await fetch(`/dojo/${id}`, {
+            method: "POST",
+            body: `_token=${token}&learn=${encodeURIComponent(`11_gg`)}`,
+            headers: {"content-type": "application/x-www-form-urlencoded"},
+          }).catch(e=>{
+            showErrorToast("There was an error...")
+            throw e
+          })
+          showSuccessToast("Restored PP!")
+          for(let move of data.moves){
+            move.pp = move.maxpp
+          }
+          localStorage["y_WG-party"] = JSON.stringify(party)
+          document.querySelector("a.close-menu").click()
+        })
+      })
     }
     let percent = Math.round(data.moves.reduce((p, move)=>p + move.pp/move.maxpp, 0) / data.moves.length *100)
-    ppBar.querySelector(`span[data-part="text"]`).innerText = `${percent} % PP`
-    ppBar.querySelector(`div[data-part="color"]`).style.width = `${percent}%`
+    ppBar.querySelector(`[data-part="text"]`).innerText = `${percent} % PP`
+    ppBar.querySelector(`[data-part="color"]`).style.width = `${percent}%`
+    ppBar.querySelector(`[data-part="restore"]`).style.display = percent===100 ? "none" : null
     return r
   }
   
@@ -132,20 +155,31 @@
   
   var advantages = `normal >< normal;fight > normal;light < normal;wind >> fight;bug <> fight;tech > fight;dark < fight;light < fight;fight << wind;earth <> wind;bug << wind;grass << wind;electric >> wind;ice > wind;fight < poison;poison <> poison;earth >> poison;bug < poison;blood < poison;psychic > poison;dark > poison;light >< poison;normal < earth;wind <> earth;poison <<< earth;metal >< earth;grass >> earth;fire <<< earth;water > earth;electric <<< earth;ice > earth;music < earth;normal > bug;fight <> bug;wind >>> bug;earth < bug;tech << bug;grass << bug;fire >>> bug;ice > bug;normal < metal;fight > metal;wind < metal;poison < metal;earth >< metal;bug < metal;metal <> metal;grass <<< metal;fire >> metal;water > metal;electric >> metal;psychic < metal;ice <<< metal;music > metal;tech > blood;grass > blood;fire > blood;water << blood;normal > tech;wind < tech;bug >>> tech;tech >< tech;fire < tech;water >>> tech;electric > tech;psychic > tech;ice < tech;music << tech;wind >> grass;poison > grass;earth << grass;bug >> grass;metal >> grass;tech < grass;grass <> grass;fire >> grass;electric < grass;ice > grass;earth >> fire;bug << fire;metal << fire;grass << fire;fire <> fire;water >> fire;ice << fire;blood >> water;tech << water;grass > water;water <> water;fire << water;electric > water;ice <> water;wind << electric;earth >> electric;metal << electric;electric <> electric;fight < psychic;bug > psychic;blood > psychic;psychic <> psychic;dark >> psychic;light > psychic;fight > ice;metal >> ice;fire >> ice;water <> ice;ice <> ice;music < ice;tech >> music;electric < music;normal < dark;psychic <<< dark;music > dark;dark <> dark;light >< dark;poison >< light;blood < light;dark >< light;light <> light`.split(";").map(e=>e.split(" "))
   var advantagesSymbols = {
-    ">":{text:"More damage", good:1},
-    ">>":{text:"Good", good:2},
-    ">>>":{text:"Perfect", good:3},
-    "!>":{text:"Less defense", good:-0.9},
-    "<":{text:"Less damage", good:-1},
-    "<<":{text:"Bad", good:-2},
-    "<<<":{text:"Very bad", good:-3},
-    "!<":{text:"More defense", good:0.9},
-    "><":{text:"Both damages more", good:0},
-    "<>":{text:"Both damages less", good:0},
+    ">": {text:"More damage", good:1},
+    ">>": {text:"Good", good:2},
+    ">>>": {text:"Perfect", good:3},
+    "!>": {text:"Less defense", good:-0.9},
+    "<": {text:"Less damage", good:-1},
+    "<<": {text:"Bad", good:-2},
+    "<<<": {text:"Very bad", good:-3},
+    "!<": {text:"More defense", good:0.9},
+    "><": {text:"Both damages more", good:0},
+    "<>": {text:"Both damages less", good:0},
   }
-  var magicElements = ["grass","fire","water","electric","psychic","ice","music","dark","light"]
+  var magicElements = ["grass", "fire", "water", "electric", "psychic", "ice", "music", "dark", "light"]
    
   if(path==="/battle"){
+    if(document.location.search==="?healed"){
+      for(let Animu of document.querySelectorAll(`#partyView [data-anniemay]`)){
+        let data = party[Animu.dataset.anniemay]
+        if(!data?.moves){continue}
+        for(let move of data.moves){
+          move.pp = move.maxpp
+        }
+      }
+      localStorage["y_WG-party"] = JSON.stringify(party)
+    }
+    
     let list = []
     for(let card of document.querySelectorAll("img.battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()
@@ -173,9 +207,9 @@
       let button = card.parentElement.parentElement.querySelector("a.btn")
       let battleID = button.href.split("/").slice(-1)[0]
       list.push({
-        id:battleID,
+        id: battleID,
         element,
-        level:+card.parentElement.querySelector("span.bg-highlight").innerText.slice(3)
+        level: +card.parentElement.querySelector("span.bg-highlight").innerText.slice(3)
       })
       if(localStorage["y_WG-autoBattle"]){
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
@@ -206,7 +240,7 @@
     }
   return}
   
-  let previousParty = party
+  let previousParty = window.battleHelpVars.previousParty = party
   party = window.battleHelpVars.party = {}
   for(let card of initialSwapData){
     let c = previousParty[card.id]
@@ -360,9 +394,15 @@
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     if(!args[0].faked){lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]}
+    let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
+    if(swap){
+      let card = Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
+      if(card){currentCard = card}
+    }
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       if(args[0].output){
-        previousParty[fullStats.p1.id].moves = fullStats.p1.moves = currentCard.moves = args[0].output.move_data
+        // Sequence hasn't played yet, fullStats is outdated
+        previousParty[currentCard.id].moves = fullStats.p1.moves = currentCard.moves = args[0].output.move_data
         localStorage["y_WG-party"] = JSON.stringify(previousParty)
       }
       if(!fullStats.p1.element && fullStats.p1.card?.element){fullStats.p1.element=fullStats.p1.card.element.toLowerCase()}

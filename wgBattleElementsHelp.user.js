@@ -401,7 +401,8 @@
     }
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       if(args[0].output){
-        previousParty[fullStats.p1.id].moves = fullStats.p1.moves = currentCard.moves = args[0].output.move_data
+        // Sequence hasn't played yet, fullStats is outdated
+        previousParty[currentCard.id].moves = fullStats.p1.moves = currentCard.moves = args[0].output.move_data
         localStorage["y_WG-party"] = JSON.stringify(previousParty)
       }
       if(!fullStats.p1.element && fullStats.p1.card?.element){fullStats.p1.element=fullStats.p1.card.element.toLowerCase()}

@@ -108,12 +108,17 @@
             move.pp = move.maxpp
           }
           localStorage["y_WG-party"] = JSON.stringify(party)
+          ppBar.querySelector(`[data-part="text"]`).innerText = `100 % PP`
+          ppBar.querySelector(`[data-part="color"]`).style.width = `100%`
+          ppBar.querySelector(`[data-part="restore"]`).style.display = "none"
+          document.querySelector("a.close-menu").click()
         })
       })
     }
     let percent = Math.round(data.moves.reduce((p, move)=>p + move.pp/move.maxpp, 0) / data.moves.length *100)
     ppBar.querySelector(`[data-part="text"]`).innerText = `${percent} % PP`
     ppBar.querySelector(`[data-part="color"]`).style.width = `${percent}%`
+    ppBar.querySelector(`[data-part="restore"]`).style.display = percent===100 ? "none" : null
     return r
   }
   

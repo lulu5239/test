@@ -319,11 +319,6 @@
       if(e.a==="narate" && winText===true){
         winText = e.p.text
       continue}
-      if(e.a==="forceswap" && e.t==="player1"){
-        let swap = party[Object.values(party).find(c=>c.name===e.p.swap.name && c.level===e.p.swap.lv)]
-        if(!swap){continue}
-        currentCard = swap
-      continue}
       if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
@@ -399,6 +394,11 @@
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     if(!args[0].faked){lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]}
+    let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
+    if(swap){
+      let card = party[Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)]
+      if(card){currentCard = card}
+    }
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       if(args[0].output){
         previousParty[fullStats.p1.id].moves = fullStats.p1.moves = currentCard.moves = args[0].output.move_data

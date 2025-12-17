@@ -85,14 +85,30 @@
         `<div class="ppBar progress mt-1 mb-1" style="height: 15px; background-color: #282f35; position: relative;">
           <div class="progress-bar border-0 text-left pl-2" role="progressbar" style="width: 0%; background-color: #9955cc; color: #fff; position: absolute; top: 0px; left: 0px; height: 100%;" data-part="color"></div>
           <span style="position: absolute; left: 5px; top: 8px" data-part="text">Not loaded PP...</span>
+          <button style="position: absolute; right: 2px; top: 8px; border: solid 2px #f0f; corner-radius: 2px" data-part="restore">Restore</button>
         </div>`
       )
       ppBar = document.querySelector("#waifuMenu .ppBar")
       document.querySelector("#waifuMenu .xpBar").parentElement.classList.remove("mb-4")
+      ppBar.querySelector(`[data-part="restore"]`).addEventListener("click", async ev=>{
+        let id = null // selected Animu ID
+        let data = party[id]
+        if(!data){return showErrorToast("Not available for this Animu...")}
+        // Put in areYouSure :
+        let r await fetch(`/dojo/${id}`, {
+          method: "POST",
+          body: `_token=${token}&learn=${encodeURIComponent(`${"11" /* learned move ID? */}_gg`)}`,
+          headers: {"content-type":"application/x-www-form-urlencoded"},
+        })
+        showSuccessToast("Restored PP!")
+        for(let move of data.moves){
+          move.pp = move.maxpp
+        }
+      })
     }
     let percent = Math.round(data.moves.reduce((p, move)=>p + move.pp/move.maxpp, 0) / data.moves.length *100)
-    ppBar.querySelector(`span[data-part="text"]`).innerText = `${percent} % PP`
-    ppBar.querySelector(`div[data-part="color"]`).style.width = `${percent}%`
+    ppBar.querySelector(`[data-part="text"]`).innerText = `${percent} % PP`
+    ppBar.querySelector(`[data-part="color"]`).style.width = `${percent}%`
     return r
   }
   

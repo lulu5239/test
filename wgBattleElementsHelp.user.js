@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-01
+// @version      2025-12-17
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -69,6 +69,33 @@
   }else{
     party = JSON.parse(party)
   }
+
+  if(typeof(showWaifuMenu)==="undefined"){return} // Not a normal page
+  let originalShowWaifuMenu = showWaifuMenu
+  showWaifuMenu = (...a)=>{
+    let r = originalShowWaifuMenu(...a)
+    let ppBar = document.querySelector("#waifuMenu .ppBar")
+    let data = party[a[0].id]
+    if(!data?.moves){
+      if(ppBar){ppBar.style.display = "none"}
+      return r
+    }
+    if(!ppBar){
+      document.querySelector("#waifuMenu .xpBar").parentElement.insertAdjacentHTML("afterend",
+        `<div class="ppBar progress mt-1 mb-1" style="height: 15px; background-color: #282f35; position: relative;">
+          <div class="progress-bar border-0 text-left pl-2" role="progressbar" style="width: 0%; background-color: #9955cc; color: #fff; position: absolute; top: 0px; left: 0px; height: 100%;" data-part="color"></div>
+          <span style="position: absolute; left: 5px; top: 8px" data-part="text">Not loaded PP...</span>
+        </div>`
+      )
+      ppBar = document.querySelector("#waifuMenu .ppBar")
+      document.querySelector("#waifuMenu .xpBar").parentElement.classList.remove("mb-4")
+    }
+    let percent = Math.round(data.moves.reduce((p, move)=>p + move.pp/move.maxpp, 0) / data.moves.length *100)
+    ppBar.querySelector(`span[data-part="text"]`).innerText = `${percent} % PP`
+    ppBar.querySelector(`div[data-part="color"]`).style.width = `${percent}%`
+    return r
+  }
+  
   if(path==="/home"){
     let nowHere = []
     for(let card of document.querySelectorAll(".card[data-amid]")){
@@ -100,7 +127,7 @@
     }
     localStorage["y_WG-party"] = JSON.stringify(party)
   }
-  window.battleHelpVars = {party}
+  window.battleHelpVars = battleHelpVars = {party}
   if(!path.startsWith("/battle")){return}
   
   var advantages = `normal >< normal;fight > normal;light < normal;wind >> fight;bug <> fight;tech > fight;dark < fight;light < fight;fight << wind;earth <> wind;bug << wind;grass << wind;electric >> wind;ice > wind;fight < poison;poison <> poison;earth >> poison;bug < poison;blood < poison;psychic > poison;dark > poison;light >< poison;normal < earth;wind <> earth;poison <<< earth;metal >< earth;grass >> earth;fire <<< earth;water > earth;electric <<< earth;ice > earth;music < earth;normal > bug;fight <> bug;wind >>> bug;earth < bug;tech << bug;grass << bug;fire >>> bug;ice > bug;normal < metal;fight > metal;wind < metal;poison < metal;earth >< metal;bug < metal;metal <> metal;grass <<< metal;fire >> metal;water > metal;electric >> metal;psychic < metal;ice <<< metal;music > metal;tech > blood;grass > blood;fire > blood;water << blood;normal > tech;wind < tech;bug >>> tech;tech >< tech;fire < tech;water >>> tech;electric > tech;psychic > tech;ice < tech;music << tech;wind >> grass;poison > grass;earth << grass;bug >> grass;metal >> grass;tech < grass;grass <> grass;fire >> grass;electric < grass;ice > grass;earth >> fire;bug << fire;metal << fire;grass << fire;fire <> fire;water >> fire;ice << fire;blood >> water;tech << water;grass > water;water <> water;fire << water;electric > water;ice <> water;wind << electric;earth >> electric;metal << electric;electric <> electric;fight < psychic;bug > psychic;blood > psychic;psychic <> psychic;dark >> psychic;light > psychic;fight > ice;metal >> ice;fire >> ice;water <> ice;ice <> ice;music < ice;tech >> music;electric < music;normal < dark;psychic <<< dark;music > dark;dark <> dark;light >< dark;poison >< light;blood < light;dark >< light;light <> light`.split(";").map(e=>e.split(" "))
@@ -185,16 +212,16 @@
     let c = previousParty[card.id]
     if(!c){
       c = previousParty[card.id] = {
-        name:card.name,
-        level:card.lvl,
+        name: card.name,
+        level: card.lvl,
       }
     }
     c.element = card.element?.toLowerCase()
-    if(card.lvl!==c.level){
+    if(card.lvl !== c.level){
       c.level = card.lvl
       delete c.stats
     }
-    party[card.id] = c
+    party[card.id] = {...c}
   }
   localStorage["y_WG-party"] = JSON.stringify(previousParty)
   window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID || localStorage["y_WG-autoBattle"]==="all"
@@ -278,10 +305,10 @@
           currentCard.receivingXP = true
           currentCard.stats = stats.stats
           // Store stats in party
-          let previous = JSON.parse(localStorage["y_WG-party"])
-          previous[stats.id].stats = stats.stats
-          previous[stats.id].level = stats.level
-          localStorage["y_WG-party"] = JSON.stringify(previous)
+          previousParty[stats.id].stats = stats.stats
+          previousParty[stats.id].level = stats.level
+          previousParty[stats.id].moves = stats.moves
+          localStorage["y_WG-party"] = JSON.stringify(previousParty)
         }
         if(Object.keys(fullStats).length===2){
           showInventory({
@@ -334,7 +361,10 @@
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     if(!args[0].faked){lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]}
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
-      if(args[0].output){fullStats.p1.moves = currentCard.moves = args[0].output.move_data}
+      if(args[0].output){
+        previousParty[fullStats.p1.id].moves = fullStats.p1.moves = currentCard.moves = args[0].output.move_data
+        localStorage["y_WG-party"] = JSON.stringify(previousParty)
+      }
       if(!fullStats.p1.element && fullStats.p1.card?.element){fullStats.p1.element=fullStats.p1.card.element.toLowerCase()}
       let noPP = true
       for(let m in fullStats.p1.moves){

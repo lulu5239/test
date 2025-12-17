@@ -625,7 +625,7 @@
           ])}<br>
           ${settingCheckbox("crushManualBattles", "Crush instead of manually battling")}<br>
           ${settingCheckbox("neverCrushWithDestination", "Never crush encounters if a destination is set")}<br>
-          ${settingCheckbox("forceFlirtEventEncounters", "Flirt event encounters instead of battling with main button")}<br>
+          ${settingCheckbox("forceFlirtEventEncounters", "Force flirt event encounters with main button")}<br>
           The following features related to your wishlist works on cards (not tags) seen on your wishlist page. After enabling these options, you should go on the wishlist page.<br>
           Unwishlist obtained cards ${settingSelect("unwishlistObtainedCards", [
             {value:"", name:"never"},

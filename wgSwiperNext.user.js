@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-17
+// @version      2025-12-18
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -260,6 +260,9 @@
       }else{
         selectedOnce = null
       }
+      if(settings.forceFlirtEventEncounters && card.flag && !["1", "15", "16"].includes(card.flag)){
+        flirtAnyways = true
+      }
       if(action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination){
         args[1] = "😘"
       }else if(action===0 && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘") && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
@@ -296,7 +299,7 @@
       let data = $('.tinder--card:not(.removed)').first()?.data("data")
       if(data && charisma){
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
-        button.dataset.battlemode = (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
+        button.dataset.battlemode = !(settings.forceFlirtEventEncounters && data.flag && !["1", "15", "16"].includes(data.flag)) && (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
         button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
         updateMainButton()
       }
@@ -623,6 +626,7 @@
           ])}<br>
           ${settingCheckbox("crushManualBattles", "Crush instead of manually battling")}<br>
           ${settingCheckbox("neverCrushWithDestination", "Never crush encounters if a destination is set")}<br>
+          ${settingCheckbox("forceFlirtEventEncounters", "Flirt event encounters instead of battling with main button")}<br>
           The following features related to your wishlist works on cards (not tags) seen on your wishlist page. After enabling these options, you should go on the wishlist page.<br>
           Unwishlist obtained cards ${settingSelect("unwishlistObtainedCards", [
             {value:"", name:"never"},

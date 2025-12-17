@@ -319,6 +319,9 @@
       if(e.a==="narate" && winText===true){
         winText = e.p.text
       continue}
+      if(e.a==="forceswap"){
+        currentCard = party[Object.values(party).find(c=>c.name===e.p.swap.name && c.level===e.p.swap.lv)]
+      continue}
       if(e.a!=="debug"){continue}
       if(e.p.text.startsWith("DEBUG XP GAIN:")){
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){

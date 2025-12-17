@@ -69,6 +69,29 @@
   }else{
     party = JSON.parse(party)
   }
+
+  if(typeof(showWaifuMenu)==="undefined"){return} // Not a normal page
+  let originalShowWaifuMenu = showWaifuMenu
+  showWaifuMenu = (...a)=>{
+    let r = originalShowWaifuMenu(...a)
+    let ppBar = document.querySelector("#waifuMenu .ppBar")
+    if(!party[a[0].id]){
+      ppBar.parentElement.style.display = "none"
+      return r
+    }
+    if(!ppBar){
+      document.querySelector("#waifuMenu .xpBar").parentElement.insertAdjacentHTML("afterend",
+        `<div class="progress mt-1 mb-1" style="height: 15px; background-color: #282f35;">
+          <div class="ppBar progress-bar border-0 text-left pl-2" role="progressbar" style="width: 0%; background-color: #9955cc; color: #fff; position: relative"><span class="position-absolute" style="left: 2px">Not loaded PP...</span></div>
+        </div>`
+      )
+      ppBar = document.querySelector("#waifuMenu .ppBar")
+    }
+    ppBar.querySelector("span").innerText = "Some complex calculations..."
+    ppBar.style.width = "20%"
+    return r
+  }
+  
   if(path==="/home"){
     let nowHere = []
     for(let card of document.querySelectorAll(".card[data-amid]")){

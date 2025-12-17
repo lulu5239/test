@@ -243,7 +243,7 @@
     }
   return}
   
-  let previousParty = party
+  let previousParty = window.battleHelpVars.previousParty = party
   party = window.battleHelpVars.party = {}
   for(let card of initialSwapData){
     let c = previousParty[card.id]

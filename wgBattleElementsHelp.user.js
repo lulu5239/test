@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-18
+// @version      2025-12-29
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -76,10 +76,8 @@
     let r = originalShowWaifuMenu(...a)
     let ppBar = document.querySelector("#waifuMenu .ppBar")
     let data = party[a[0].id]
-    if(!data?.moves){
-      if(ppBar){ppBar.style.display = "none"}
-      return r
-    }
+    if(ppBar){ppBar.style.display = data?.moves ? null : "none"}
+    if(!data?.moves){return r}
     if(!ppBar){
       document.querySelector("#waifuMenu .xpBar").parentElement.insertAdjacentHTML("afterend",
         `<div class="ppBar progress mt-1 mb-1" style="height: 15px; background-color: #282f35; position: relative;">

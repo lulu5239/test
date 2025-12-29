@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-18
+// @version      2025-12-29
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -51,6 +51,10 @@
   navigator.serviceWorker.originalRegister = navigator.serviceWorker.register
   if(settings.fixServiceWorker){
     navigator.serviceWorker.register = url=>{}
+  }
+
+  if(settings.lighterTextColor){
+    document.querySelector("#page").style.color = "#aaa"
   }
 
   if(path==="/festival"){
@@ -561,7 +565,7 @@
         <div data-page="visibility">
           For the destination buttons:<br>
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
-          ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
+          ${settingCheckbox("biggerButtons", "Make")}<br>
           ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
           ${settingCheckbox("swiperAllButtonLines", "Always display the buttons for both destination and charisma selection")}<br>
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
@@ -584,6 +588,7 @@
           ${settingCheckbox("fixServiceWorker", "Stop creating service workers")}<br>
           <br>
           ${settingCheckbox("fasterWheels", "Make wheels on festival page less slow")}
+          ${settingCheckbox("lighterTextColor", "Make text more white")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -623,9 +628,9 @@
             {value:5, name:"Legendary rarity or lower"},
             {value:6, name:"Always"},
           ])}<br>
-          ${settingCheckbox("crushManualBattles", "Crush instead of manually battling")}<br>
-          ${settingCheckbox("neverCrushWithDestination", "Never crush encounters if a destination is set")}<br>
-          ${settingCheckbox("forceFlirtEventEncounters", "Force flirt event encounters with main button")}<br>
+          ${settingCheckbox("crushManualBattles", "<b>Crush</b> instead of manually battling")}<br>
+          ${settingCheckbox("neverCrushWithDestination", "Never crush encounters <b>if a destination is set</b>")}<br>
+          ${settingCheckbox("forceFlirtEventEncounters", "Force flirt <b>event encounters</b> with main button")}<br>
           The following features related to your wishlist works on cards (not tags) seen on your wishlist page. After enabling these options, you should go on the wishlist page.<br>
           Unwishlist obtained cards ${settingSelect("unwishlistObtainedCards", [
             {value:"", name:"never"},

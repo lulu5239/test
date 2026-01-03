@@ -136,7 +136,7 @@
         background-color: #111a;
         padding-left: 5px;
         padding-right: 5px;
-        height: ${settings.biggerButtons ? "50" : "30"}px;
+        height: ${settings.swiperVerticalButtons ? "auto" : settings.biggerButtons ? "50px" : "30px"};
         align-items: center;
         min-width: 30px;
         user-select: none;
@@ -146,7 +146,7 @@
       .tinder--buttons-vertical {
         ${settings.swiperVerticalButtons}: 0px;
         display: flex;
-        flex-direction: reverse-column;
+        flex-direction: column-reverse;
         width: 100px;
       }
       ` : "")+`
@@ -175,18 +175,18 @@
     if(settings.swiperVerticalButtons){
       mainButton.style.width = mainButton.style.height = "50px" // So it doesn't look strange
       mainButton.querySelector(".fa").style.fontSize = "32px"
-      mainButton.style.flexGrow = "1.5"
+      mainButton.parentElement.style.flex = "100% 1.5 1.5"
       let container = mainButton.parentElement.parentElement
       container.style[settings.swiperVerticalButtons==="right" ? "left" : "right"] = "auto" // Canceling some style of tinder--buttons
       container.classList.add("tinder--buttons-vertical")
-      container.querySelector("#autoPlay").insertAdjacentHTML("beforebegin",
+      container.querySelector("#autoplay").insertAdjacentHTML("beforebegin",
         `
-          <div data-contains="autoPlay"></div>
+          <div data-contains="autoplay"></div>
           <div data-contains="options"></div>
         `
       )
       for(let c of container.querySelectorAll("[data-contains]")){
-        c.addElement(container.querySelector("#"+c.dataset.contains))
+        c.appendChild(container.querySelector("#"+c.dataset.contains))
       }
     }
     let updateMainButton = ()=>{

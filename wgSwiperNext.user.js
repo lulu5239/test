@@ -129,7 +129,8 @@
   }
 
   if(path==="/swiper"){
-    document.body.insertAdjacentHTML("beforeend", `<style>.swiperNextButton {
+    document.body.insertAdjacentHTML("beforeend", `<style>
+      .swiperNextButton {
         display: inline-flex;
         color: #fff;
         background-color: #111a;
@@ -141,6 +142,18 @@
         user-select: none;
       }
       ${settings.transparentSwiperButtons ? ".tinder--buttons button {background-color: #0008}" : ""}
+      `+(settings.swiperVerticalButtons ? `
+      .tinder--buttons-vertical {
+        position: fixed;
+        bottom: 110px;
+        ${settings.swiperVerticalButtons}: 0px;
+        text-align: center;
+        z-index: 95;
+        display: flex;
+        flex-direction: reverse-column;
+        width: 100px;
+      }
+      ` : "")+`
     </style>`)
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
       `<br><div id="swiperNextButtons" style="height:${(settings.biggerButtons ? 50 : 30) * (settings.swiperAllButtonLines ? 2 : 1)}px; overflow-y:hidden; margin-top: 5px;">` + [0, 1, 2, 3, 4, "swap"].slice(0, settings.swiperAllButtonLines ? -1 : 99).map(i=>
@@ -162,6 +175,9 @@
       love.querySelector(".fa").style.fontSize = "32px"
       mainButton.parentElement.parentElement.insertBefore(mainButton.parentElement, love.parentElement)
       mainButton.parentElement.parentElement.insertBefore(love.parentElement, document.querySelector("#deb").parentElement)
+    }
+    if(settings.swiperVerticalButtons){
+      mainButton.style.width = mainButton.style.height = "50px" // So it doesn't look strange
     }
     let updateMainButton = ()=>{
       mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")
@@ -568,6 +584,11 @@
           ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
           ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
           ${settingCheckbox("swiperAllButtonLines", "Always display the buttons for both destination and charisma selection")}<br>
+          Display all the buttons ${settingSelect("swiperVerticalButtons", [
+            {value: "", name: "horizontally"},
+            {value: "right", name: "vertically (right side)"},
+            {value: "left", name: "vertically (left side)"},
+          ])}<br>
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
           ${settingCheckbox("swapFlirtCrush", "Swap flirt and crush buttons")}<br>
           On the cards page:<br>

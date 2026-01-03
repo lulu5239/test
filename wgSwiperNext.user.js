@@ -144,11 +144,7 @@
       ${settings.transparentSwiperButtons ? ".tinder--buttons button {background-color: #0008}" : ""}
       `+(settings.swiperVerticalButtons ? `
       .tinder--buttons-vertical {
-        position: fixed;
-        bottom: 110px;
         ${settings.swiperVerticalButtons}: 0px;
-        text-align: center;
-        z-index: 95;
         display: flex;
         flex-direction: reverse-column;
         width: 100px;
@@ -178,6 +174,20 @@
     }
     if(settings.swiperVerticalButtons){
       mainButton.style.width = mainButton.style.height = "50px" // So it doesn't look strange
+      mainButton.querySelector(".fa").style.fontSize = "32px"
+      mainButton.style.flexGrow = "1.5"
+      let container = mainButton.parentElement.parentElement
+      container.style[settings.swiperVerticalButtons==="right" ? "left" : "right"] = "auto" // Canceling some style of tinder--buttons
+      container.classList.add("tinder--buttons-vertical")
+      container.querySelector("#autoPlay").insertAdjacentHTML("beforebegin",
+        `
+          <div data-contains="autoPlay"></div>
+          <div data-contains="menu"></div>
+        `
+      )
+      for(let c of container.querySelectorAll("[data-contains]")){
+        c.addElement(container.findElementById(c.dataset.contains))
+      }
     }
     let updateMainButton = ()=>{
       mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")

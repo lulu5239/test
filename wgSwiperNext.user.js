@@ -155,7 +155,7 @@
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
       `<br><div id="swiperNextButtons" style="height:${settings.swiperVerticalButtons ? "auto" : (settings.biggerButtons ? 50 : 30) * (settings.swiperAllButtonLines ? 2 : 1) +"px"}; overflow-y: hidden; margin-top: 5px;">` + [0, 1, 2, 3, 4, "swap"].slice(0, settings.swiperAllButtonLines ? -1 : 99).map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
-      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"${settings.swiperAllButtonLines ? ' style="display:none"' : ""}><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
+      ).join(" ")+`<br>${settings.swiperAllButtonLines ? `<div data-nextaction="swap" class="swiperNextButton">` : ""}<i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
     )
     let swiperNextButtons = document.querySelector("#swiperNextButtons")
     
@@ -189,6 +189,7 @@
       for(let c of container.querySelectorAll("[data-contains]")){
         c.appendChild(container.querySelector("#"+c.dataset.contains))
       }
+      document.querySelector("#page").style.width = "calc(100% - 50px)"
     }
     let updateMainButton = ()=>{
       mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")
@@ -196,6 +197,12 @@
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){
         button.addEventListener("click", ()=>{
+          if(settings.swiperVerticalButtons){
+            swiperNextButtons.dataset.section = (+swiperNextButtons.dataset.section + 1)%2
+            for(let b of document.querySelectorAll(".swiperNextButton")){
+              b.style.display = b.dataset.section===button.parentElement.dataset.section ? null : "none"
+            }
+          return}
           let size = button.parentElement.style.height.slice(0, -2)
           swiperNextButtons.scrollTo(0, swiperNextButtons.scrollTop<size/2 ? size : 0)
         })
@@ -268,6 +275,18 @@
       })
       button.innerText = thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma
       swiperNextButtons.appendChild(button)
+    }
+
+    if(settings.swiperVerticalButtons){
+      let section = 0
+      for(let button of document.querySelectorAll(".swiperNextButton")){
+        if(button.className==="br"){
+          section++
+        continue}
+        button.dataset.section = section
+        if(section>0){button.style.display = "none"}
+      }
+      swiperNextButtons.dataset.section = "0"
     }
 
     let wishedCards = GM_getValue("wishedCards") || []

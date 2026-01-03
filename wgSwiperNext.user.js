@@ -182,11 +182,11 @@
       container.querySelector("#autoPlay").insertAdjacentHTML("beforebegin",
         `
           <div data-contains="autoPlay"></div>
-          <div data-contains="menu"></div>
+          <div data-contains="options"></div>
         `
       )
       for(let c of container.querySelectorAll("[data-contains]")){
-        c.addElement(container.findElementById(c.dataset.contains))
+        c.addElement(container.querySelector("#"+c.dataset.contains))
       }
     }
     let updateMainButton = ()=>{

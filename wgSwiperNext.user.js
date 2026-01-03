@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-29
-// @description  Move your cards to boxes from the swiper page.
+// @version      2026-01-03
+// @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=waifugame.com
@@ -129,23 +129,36 @@
   }
 
   if(path==="/swiper"){
-    document.body.insertAdjacentHTML("beforeend", `<style>.swiperNextButton {
+    document.body.insertAdjacentHTML("beforeend", `<style>
+      .swiperNextButton {
         display: inline-flex;
         color: #fff;
         background-color: #111a;
         padding-left: 5px;
         padding-right: 5px;
-        height: ${settings.biggerButtons ? "50" : "30"}px;
+        height: ${settings.biggerButtons ? "50px" : "30px"};
         align-items: center;
         min-width: 30px;
         user-select: none;
+        flex-grow: 1;
+        text-align: center;
+        justify-content: center;
       }
       ${settings.transparentSwiperButtons ? ".tinder--buttons button {background-color: #0008}" : ""}
+      `+(settings.swiperVerticalButtons ? `
+      .tinder--buttons-vertical {
+        ${settings.swiperVerticalButtons}: 0px;
+        display: flex;
+        flex-direction: column-reverse;
+        width: 100px;
+        row-gap: 15px;
+      }
+      ` : "")+`
     </style>`)
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
-      `<br><div id="swiperNextButtons" style="height:${(settings.biggerButtons ? 50 : 30) * (settings.swiperAllButtonLines ? 2 : 1)}px; overflow-y:hidden; margin-top: 5px;">` + [0, 1, 2, 3, 4, "swap"].slice(0, settings.swiperAllButtonLines ? -1 : 99).map(i=>
+      `<br><div id="swiperNextButtons" style="height:${settings.swiperVerticalButtons ? "auto" : (settings.biggerButtons ? 50 : 30) * (settings.swiperAllButtonLines ? 2 : 1) +"px"}; overflow-y: hidden; margin-top: 5px;">` + [0, 1, 2, 3, 4, "swap"].slice(0, settings.swiperAllButtonLines ? -1 : 99).map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
-      ).join(" ")+`<br><div data-nextaction="swap" class="swiperNextButton"${settings.swiperAllButtonLines ? ' style="display:none"' : ""}><i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
+      ).join(" ")+`<br data-section="separator">${!settings.swiperAllButtonLines ? `<div data-nextaction="swap" class="swiperNextButton">` : ""}<i class="fa fa-exchange-alt" style="font-size:12px"></i></div><span>Charisma:</span></div>`
     )
     let swiperNextButtons = document.querySelector("#swiperNextButtons")
     
@@ -163,12 +176,41 @@
       mainButton.parentElement.parentElement.insertBefore(mainButton.parentElement, love.parentElement)
       mainButton.parentElement.parentElement.insertBefore(love.parentElement, document.querySelector("#deb").parentElement)
     }
+    if(settings.swiperVerticalButtons){
+      swiperNextButtons.style.display = "flex"
+      swiperNextButtons.style.flexFlow = "row wrap"
+      swiperNextButtons.style.gap = "2px 2px"
+      mainButton.parentElement.style.flex = "100% 1.5 1.5"
+      let container = mainButton.parentElement.parentElement
+      container.style[settings.swiperVerticalButtons==="right" ? "left" : "right"] = "auto" // Canceling some style of tinder--buttons
+      container.classList.add("tinder--buttons-vertical")
+      container.querySelector("#autoplay").insertAdjacentHTML("beforebegin",
+        `
+          <div data-contains="autoplay"></div>
+          <div data-contains="options"></div>
+        `
+      )
+      for(let c of container.querySelectorAll("[data-contains]")){
+        c.appendChild(container.querySelector("#"+c.dataset.contains))
+      }
+      let page = document.querySelector("#page")
+      page.style.width = "calc(100% - 50px)"
+      if(settings.swiperVerticalButtons==="left"){
+        page.style.marginLeft = "50px"
+      }
+    }
     let updateMainButton = ()=>{
       mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")
     }
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){
         button.addEventListener("click", ()=>{
+          if(settings.swiperVerticalButtons){
+            swiperNextButtons.dataset.section = (+swiperNextButtons.dataset.section + 1)%2
+            for(let b of swiperNextButtons.children){
+              b.style.display = b.dataset.section===button.parentElement.dataset.section ? null : "none"
+            }
+          return}
           let size = button.parentElement.style.height.slice(0, -2)
           swiperNextButtons.scrollTo(0, swiperNextButtons.scrollTop<size/2 ? size : 0)
         })
@@ -241,6 +283,18 @@
       })
       button.innerText = thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma
       swiperNextButtons.appendChild(button)
+    }
+
+    if(settings.swiperVerticalButtons){
+      let section = 0
+      for(let button of swiperNextButtons.children){
+        if(button.dataset.section==="separator"){
+          section++
+        continue}
+        button.dataset.section = section
+        if(section>0){button.style.display = "none"}
+      }
+      swiperNextButtons.dataset.section = "0"
     }
 
     let wishedCards = GM_getValue("wishedCards") || []
@@ -557,17 +611,22 @@
     let settingSelect = (key, list)=>(`<select style="display:inline-block" class="btn" data-key="${key}">`+list.map(o=>`<option value="${o.value}"${settings[key]==o.value ? " selected" : ""}>${o.name}</option>`)+`</select>`)
     document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
       `<div id="swiperNextSettings" class="card card-style" style="padding:3px">
-        <div>
-          <button data-page="visibility" class="btn btn-block">Visibility</button>
-          <button data-page="keybinds" class="btn btn-block">Keybinds</button>
-          <button data-page="recommendations" class="btn btn-block">Recommendations</button>
+        <div class="tab-controls tabs-round tab-animated tabs-small tabs-rounded shadow-xl flex-tabs" data-tab-items="3">
+          <a href="#" data-page="visibility">Visibility</a>
+          <a href="#" data-page="keybinds">Keybinds</a>
+          <a href="#" data-page="recommendations">Recommendations</a>
         </div>
         <div data-page="visibility">
           For the destination buttons:<br>
           ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
-          ${settingCheckbox("biggerButtons", "Make")}<br>
+          ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
           ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
           ${settingCheckbox("swiperAllButtonLines", "Always display the buttons for both destination and charisma selection")}<br>
+          Display all the buttons ${settingSelect("swiperVerticalButtons", [
+            {value: "", name: "horizontally"},
+            {value: "right", name: "vertically (right side)"},
+            {value: "left", name: "vertically (left side)"},
+          ])}<br>
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
           ${settingCheckbox("swapFlirtCrush", "Swap flirt and crush buttons")}<br>
           On the cards page:<br>
@@ -649,11 +708,11 @@
       </div>
       <style>
         #swiperNextSettings div[data-page] {
-          display:none;
-          color:#eee;
+          display: none;
+          color: #eee;
         }
         #swiperNextSettings div[data-page][data-visible] {
-          display:block;
+          display: block;
         }
         #swiperNextSettings div[data-page="keybinds"] div button {
           border: solid 2px #fffa;
@@ -661,14 +720,25 @@
         #swiperNextSettings div[data-page="keybinds"] div {
           font-size:20px;
         }
+        .flex-tabs {
+          display: flex;
+        }
+        .flex-tabs a {
+          flex-grow: 1;
+          color: #fff;
+        }
       </style>`
     )
     let settingsDiv = document.querySelector("div#swiperNextSettings")
     for(let button of settingsDiv.children[0].children){
       button.addEventListener("click", ()=>{
-        let previous = settingsDiv.querySelectorAll("[data-visible]")[0]
-        if(previous){previous.removeAttribute("data-visible")}
+        let previous = settingsDiv.querySelector("[data-visible]")
+        if(previous){
+          previous.removeAttribute("data-visible")
+          settingsDiv.children[0].querySelector(`[data-page=${previous.dataset.page}]`).classList.remove("bg-red-dark")
+        }
         settingsDiv.querySelector(`div[data-page="${button.dataset.page}"]`).dataset.visible = true
+        settingsDiv.children[0].querySelector(`[data-page="${button.dataset.page}"]`).classList.add("bg-red-dark")
       })
     }
     let recording

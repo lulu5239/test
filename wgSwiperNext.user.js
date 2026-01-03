@@ -196,7 +196,7 @@
       let page = document.querySelector("#page")
       page.style.width = "calc(100% - 50px)"
       if(settings.swiperVerticalButtons==="left"){
-        page.marginLeft = "50px"
+        page.style.marginLeft = "50px"
       }
     }
     let updateMainButton = ()=>{

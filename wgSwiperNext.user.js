@@ -140,6 +140,7 @@
         align-items: center;
         min-width: 30px;
         user-select: none;
+        flex-grow: 1;
       }
       ${settings.transparentSwiperButtons ? ".tinder--buttons button {background-color: #0008}" : ""}
       `+(settings.swiperVerticalButtons ? `
@@ -154,8 +155,8 @@
     </style>`)
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
       `<br><div id="swiperNextButtons" style="height:${settings.swiperVerticalButtons ? "auto" : (settings.biggerButtons ? 50 : 30) * (settings.swiperAllButtonLines ? 2 : 1) +"px"}; overflow-y: hidden; margin-top: 5px;">` + [0, 1, 2, 3, 4, "swap"].slice(0, settings.swiperAllButtonLines ? -1 : 99).map(i=>
-        `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
-      ).join(" ")+`<br data-section="separator">${!settings.swiperAllButtonLines ? `<div data-nextaction="swap" class="swiperNextButton">` : ""}<i class="fa fa-exchange-alt" style="font-size:12px"></i></div><span>Charisma:</span></div>`
+        `<div data-nextaction="${i}" class="swiperNextButton"><a>${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</a></div>`
+      ).join(" ")+`<br data-section="separator">${!settings.swiperAllButtonLines ? `<div data-nextaction="swap" class="swiperNextButton">` : ""}<i class="fa fa-exchange-alt" style="font-size:12px"></i></div><span><a>Charisma:</a></span></div>`
     )
     let swiperNextButtons = document.querySelector("#swiperNextButtons")
     
@@ -174,8 +175,9 @@
       mainButton.parentElement.parentElement.insertBefore(love.parentElement, document.querySelector("#deb").parentElement)
     }
     if(settings.swiperVerticalButtons){
-      mainButton.style.width = mainButton.style.height = "50px" // So it doesn't look strange
-      mainButton.querySelector(".fa").style.fontSize = "32px"
+      swiperNextButtons.style.display = "flex"
+      swiperNextButtons.style.flexFlow = "row wrap"
+      swiperNextButtons.style.gap = "2px 2px"
       mainButton.parentElement.style.flex = "100% 1.5 1.5"
       let container = mainButton.parentElement.parentElement
       container.style[settings.swiperVerticalButtons==="right" ? "left" : "right"] = "auto" // Canceling some style of tinder--buttons
@@ -273,7 +275,7 @@
         GM_setValue("formations", formations)
         applyEncounterStyle({each:()=>{}})
       })
-      button.innerText = thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma
+      button.innerHTML = "<a>" + (thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma) + "</a>"
       swiperNextButtons.appendChild(button)
     }
 

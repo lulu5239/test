@@ -155,7 +155,7 @@
     document.querySelector(".tinder--buttons").insertAdjacentHTML("beforeend",
       `<br><div id="swiperNextButtons" style="height:${settings.swiperVerticalButtons ? "auto" : (settings.biggerButtons ? 50 : 30) * (settings.swiperAllButtonLines ? 2 : 1) +"px"}; overflow-y: hidden; margin-top: 5px;">` + [0, 1, 2, 3, 4, "swap"].slice(0, settings.swiperAllButtonLines ? -1 : 99).map(i=>
         `<div data-nextaction="${i}" class="swiperNextButton">${i===0 ? "Disenchant" : i===1 ? "Portfolio" : i==="swap" ? '<i class="fa fa-exchange-alt" style="font-size:12px"></i>' : "Box "+(i-1)}</div>`
-      ).join(" ")+`<br data-section="separator">${settings.swiperAllButtonLines ? `<div data-nextaction="swap" class="swiperNextButton">` : ""}<i class="fa fa-exchange-alt" style="font-size:12px"></i></div> <span>Charisma:</span></div>`
+      ).join(" ")+`<br data-section="separator"><span>Charisma:</span>${!settings.swiperAllButtonLines ? `<div data-nextaction="swap" class="swiperNextButton">` : ""}<i class="fa fa-exchange-alt" style="font-size:12px"></i></div></div>`
     )
     let swiperNextButtons = document.querySelector("#swiperNextButtons")
     
@@ -279,7 +279,7 @@
 
     if(settings.swiperVerticalButtons){
       let section = 0
-      for(let button of document.querySelectorAll(".swiperNextButton")){
+      for(let button of swiperNextButtons.children){
         if(button.dataset.section==="separator"){
           section++
         continue}

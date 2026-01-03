@@ -193,7 +193,11 @@
       for(let c of container.querySelectorAll("[data-contains]")){
         c.appendChild(container.querySelector("#"+c.dataset.contains))
       }
-      document.querySelector("#page").style.width = "calc(100% - 50px)"
+      let page = document.querySelector("#page")
+      page.style.width = "calc(100% - 50px)"
+      if(settings.swiperVerticalButtons==="left"){
+        page.marginLeft = "50px"
+      }
     }
     let updateMainButton = ()=>{
       mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")

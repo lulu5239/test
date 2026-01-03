@@ -142,6 +142,7 @@
         user-select: none;
         flex-grow: 1;
         text-align: center;
+        justify-content: center;
       }
       ${settings.transparentSwiperButtons ? ".tinder--buttons button {background-color: #0008}" : ""}
       `+(settings.swiperVerticalButtons ? `

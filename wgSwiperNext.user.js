@@ -648,13 +648,9 @@
         </div>
       </div>
       <style>
-        #swiperNextSettings {
-          display: flex;
-        }
         #swiperNextSettings div[data-page] {
           display: none;
           color: #eee;
-          flex-grow: 1;
         }
         #swiperNextSettings div[data-page][data-visible] {
           display: block;
@@ -665,6 +661,13 @@
         #swiperNextSettings div[data-page="keybinds"] div {
           font-size:20px;
         }
+        .flex-tabs {
+          display: flex;
+          color: #fff;
+        }
+        .flex-tabs a {
+          flex-grow: 1;
+        }
       </style>`
     )
     let settingsDiv = document.querySelector("div#swiperNextSettings")
@@ -673,11 +676,10 @@
         let previous = settingsDiv.querySelector("[data-visible]")
         if(previous){
           previous.removeAttribute("data-visible")
-          previous.classList.remove("bg-red-dark")
+          settingsDiv.children[0].querySelector(`[data-page=${previous.dataset.page}]`).classList.remove("bg-red-dark")
         }
-        let now = settingsDiv.querySelector(`div[data-page="${button.dataset.page}"]`)
-        now.dataset.visible = true
-        now.classList.add("bg-red-dark")
+        settingsDiv.querySelector(`div[data-page="${button.dataset.page}"]`).dataset.visible = true
+        settingsDiv.children[0].querySelector(`[data-page="${button.dataset.page}"]`).classList.add("bg-red-dark")
       })
     }
     let recording

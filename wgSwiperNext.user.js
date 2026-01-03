@@ -557,7 +557,7 @@
     let settingSelect = (key, list)=>(`<select style="display:inline-block" class="btn" data-key="${key}">`+list.map(o=>`<option value="${o.value}"${settings[key]==o.value ? " selected" : ""}>${o.name}</option>`)+`</select>`)
     document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
       `<div id="swiperNextSettings" class="card card-style" style="padding:3px">
-        <div class="tab-controls tabs-round tab-animated tabs-small tabs-rounded shadow-xl flex-tabs" data-tab-items="3" data-tab-active="bg-red-dark color-white">
+        <div class="tab-controls tabs-round tab-animated tabs-small tabs-rounded shadow-xl flex-tabs" data-tab-items="3">
           <a href="#" data-page="visibility">Visibility</a>
           <a href="#" data-page="keybinds">Keybinds</a>
           <a href="#" data-page="recommendations">Recommendations</a>
@@ -663,10 +663,10 @@
         }
         .flex-tabs {
           display: flex;
-          color: #fff;
         }
         .flex-tabs a {
           flex-grow: 1;
+          color: #fff;
         }
       </style>`
     )

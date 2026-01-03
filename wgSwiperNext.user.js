@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-01-01
+// @version      2026-01-03
 // @description  Move your cards to boxes from the swiper page.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -557,10 +557,10 @@
     let settingSelect = (key, list)=>(`<select style="display:inline-block" class="btn" data-key="${key}">`+list.map(o=>`<option value="${o.value}"${settings[key]==o.value ? " selected" : ""}>${o.name}</option>`)+`</select>`)
     document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
       `<div id="swiperNextSettings" class="card card-style" style="padding:3px">
-        <div>
-          <button data-page="visibility" class="btn btn-block">Visibility</button>
-          <button data-page="keybinds" class="btn btn-block">Keybinds</button>
-          <button data-page="recommendations" class="btn btn-block">Recommendations</button>
+        <div class="tab-controls tabs-round tab-animated tabs-small tabs-rounded shadow-xl flex-tabs" data-tab-items="3" data-tab-active="bg-red-dark color-white">
+          <a href="#" data-page="visibility">Visibility</a>
+          <a href="#" data-page="keybinds">Keybinds</a>
+          <a href="#" data-page="recommendations">Recommendations</a>
         </div>
         <div data-page="visibility">
           For the destination buttons:<br>
@@ -648,12 +648,16 @@
         </div>
       </div>
       <style>
+        #swiperNextSettings {
+          display: flex;
+        }
         #swiperNextSettings div[data-page] {
-          display:none;
-          color:#eee;
+          display: none;
+          color: #eee;
+          flex-grow: 1;
         }
         #swiperNextSettings div[data-page][data-visible] {
-          display:block;
+          display: block;
         }
         #swiperNextSettings div[data-page="keybinds"] div button {
           border: solid 2px #fffa;
@@ -666,9 +670,14 @@
     let settingsDiv = document.querySelector("div#swiperNextSettings")
     for(let button of settingsDiv.children[0].children){
       button.addEventListener("click", ()=>{
-        let previous = settingsDiv.querySelectorAll("[data-visible]")[0]
-        if(previous){previous.removeAttribute("data-visible")}
-        settingsDiv.querySelector(`div[data-page="${button.dataset.page}"]`).dataset.visible = true
+        let previous = settingsDiv.querySelector("[data-visible]")
+        if(previous){
+          previous.removeAttribute("data-visible")
+          previous.classList.remove("bg-red-dark")
+        }
+        let now = settingsDiv.querySelector(`div[data-page="${button.dataset.page}"]`)
+        now.dataset.visible = true
+        now.classList.add("bg-red-dark")
       })
     }
     let recording

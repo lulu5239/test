@@ -240,7 +240,7 @@
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 2px #"+colors.selectedNotNow
         updateMainButton()
       })
-      if(i===action){
+      if(i===selected){
         button.style.border = "solid 2px #"+colors.selected
       }
     }

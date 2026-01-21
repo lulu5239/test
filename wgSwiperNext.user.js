@@ -300,7 +300,7 @@
 
     let wishedCards = GM_getValue("wishedCards") || []
 
-    let flirtAnyways
+    let flirtAnyways; let noNextCard = true
     let originalPostServer = postServer
     postServer = (...args)=>{
       let card = $('.tinder--card[data-encounterid=' + args[0] + ']').data("data")
@@ -312,7 +312,9 @@
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
       let nextAction = nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id])
-      if(nextAction){
+      if(!nextCard){
+        noNextCard = true
+      }else if(nextAction){
         selectedOnce = nextAction
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = "solid 3px #"+colors.selectedOnce
@@ -360,6 +362,15 @@
         button.dataset.battlemode = !button.dataset.forceflirt && (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
         button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
         updateMainButton()
+      }
+      if(noNextCard){
+        noNextCard = false
+        let nextAction = settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id]
+        if(nextAction){
+          selectedOnce = nextAction
+          document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
+          document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = "solid 3px #"+colors.selectedOnce
+        }
       }
       return originalApplyEncounterStyle(...args)
     }

@@ -365,7 +365,7 @@
       }
       if(noNextCard){
         noNextCard = false
-        let nextAction = settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id]
+        let nextAction = settings.wishedCardDestination && wishedCards.includes(""+data.card_id) ? settings.wishedCardDestination : +cardActions[""+data.card_id]!==selected && +cardActions[""+data.card_id]
         if(nextAction){
           selectedOnce = nextAction
           document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow

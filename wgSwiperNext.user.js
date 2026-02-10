@@ -953,15 +953,16 @@
   }
 
   if(path==="/items" && true){
-    let getItem = id=>document.querySelector(`.actionShowSheet[data-iid="${id}"]`)
+    let getItem = id=>document.querySelector(`.actionShowItemSheet[data-iid="${id}"]`)
     let storableItem = e=>({
       name: e.dataset.name,
       count: e.dataset.count,
-      icon: e.querySelector("img").src,
+      icon: e.querySelector("img").src.slice(21),
     })
     let best = {flavors: {}}
     for(let flavor in flavors){
       let item = flavors[flavor].reduce((p, id)=>{
+        if(id===64){return p} // eggs
         let item = getItem(id)
         return !p || +item.dataset.count>+p.dataset.count ? item : p
       }, null)
@@ -970,7 +971,11 @@
     }
     let gift = document.querySelectorAll(`.showActionSheet[data-type="gift"]`).reduce((p, item)=>!p || item.dataset.count>p.dataset.count ? item : p, null)
     if(gift){best.gift = storableItem(gift)}
-    // Presents and mystery candy
+    for(let e of Object.entries({"151": "present5000", "150": "present10000", "149": "present20000", "161": "candy"})){
+      let item = getItem(e[0])
+      if(!item){continue}
+      best[e[1]] = storableItem(item)
+    }
     GM_setValue("bestItems", best)
     navigator.bestItems = best // temporary
   }

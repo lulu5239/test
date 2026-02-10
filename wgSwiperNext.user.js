@@ -29,10 +29,48 @@
   }
   var settings = GM_getValue("settings") || {}
 
-  if(settings.manualRerollOnly && typeof(ReRollGifts)!=="undefined"){
+  var flavors = {
+    "spicy": [27,28,29,30,31,32,33,34,47,65,66,67,69,76,79,85,86],
+    "greasy": [9,10,11,12,13,14,15,16,53,61,70,71,72,73,78,81,84],
+    "sour": [19,20,21,22,23,24,25,26,43,52,55,56,68,74,75,77,80],
+    "sweet": [35,36,37,38,39,40,41,42,45,48,49,50,57,59,62,82,83],
+    "bitter": [1,2,3,4,5,6,7,8,44,46,51,54,58,60,63,64],
+    "neutral": [17,18]
+  }
+  var cardsCache = {}
+  var fetchCardData = async (id, force)=>{
+    if(cardsCache[id] instanceof Array){
+      return await new Promise(ok=>cardsCache[id].push(ok))
+    }
+    if(cardsCache[id] && !force){return cardsCache[id]}
+    cardsCache[id] = id
+    let r
+    try{
+      r = await fetch(`/json/card/${id}`)
+      r = await r.json()
+    }catch(e){console.warn(e)}
+    if(cardsCache[id] instanceof Array){
+      for(let p of cardsCache[id]){p(r)}
+    }
+    cardsCache[id] = r
+    return r
+  }
+  showCardInfoMenuLookup = id=>{
+    fetchCardData(id, true).then(showCardInfoMenu)
+  }
+  if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
+    let rerolled = false
     ReRollGifts = (...args)=>{
-      if(!args[0] && document.querySelector(".giftableItem")){return}
+      if(args[0]){rerolled = true}
+      if(!rerolled && settings.defaultRerollSet){
+        fetchCardData(null).then(card=>{
+          if(!card){return}
+          let trait = card.Trait
+          //
+        })
+      return}
+      if(settings.manualRerollOnly && !args[0] && document.querySelector(".giftableItem")){return}
       return originalReroll(...args)
     }
     let originalGive = giveItemHandler
@@ -126,15 +164,6 @@
         await new Promise(ok=>setTimeout(ok, 0.7 - t))
       }
     }
-  }
-
-  var flavors = {
-    "spicy": [27,28,29,30,31,32,33,34,47,65,66,67,69,76,79,85,86],
-    "greasy": [9,10,11,12,13,14,15,16,53,61,70,71,72,73,78,81,84],
-    "sour": [19,20,21,22,23,24,25,26,43,52,55,56,68,74,75,77,80],
-    "sweet": [35,36,37,38,39,40,41,42,45,48,49,50,57,59,62,82,83],
-    "bitter": [1,2,3,4,5,6,7,8,44,46,51,54,58,60,63,64],
-    "neutral": [17,18]
   }
 
   if(path==="/swiper"){
@@ -662,6 +691,7 @@
           <br>
           When feeding an Animu:<br>
           ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}<br>
+          ${settingCheckbox("defaultRerollSet", "Better default items")}<br>
           <br>
           Off-topic, but you currently have <a id="swcount"></a> registered service workers and they might lag your browser.<br>
           <button id="unregistersw">Unregister bad service workers</button><button id="registersw">Register a service worker</button> <button id="unregisterallsw">Unregister all service workers</button><br>
@@ -952,7 +982,7 @@
     })
   }
 
-  if(path==="/items" && true){
+  if(path==="/items" && settings.defaultRerollSet){
     let getItem = id=>document.querySelector(`.actionShowItemSheet[data-iid="${id}"]`)
     let storableItem = e=>({
       id: e.dataset.iid,

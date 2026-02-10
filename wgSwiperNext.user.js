@@ -48,7 +48,7 @@
     try{
       r = await fetch(`/json/card/${id}`)
       r = await r.json()
-    }catch(e){console.warn(e)}
+    }catch(e){console.warn(e); r = null}
     if(cardsCache[id] instanceof Array){
       for(let p of cardsCache[id]){p(r)}
     }
@@ -66,7 +66,7 @@
       defaulyRerollSet:if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
         if(best){
-          fetchCardData(null).then(card=>{
+          fetchCardData(selectedAnimu.cardID).then(card=>{
             if(!card){return}
             let flavor = {
               spicy: ["Hardy", "Lonely", "Adamant", "Naughty", "Brave"],

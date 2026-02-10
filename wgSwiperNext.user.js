@@ -82,10 +82,10 @@
               best.snack?.[flavor] || Object.values(best.snack)[0],
               best.meal?.[flavor] || Object.values(best.meal)[0],
               best.gift,
-            ].filter(Boolean)
+            ].map((item, i)=>{if(item){item.i = i}}).filter(Boolean)
 
             for(let item of items){
-              let bgClass = "bg-gray-dark";
+              let bgClass = "bg-"+["magenta", "magenta", "magenta", "yellow", "gray", "green", "blue"][item.i]+"-dark";
               htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.id + '" href="#" '
                 + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
                 + '<img src="' + item.icon + '" />'

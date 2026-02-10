@@ -82,7 +82,7 @@
               best.snack?.[flavor] || Object.values(best.snack)[0],
               best.meal?.[flavor] || Object.values(best.meal)[0],
               best.gift,
-            ].map((item, i)=>{if(item){item.i = i}}).filter(Boolean)
+            ].map((item, i)=>{if(item){item.i = i}; return item}).filter(Boolean)
 
             for(let item of items){
               let bgClass = "bg-"+["magenta", "magenta", "magenta", "yellow", "gray", "green", "blue"][item.i]+"-dark";
@@ -91,7 +91,6 @@
                 + '<img src="' + item.icon + '" />'
                 + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
                 + item.name + '</p></div>';
-              });
             }
             
             $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();

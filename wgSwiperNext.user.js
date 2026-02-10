@@ -957,7 +957,7 @@
     let storableItem = e=>({
       id: e.dataset.iid,
       name: e.dataset.name,
-      count: e.dataset.count,
+      count: +e.dataset.count,
       icon: e.querySelector("img").src.slice(21),
     })
     let best = {}
@@ -975,7 +975,7 @@
         best[name][flavor] = storableItem(item)
       }
     }
-    let gift = Array.from(document.querySelectorAll(`.showActionSheet[data-type="gift"]`)).reduce((p, item)=>!p || item.dataset.count>p.dataset.count ? item : p, null)
+    let gift = Array.from(document.querySelectorAll(`.actionShowItemSheet[data-type="gift"]`)).reduce((p, item)=>!p || +item.dataset.count>+p.dataset.count ? item : p, null)
     if(gift){best.gift = storableItem(gift)}
     for(let e of Object.entries({"151": "present5000", "150": "present10000", "149": "present20000", "161": "candy"})){
       let item = getItem(e[0])

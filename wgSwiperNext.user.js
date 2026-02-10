@@ -65,39 +65,40 @@
       if(args[0]){rerolled = true}
       defaulyRerollSet:if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
-        if(!best){break defaultRerollSet}
-        fetchCardData(null).then(card=>{
-          if(!card){return}
-          let trait = card.Trait
-          let flavor = null //
-          
-          let $p = $('#waifuFeed')
-          let htmlBag = ""
-          
-          let items = [
-            best.present5000,
-            best.present10000,
-            best.present20000,
-            best.candy,
-            best.snack?.[flavor] || Object.values(best.snack)[0],
-            best.meal?.[flavor] || Object.values(best.meal)[0],
-            best.gift,
-          ].filter(Boolean)
+        if(best){
+          fetchCardData(null).then(card=>{
+            if(!card){return}
+            let trait = card.Trait
+            let flavor = null //
+            
+            let $p = $('#waifuFeed')
+            let htmlBag = ""
+            
+            let items = [
+              best.present5000,
+              best.present10000,
+              best.present20000,
+              best.candy,
+              best.snack?.[flavor] || Object.values(best.snack)[0],
+              best.meal?.[flavor] || Object.values(best.meal)[0],
+              best.gift,
+            ].filter(Boolean)
 
-          for(let item of items){
-            let bgClass = "bg-gray-dark";
-            htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.id + '" href="#" '
-              + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
-              + '<img src="' + item.icon + '" />'
-              + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
-              + item.name + '</p></div>';
-            });
-          }
-      
-          $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
-          $p.prepend(htmlBag);
-        })
-      return}
+            for(let item of items){
+              let bgClass = "bg-gray-dark";
+              htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.id + '" href="#" '
+                + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
+                + '<img src="' + item.icon + '" />'
+                + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
+                + item.name + '</p></div>';
+              });
+            }
+            
+            $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
+            $p.prepend(htmlBag);
+          })
+        return}
+      }
       if(settings.manualRerollOnly && !args[0] && document.querySelector(".giftableItem")){return}
       return originalReroll(...args)
     }

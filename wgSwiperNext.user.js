@@ -68,8 +68,14 @@
         if(best){
           fetchCardData(null).then(card=>{
             if(!card){return}
-            let trait = card.Trait
-            let flavor = null //
+            let flavor = {
+              spicy: ["Hardy", "Lonely", "Adamant", "Naughty", "Brave"],
+              sour: ["Bold", "Docile", "Impish", "Lax", "Relaxed"],
+              greasy: ["Modest", "Mild", "Bashful", "Rash", "Quiet"],
+              bitter: ["Calm", "Gentle", "Careful", "Quirky", "Sassy"],
+              sweet: ["Timid", "Hasty", "Jolly", "Naive", "Serious"],
+            }
+            flavor = Object.entries(flavor).find(e=>e[1].includes(card.Nature))?.[0]
             
             let $p = $('#waifuFeed')
             let htmlBag = ""

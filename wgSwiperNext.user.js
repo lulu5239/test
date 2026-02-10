@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-01-21
+// @version      2026-02-10
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -29,10 +29,82 @@
   }
   var settings = GM_getValue("settings") || {}
 
-  if(settings.manualRerollOnly && typeof(ReRollGifts)!=="undefined"){
+  var flavors = {
+    "spicy": [27,28,29,30,31,32,33,34,47,65,66,67,69,76,79,85,86],
+    "greasy": [9,10,11,12,13,14,15,16,53,61,70,71,72,73,78,81,84],
+    "sour": [19,20,21,22,23,24,25,26,43,52,55,56,68,74,75,77,80],
+    "sweet": [35,36,37,38,39,40,41,42,45,48,49,50,57,59,62,82,83],
+    "bitter": [1,2,3,4,5,6,7,8,44,46,51,54,58,60,63,64],
+    "neutral": [17,18]
+  }
+  var cardsCache = {}
+  var fetchCardData = async (id, force)=>{
+    if(cardsCache[id] instanceof Array){
+      return await new Promise(ok=>cardsCache[id].push(ok))
+    }
+    if(cardsCache[id] && !force){return cardsCache[id]}
+    cardsCache[id] = id
+    let r
+    try{
+      r = await fetch(`/json/card/${id}`)
+      r = await r.json()
+    }catch(e){console.warn(e); r = null}
+    if(cardsCache[id] instanceof Array){
+      for(let p of cardsCache[id]){p(r)}
+    }
+    cardsCache[id] = r
+    return r
+  }
+  showCardInfoMenuLookup = id=>{
+    fetchCardData(id, true).then(showCardInfoMenu)
+  }
+  if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
+    let rerolled = false
     ReRollGifts = (...args)=>{
-      if(!args[0] && document.querySelector(".giftableItem")){return}
+      if(args[0]){rerolled = true}
+      defaulyRerollSet:if(!rerolled && settings.defaultRerollSet){
+        let best = GM_getValue("bestItems")
+        if(best){
+          fetchCardData(selectedAnimu.cardID).then(card=>{
+            if(!card){return}
+            let flavor = {
+              spicy: ["Hardy", "Lonely", "Adamant", "Naughty", "Brave"],
+              sour: ["Bold", "Docile", "Impish", "Lax", "Relaxed"],
+              greasy: ["Modest", "Mild", "Bashful", "Rash", "Quiet"],
+              bitter: ["Calm", "Gentle", "Careful", "Quirky", "Sassy"],
+              sweet: ["Timid", "Hasty", "Jolly", "Naive", "Serious"],
+            }
+            flavor = Object.entries(flavor).find(e=>e[1].includes(card.Nature))?.[0]
+            
+            let $p = $('#waifuFeed')
+            let htmlBag = ""
+            
+            let items = [
+              best.present5000,
+              best.present10000,
+              best.present20000,
+              best.candy,
+              best.snack?.[flavor] || Object.values(best.snack)[0],
+              best.meal?.[flavor] || Object.values(best.meal)[0],
+              best.gift,
+            ].map((item, i)=>{if(item){item.i = i}; return item}).filter(Boolean)
+
+            for(let item of items){
+              let bgClass = "bg-"+["magenta", "magenta", "magenta", "yellow", "gray", "green", "blue"][item.i]+"-dark";
+              htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.id + '" href="#" '
+                + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
+                + '<img src="' + item.icon + '" />'
+                + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
+                + item.name + '</p></div>';
+            }
+            
+            $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
+            $p.prepend(htmlBag);
+          })
+        return}
+      }
+      if(settings.manualRerollOnly && !args[0] && document.querySelector(".giftableItem")){return}
       return originalReroll(...args)
     }
     let originalGive = giveItemHandler
@@ -653,6 +725,7 @@
           <br>
           When feeding an Animu:<br>
           ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}<br>
+          ${settingCheckbox("defaultRerollSet", "Better default items")}<br>
           <br>
           Off-topic, but you currently have <a id="swcount"></a> registered service workers and they might lag your browser.<br>
           <button id="unregistersw">Unregister bad service workers</button><button id="registersw">Register a service worker</button> <button id="unregisterallsw">Unregister all service workers</button><br>
@@ -941,5 +1014,39 @@
         menu.querySelector(".close-menu").click()
       })
     })
+  }
+
+  if(path==="/items" && settings.defaultRerollSet){
+    let getItem = id=>document.querySelector(`.actionShowItemSheet[data-iid="${id}"]`)
+    let storableItem = e=>({
+      id: e.dataset.iid,
+      name: e.dataset.name,
+      count: +e.dataset.count,
+      icon: e.querySelector("img").src.slice(21),
+    })
+    let best = {}
+    for(let food=0; food<2; food++){
+      let name = ["snack", "meal"][food]
+      let filter = [id=>id>=43, id=>id<43][food]
+      best[name] = {}
+      for(let flavor in flavors){
+        let item = flavors[flavor].filter(filter).reduce((p, id)=>{
+          if(id===64){return p} // eggs
+          let item = getItem(id)
+          return !p || +item.dataset.count>+p.dataset.count ? item : p
+        }, null)
+        if(!item){continue}
+        best[name][flavor] = storableItem(item)
+      }
+    }
+    let gift = Array.from(document.querySelectorAll(`.actionShowItemSheet[data-type="gift"]`)).reduce((p, item)=>!p || +item.dataset.count>+p.dataset.count ? item : p, null)
+    if(gift){best.gift = storableItem(gift)}
+    for(let e of Object.entries({"151": "present5000", "150": "present10000", "149": "present20000", "161": "candy"})){
+      let item = getItem(e[0])
+      if(!item){continue}
+      best[e[1]] = storableItem(item)
+    }
+    GM_setValue("bestItems", best)
+    navigator.bestItems = best // temporary
   }
 })();

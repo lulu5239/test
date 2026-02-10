@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-01-21
+// @version      2026-02-10
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -126,6 +126,15 @@
         await new Promise(ok=>setTimeout(ok, 0.7 - t))
       }
     }
+  }
+
+  var flavors = {
+    "spicy": [27,28,29,30,31,32,33,34,47,65,66,67,69,76,79,85,86],
+    "greasy": [9,10,11,12,13,14,15,16,53,61,70,71,72,73,78,81,84],
+    "sour": [19,20,21,22,23,24,25,26,43,52,55,56,68,74,75,77,80],
+    "sweet": [35,36,37,38,39,40,41,42,45,48,49,50,57,59,62,82,83],
+    "bitter": [1,2,3,4,5,6,7,8,44,46,51,54,58,60,63,64],
+    "neutral": [17,18]
   }
 
   if(path==="/swiper"){
@@ -941,5 +950,28 @@
         menu.querySelector(".close-menu").click()
       })
     })
+  }
+
+  if(path==="/items" && true){
+    let getItem = id=>document.querySelector(`.actionShowSheet[data-iid="${id}"]`)
+    let storableItem = e=>({
+      name: e.dataset.name,
+      count: e.dataset.count,
+      icon: e.querySelector("img").src,
+    })
+    let best = {flavors: {}}
+    for(let flavor in flavors){
+      let item = flavors[flavor].reduce((p, id)=>{
+        let item = getItem(id)
+        return !p || +item.dataset.count>+p.dataset.count ? item : p
+      }, null)
+      if(!item){continue}
+      best.flavors[flavor] = storableItem(item)
+    }
+    let gift = document.querySelectorAll(`.showActionSheet[data-type="gift"]`).reduce((p, item)=>!p || item.dataset.count>p.dataset.count ? item : p, null)
+    if(gift){best.gift = storableItem(gift)}
+    // Presents and mystery candy
+    GM_setValue("bestItems", best)
+    navigator.bestItems = best // temporary
   }
 })();

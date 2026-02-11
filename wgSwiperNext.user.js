@@ -1018,8 +1018,7 @@
     document.querySelector(`#hoteledWaifuMenu .btnOpenStats`).insertAdjacentHTML("beforebegin", 
     `<a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="feed" style="width: 50%; display: inline-block">
       <i class="fa fa-smile-beam"></i> Feed
-    </a>
-    <a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="load+feed" style="width: 50%; display: inline-block">
+    </a><a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="load+feed" style="width: 50%; display: inline-block">
       <i class="fa fa-smile-beam"></i> Load and feed
     </a>`)
     let feed = async load=>{
@@ -1041,7 +1040,7 @@
         relHP: 0,
         ...stats,
       }, true)
-    })
+    }
     document.querySelector(`#hoteledWaifuMenu [data-action="feed"]`).addEventListener("click", ()=>{feed(false)})
     document.querySelector(`#hoteledWaifuMenu [data-action="load+feed"]`).addEventListener("click", ()=>{feed(true)})
   }

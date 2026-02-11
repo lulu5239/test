@@ -1015,13 +1015,17 @@
       })
     })
 
-    document.querySelector(`#hoteledWaifuMenu .btnOpenStats`).insertAdjacentHTML("beforebegin", `<a href="#" class="btn font-14 shadow-l btn-full rounded-s font-600 btn-secondary text-center mb-2" data-action="feed">
+    document.querySelector(`#hoteledWaifuMenu .btnOpenStats`).insertAdjacentHTML("beforebegin", 
+    `<a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="feed" style="width: 50%; display: inline-block">
       <i class="fa fa-smile-beam"></i> Feed
+    </a>
+    <a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="load+feed" style="width: 50%; display: inline-block">
+      <i class="fa fa-smile-beam"></i> Load and feed
     </a>`)
-    document.querySelector(`#hoteledWaifuMenu [data-action="feed"]`).addEventListener("click", async ()=>{
+    let feed = async load=>{
       let row = document.querySelector(`.hotelListing .actionShowHotelWaifu[data-id="${selectedAnniemay}"]`)
       let stats
-      if(true){
+      if(load){
         try{
           let r = await fetch(`/json/am/${row.dataset.id}`)
           stats = await r.json()
@@ -1038,6 +1042,8 @@
         ...stats,
       }, true)
     })
+    document.querySelector(`#hoteledWaifuMenu [data-action="feed"]`).addEventListener("click", ()=>{feed(false)})
+    document.querySelector(`#hoteledWaifuMenu [data-action="load+feed"]`).addEventListener("click", ()=>{feed(true)})
   }
 
   if(path==="/items" && settings.defaultRerollSet){

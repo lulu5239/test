@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-11
+// @version      2026-02-12
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -63,7 +63,7 @@
     let rerolled = false
     ReRollGifts = (...args)=>{
       if(args[0]){rerolled = true}
-      defaulyRerollSet:if(!rerolled && settings.defaultRerollSet){
+      if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
         if(best){
           fetchCardData(selectedAnimu.cardID).then(card=>{
@@ -1062,6 +1062,7 @@
         let item = flavors[flavor].filter(filter).reduce((p, id)=>{
           if(id===64){return p} // eggs
           let item = getItem(id)
+          if(!item){return p}
           return !p || +item.dataset.count>+p.dataset.count ? item : p
         }, null)
         if(!item){continue}
@@ -1076,6 +1077,6 @@
       best[e[1]] = storableItem(item)
     }
     GM_setValue("bestItems", best)
-    navigator.bestItems = best // temporary
+    navigator.bestItems = best
   }
 })();

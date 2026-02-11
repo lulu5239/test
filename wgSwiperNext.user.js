@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-10
+// @version      2026-02-11
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1014,6 +1014,35 @@
         menu.querySelector(".close-menu").click()
       })
     })
+
+    document.querySelector(`#hoteledWaifuMenu .btnOpenStats`).insertAdjacentHTML("beforebegin", 
+    `<a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="feed" style="width: 50%; display: inline-block">
+      <i class="fa fa-smile-beam"></i> Feed
+    </a><a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="load+feed" style="width: 50%; display: inline-block">
+      <i class="fa fa-smile-beam"></i> Load and feed
+    </a>`)
+    let feed = async load=>{
+      let row = document.querySelector(`.hotelListing .actionShowHotelWaifu[data-id="${selectedAnniemay}"]`)
+      let stats
+      if(load){
+        try{
+          let r = await fetch(`/json/am/${row.dataset.id}`)
+          stats = await r.json()
+        }catch(e){console.warn(e); stats = null}
+      }
+      showWaifuMenu({
+        name: row.dataset.name,
+        id: row.dataset.amid,
+        cardID: row.dataset.cardid,
+        xpText: "unloaded",
+        relXP: 0,
+        hpText: "unloaded",
+        relHP: 0,
+        ...stats,
+      }, true)
+    }
+    document.querySelector(`#hoteledWaifuMenu [data-action="feed"]`).addEventListener("click", ()=>{feed(false)})
+    document.querySelector(`#hoteledWaifuMenu [data-action="load+feed"]`).addEventListener("click", ()=>{feed(true)})
   }
 
   if(path==="/items" && settings.defaultRerollSet){

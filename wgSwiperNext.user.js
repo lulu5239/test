@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-10
+// @version      2026-02-11
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1013,6 +1013,29 @@
         }, wishedCards)
         menu.querySelector(".close-menu").click()
       })
+    })
+
+    document.querySelector(`#hoteledWaifuMenu .btnOpenStats`).insertAdjacentHTML("beforebegin", `<a href="#" class="btn font-14 shadow-l btn-full rounded-s font-600 btn-secondary text-center mb-2" data-action="feed">
+      <i class="fa fa-smile-beam"></i> Feed
+    </a>`)
+    document.querySelector(`#hoteledWaifuMenu [data-action="feed"]`).addEventListener("click", async ()=>{
+      let row = document.querySelector(`.hotelListing .showHotelWaifu[data-id="${selectedAnniemay}"]`)
+      let stats
+      if(false){
+        try{
+          let r = await fetch(`/json/am/${row.dataset.id}`)
+          stats = await r.json()
+        }catch(e){console.warn(e); stats = null}
+      }
+      showWaifuMenu({
+        name: row.dataset.name,
+        id: row.dataset.amid,
+        cardID: row.dataset.cardid,
+        xpText: stats?.xp ? stats.xp+" XP" : "unloaded",
+        relXP: stats?.xp ? stats.xp : 0,
+        hpText: stats?.hp ? stats.hp+" HP" : "unloaded",
+        relHP: stats?.hp ? stats.hp : 0,
+      }, true)
     })
   }
 

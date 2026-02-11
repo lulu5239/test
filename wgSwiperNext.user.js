@@ -1019,9 +1019,9 @@
       <i class="fa fa-smile-beam"></i> Feed
     </a>`)
     document.querySelector(`#hoteledWaifuMenu [data-action="feed"]`).addEventListener("click", async ()=>{
-      let row = document.querySelector(`.hotelListing .showHotelWaifu[data-id="${selectedAnniemay}"]`)
+      let row = document.querySelector(`.hotelListing .actionShowHotelWaifu[data-id="${selectedAnniemay}"]`)
       let stats
-      if(false){
+      if(true){
         try{
           let r = await fetch(`/json/am/${row.dataset.id}`)
           stats = await r.json()
@@ -1031,10 +1031,11 @@
         name: row.dataset.name,
         id: row.dataset.amid,
         cardID: row.dataset.cardid,
-        xpText: stats?.xp ? stats.xp+" XP" : "unloaded",
-        relXP: stats?.xp ? stats.xp : 0,
-        hpText: stats?.hp ? stats.hp+" HP" : "unloaded",
-        relHP: stats?.hp ? stats.hp : 0,
+        xpText: "unloaded",
+        relXP: 0,
+        hpText: "unloaded",
+        relHP: 0,
+        ...stats,
       }, true)
     })
   }

@@ -449,7 +449,13 @@
             GM_setValue("formations", formations)
             swiperNextButtons.querySelector(`div[data-formation="${Object.keys(formations).find(k=>(formations[k]===formation))}"]`).innerText = charisma
           }
-          if(gainXP){gainXP(xp)} // Needs to support auto-battle
+          if(gainXP){gainXP(xp)}
+        }else if(data.result.includes("... Outcome:")){
+          let words = data.result.split(" ")
+          let xpPos = words.findIndex(w=>w.slice(0, 1)==="+" && w.slice(-2)==="XP")
+          let xp = +words[xpPos].slice(1, -2).replace(/\,/g, "")
+          let name = words.slice(words.findIndex(w=>w==="Outcome:")+1, xpPos).join(" ")
+          if(gainXP){gainXP(xp, name)}
         }
         if(originalSuccessFn){return originalSuccessFn(data)}
       })

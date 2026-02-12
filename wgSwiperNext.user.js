@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-13
+// @version      2026-02-14
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -154,7 +154,7 @@
     if(settings.levelUpSlots && formation?.levelUpSlots?.length){
       let levelingUp = GM_getValue("levelingUpAnimus", [])
       for(let i in levelingUp){
-        await fetch('https://waifugame.com/am/'+levelingUp[i], {
+        await fetch('https://waifugame.com/am/'+levelingUp[i].id, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
@@ -162,7 +162,7 @@
           body: JSON.stringify({
             '_token': token,
             'action': 'swap',
-            'slot': formation.levelUpSlots[i].id
+            'slot': formation.levelUpSlots[i]
           })
         });
       }

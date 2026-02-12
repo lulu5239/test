@@ -281,7 +281,7 @@
       let levelIndicator = document.querySelector("#levelIndicator")
       gainXP = (xp, name)=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
-        let receiving = (name ? levelingUp.filter(am=>am.name===name) : name)
+        let receiving = (name ? levelingUp.filter(am=>am.name===name) : levelingUp)
         .filter(am=>am.xp < Math.pow(120, 3))
         for(let am of receiving){
           am.xp += Math.floor(xp / receiving.length)
@@ -294,8 +294,9 @@
           levelIndicator.querySelector("div").style.backgroundColor = "#f00"
         return}
         let level = Math.floor(Math.pow(lowest.xp, 1/3))
+        let levelXP = Math.pow(level, 3)
         levelIndicator.querySelector("span").innerText = "Level "+level
-        levelIndicator.querySelector("div").style.width = Math.floor((lowest.xp - Math.pow(level, 3)) / Math.pow(level+1, 3) * 100)+"%"
+        levelIndicator.querySelector("div").style.width = Math.floor((lowest.xp - levelXP) / (Math.pow(level+1, 3) - levelXP) * 100)+"%"
       }
       gainXP(0)
     }

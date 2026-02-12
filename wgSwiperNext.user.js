@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-12
+// @version      2026-02-13
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -152,7 +152,7 @@
     })
     let formation = formations[id.slice(2)]
     if(settings.levelUpSlots && formation?.levelUpSlots?.length){
-      let levelingUp = GM_getValue("levelingUp") || []
+      let levelingUp = GM_getValue("levelingUpAnimus", [])
       for(let i in levelingUp){
         await fetch('https://waifugame.com/am/'+levelingUp[i], {
           method: 'POST',
@@ -162,7 +162,7 @@
           body: JSON.stringify({
             '_token': token,
             'action': 'swap',
-            'slot': formation.levelUpSlots[i]
+            'slot': formation.levelUpSlots[i].id
           })
         });
       }
@@ -270,6 +270,34 @@
       if(settings.swiperVerticalButtons==="left"){
         page.style.marginLeft = "50px"
       }
+    }
+    let gainXP
+    if(settings.swiperShowLevel){
+      document.querySelector(`.tinder--buttons`).insertAdjacentHTML("beforeend",
+        `<div style="text-align: left; margin-bottom: -10px;" id="levelIndicator">
+          <span>This thing broke!</span>
+          <div style="position: relative; width: 50%; height: 3px; background-color: #f86; bottom: 0px; left: 0px"></div>
+        </div>`)
+      let levelIndicator = document.querySelector("#levelIndicator")
+      gainXP = (xp, name)=>{
+        let levelingUp = GM_getValue("levelingUpAnimus", [])
+        let receiving = (name ? levelingUp.filter(am=>am.name===name) : name)
+        .filter(am=>am.xp < Math.pow(120, 3))
+        for(let am of receiving){
+          am.xp += Math.floor(xp / receiving.length)
+        }
+        GM_setValue("levelingUpAnimus", levelingUp)
+        let lowest = receiving.reduce((p, am)=>!p || am.xp<p.xp ? am : p, null)
+        if(!lowest){
+          levelIndicator.querySelector("span").innerText = "Wasting XP"
+          levelIndicator.querySelector("div").style.width = "100%"
+          levelIndicator.querySelector("div").style.backgroundColor = "#f00"
+        return}
+        let level = Math.floor(Math.pow(lowest.xp, 1/3))
+        levelIndicator.querySelector("span").innerText = "Level "+level
+        levelIndicator.querySelector("div").style.width = Math.floor((lowest.xp - Math.pow(level, 3)) / Math.pow(level+1, 3) * 100)+"%"
+      }
+      gainXP(0)
     }
     let updateMainButton = ()=>{
       mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")
@@ -420,6 +448,7 @@
             GM_setValue("formations", formations)
             swiperNextButtons.querySelector(`div[data-formation="${Object.keys(formations).find(k=>(formations[k]===formation))}"]`).innerText = charisma
           }
+          if(gainXP){gainXP(xp)} // Needs to support auto-battle
         }
         if(originalSuccessFn){return originalSuccessFn(data)}
       })
@@ -711,8 +740,9 @@
             {value: "right", name: "vertically (right side)"},
             {value: "left", name: "vertically (left side)"},
           ])}<br>
+          ${settingCheckbox("swiperShowLevel", "Display Animu level <i>(only if vertical buttons)</i>")}
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
-          ${settingCheckbox("swapFlirtCrush", "Swap flirt and crush buttons")}<br>
+          ${settingCheckbox("swapFlirtCrush", "<b>Swap flirt and crush</b> buttons")}<br>
           On the cards page:<br>
           ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
           ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>
@@ -960,7 +990,12 @@
             let level = +card.querySelector(".levelBadge.badge").innerText.slice(3)
             if(level < 120){
               newLevelUpSlots.push(i)
-              levelingUp.push(card.dataset.amid)
+              levelingUp.push({
+                name: card.dataset.nameonly,
+                id: card.dataset.amid,
+                cardid: card.dataset.cardid,
+                xp: +card.dataset.absxp,
+              })
             }
           }
           for(let i of (data.levelUpSlots||[])){
@@ -969,7 +1004,7 @@
             }
           }
           data.levelUpSlots = newLevelUpSlots
-          GM_setValue("levelingUp", levelingUp)
+          GM_setValue("levelingUpAnimus", levelingUp)
         }else{delete data.levelUpSlots}
       }
     }

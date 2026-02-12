@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-12
+// @version      2026-02-13
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -152,7 +152,7 @@
     })
     let formation = formations[id.slice(2)]
     if(settings.levelUpSlots && formation?.levelUpSlots?.length){
-      let levelingUp = GM_getValue("levelingUp") || []
+      let levelingUp = GM_getValue("levelingUpAnimus", [])
       for(let i in levelingUp){
         await fetch('https://waifugame.com/am/'+levelingUp[i], {
           method: 'POST',
@@ -162,7 +162,7 @@
           body: JSON.stringify({
             '_token': token,
             'action': 'swap',
-            'slot': formation.levelUpSlots[i]
+            'slot': formation.levelUpSlots[i].id
           })
         });
       }
@@ -270,6 +270,35 @@
       if(settings.swiperVerticalButtons==="left"){
         page.style.marginLeft = "50px"
       }
+    }
+    let gainXP
+    if(settings.swiperShowLevel){
+      document.querySelector(`.tinder--buttons`).insertAdjacentHTML("beforeend",
+        `<div style="${settings.swiperVerticalButtons ? "text-align: left; margin-bottom: -10px;" : "position: fixed; top: 3px; left: 3px"}" id="levelIndicator">
+          <span style="padding: 3px">This thing broke!</span>
+          <div style="position: relative; width: 50%; height: 3px; background-color: #f86; bottom: 0px; left: 0px"></div>
+        </div>`)
+      let levelIndicator = document.querySelector("#levelIndicator")
+      gainXP = (xp, name)=>{
+        let levelingUp = GM_getValue("levelingUpAnimus", [])
+        let receiving = (name ? levelingUp.filter(am=>am.name===name) : levelingUp)
+        .filter(am=>am.xp < Math.pow(120, 3))
+        for(let am of receiving){
+          am.xp += Math.floor(xp / receiving.length)
+        }
+        GM_setValue("levelingUpAnimus", levelingUp)
+        let lowest = receiving.reduce((p, am)=>!p || am.xp<p.xp ? am : p, null)
+        if(!lowest){
+          levelIndicator.querySelector("span").innerText = "Wasting XP"
+          levelIndicator.querySelector("div").style.width = "100%"
+          levelIndicator.querySelector("div").style.backgroundColor = "#f00"
+        return}
+        let level = Math.floor(Math.pow(lowest.xp, 1/3))
+        let levelXP = Math.pow(level, 3)
+        levelIndicator.querySelector("span").innerText = "Level "+level
+        levelIndicator.querySelector("div").style.width = Math.floor((lowest.xp - levelXP) / (Math.pow(level+1, 3) - levelXP) * 100)+"%"
+      }
+      gainXP(0)
     }
     let updateMainButton = ()=>{
       mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")
@@ -420,6 +449,13 @@
             GM_setValue("formations", formations)
             swiperNextButtons.querySelector(`div[data-formation="${Object.keys(formations).find(k=>(formations[k]===formation))}"]`).innerText = charisma
           }
+          if(gainXP){gainXP(xp)}
+        }else if(data.result.includes("... Outcome:")){
+          let words = data.result.split(" ")
+          let xpPos = words.findIndex(w=>w.slice(0, 1)==="+" && w.slice(-2)==="XP")
+          let xp = +words[xpPos].slice(1, -2).replace(/\,/g, "")
+          let name = words.slice(words.findIndex(w=>w==="Outcome:")+1, xpPos).join(" ")
+          if(gainXP){gainXP(xp, name)}
         }
         if(originalSuccessFn){return originalSuccessFn(data)}
       })
@@ -702,20 +738,21 @@
         </div>
         <div data-page="visibility">
           For the destination buttons:<br>
-          ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
-          ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
-          ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
-          ${settingCheckbox("swiperAllButtonLines", "Always display the buttons for both destination and charisma selection")}<br>
+          ${settingCheckbox("disableOnSwiperPage", "<b>Remove</b> from swiper page")}<br>
+          ${settingCheckbox("biggerButtons", "Make <b>buttons bigger</b>")}<br>
+          ${settingCheckbox("transparentSwiperButtons", "<b>Transparent</b> background for action buttons")}<br>
+          ${settingCheckbox("swiperAllButtonLines", "Always display the buttons for <b>both destination and charisma</b> selection")}<br>
           Display all the buttons ${settingSelect("swiperVerticalButtons", [
             {value: "", name: "horizontally"},
             {value: "right", name: "vertically (right side)"},
             {value: "left", name: "vertically (left side)"},
           ])}<br>
+          ${settingCheckbox("swiperShowLevel", "Guess Animu <b>level</b>")}<br>
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
-          ${settingCheckbox("swapFlirtCrush", "Swap flirt and crush buttons")}<br>
+          ${settingCheckbox("swapFlirtCrush", "<b>Swap flirt and crush</b> buttons")}<br>
           On the cards page:<br>
-          ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
-          ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>
+          ${settingCheckbox("disableOnCardsPage", "<b>Remove</b> from cards page")}<br>
+          ${settingCheckbox("showTopSimps", "Add button to <b>load top simps</b>")}<br>
           If you want the list of cards (not far above these settings) to have a fixed size (meaning less scrolling):<br>
           ${settingSelect("cardsListFixedSize", [
             {value:"", name:"Variable size for cards list"},
@@ -960,7 +997,12 @@
             let level = +card.querySelector(".levelBadge.badge").innerText.slice(3)
             if(level < 120){
               newLevelUpSlots.push(i)
-              levelingUp.push(card.dataset.amid)
+              levelingUp.push({
+                name: card.dataset.nameonly,
+                id: card.dataset.amid,
+                cardid: card.dataset.cardid,
+                xp: +card.dataset.absxp,
+              })
             }
           }
           for(let i of (data.levelUpSlots||[])){
@@ -969,7 +1011,7 @@
             }
           }
           data.levelUpSlots = newLevelUpSlots
-          GM_setValue("levelingUp", levelingUp)
+          GM_setValue("levelingUpAnimus", levelingUp)
         }else{delete data.levelUpSlots}
       }
     }

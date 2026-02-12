@@ -274,8 +274,8 @@
     let gainXP
     if(settings.swiperShowLevel){
       document.querySelector(`.tinder--buttons`).insertAdjacentHTML("beforeend",
-        `<div style="text-align: left; margin-bottom: -10px;" id="levelIndicator">
-          <span>This thing broke!</span>
+        `<div style="${settings.swiperVerticalButtons ? "text-align: left; margin-bottom: -10px;" : "position: fixed; top: 3px; left: 3px"}" id="levelIndicator">
+          <span style="padding: 3px">This thing broke!</span>
           <div style="position: relative; width: 50%; height: 3px; background-color: #f86; bottom: 0px; left: 0px"></div>
         </div>`)
       let levelIndicator = document.querySelector("#levelIndicator")
@@ -732,21 +732,21 @@
         </div>
         <div data-page="visibility">
           For the destination buttons:<br>
-          ${settingCheckbox("disableOnSwiperPage", "Remove from swiper page")}<br>
-          ${settingCheckbox("biggerButtons", "Make buttons bigger")}<br>
-          ${settingCheckbox("transparentSwiperButtons", "Transparent background for action buttons")}<br>
-          ${settingCheckbox("swiperAllButtonLines", "Always display the buttons for both destination and charisma selection")}<br>
+          ${settingCheckbox("disableOnSwiperPage", "<b>Remove</b> from swiper page")}<br>
+          ${settingCheckbox("biggerButtons", "Make <b>buttons bigger</b>")}<br>
+          ${settingCheckbox("transparentSwiperButtons", "<b>Transparent</b> background for action buttons")}<br>
+          ${settingCheckbox("swiperAllButtonLines", "Always display the buttons for <b>both destination and charisma</b> selection")}<br>
           Display all the buttons ${settingSelect("swiperVerticalButtons", [
             {value: "", name: "horizontally"},
             {value: "right", name: "vertically (right side)"},
             {value: "left", name: "vertically (left side)"},
           ])}<br>
-          ${settingCheckbox("swiperShowLevel", "Display Animu level <i>(only if vertical buttons)</i>")}
+          ${settingCheckbox("swiperShowLevel", "Guess Animu <b>level</b>")}<br>
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
           ${settingCheckbox("swapFlirtCrush", "<b>Swap flirt and crush</b> buttons")}<br>
           On the cards page:<br>
-          ${settingCheckbox("disableOnCardsPage", "Remove from cards page")}<br>
-          ${settingCheckbox("showTopSimps", "Add button to load top simps")}<br>
+          ${settingCheckbox("disableOnCardsPage", "<b>Remove</b> from cards page")}<br>
+          ${settingCheckbox("showTopSimps", "Add button to <b>load top simps</b>")}<br>
           If you want the list of cards (not far above these settings) to have a fixed size (meaning less scrolling):<br>
           ${settingSelect("cardsListFixedSize", [
             {value:"", name:"Variable size for cards list"},

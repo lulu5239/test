@@ -219,7 +219,7 @@
     if(GM_getValue("autoBattle")){
       document.querySelector(".page-content .content.mt-5 table").insertAdjacentHTML("beforebegin",
         `<style>.autoBattleButton { background-color: #000; border: solid 2px #700 }</style>` +
-        `<div><label><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label> <label>until level <input type="number" min="1" max="120" value="${GM_getValue("objectiveLevel") || maximumLevel}"></label></div>`
+        `<div><label><input type="checkbox"${GM_getValue("autoBattle")==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label> <label>until level <input type="number" min="1" max="120" value="${GM_getValue("objectiveLevel") || maximumLevel}"></label></div>`
       )
       let box = document.querySelector(`.page-content .content.mt-5 label input[type="checkbox"]`)
       box.addEventListener("change", ()=>{

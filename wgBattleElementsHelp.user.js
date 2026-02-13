@@ -316,8 +316,8 @@
         winText = e.p.text
       continue}
       if(e.a!=="debug"){continue}
-      if(e.p.text.startsWith("DEBUG XP GAIN:")){ // Doesn't work?
-        for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
+      if(e.p.text.startsWith("DEBUG XP GAIN:")){
+        for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(",")){
           if(!party[c]){continue}
           party[c].receivingXP = true
         }

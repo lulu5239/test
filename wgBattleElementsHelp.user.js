@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-01-04
+// @version      2026-02-13
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -62,13 +62,7 @@
     }
   return}
   
-  let party = localStorage["y_WG-party"]
-  if(!party || party==="[object Object]"){
-    localStorage["y_WG-party"] = "{}"
-    party = {}
-  }else{
-    party = JSON.parse(party)
-  }
+  let party = GM_getValue("party", localStorage["y_WG-party"] ? JSON.parse(localStorage["y_WG-party"]) : {})
 
   if(typeof(showWaifuMenu)==="undefined"){return} // Not a normal page
   let originalShowWaifuMenu = showWaifuMenu
@@ -105,7 +99,7 @@
           for(let move of data.moves){
             move.pp = move.maxpp
           }
-          localStorage["y_WG-party"] = JSON.stringify(party)
+          GM_setValue("party", party)
           document.querySelector("a.close-menu").click()
         })
       })
@@ -146,7 +140,7 @@
         }
       }
     }
-    localStorage["y_WG-party"] = JSON.stringify(party)
+    GM_setValue("party", party)
   }
   window.battleHelpVars = battleHelpVars = {party}
   if(!path.startsWith("/battle")){return}
@@ -175,7 +169,7 @@
           move.pp = move.maxpp
         }
       }
-      localStorage["y_WG-party"] = JSON.stringify(party)
+      GM_setValue("party", party)
     }
     
     let list = []
@@ -209,27 +203,27 @@
         element,
         level: +card.parentElement.querySelector("span.bg-highlight").innerText.slice(3)
       })
-      if(localStorage["y_WG-autoBattle"]){
+      if(GM_getValue("autoBattle")){
         text.innerHTML += ` <button class="btn autoBattleButton">Auto</button>`
         text.querySelector(".autoBattleButton").addEventListener("click",()=>{
-          if(localStorage["y_WG-autoBattle"]!=="all"){
-            localStorage["y_WG-autoBattle"] = battleID
+          if(GM_getValue("autoBattle")!=="all"){
+            GM_setValue("autoBattle", battleID)
           }
           button.click()
         })
         text.style.display = null
       }
     }
-    localStorage["y_WG-battles"] = JSON.stringify(list)
+    GM_setValue("battles", list)
     document.querySelector("#partyView p.font-italic").innerText = "You can heal your Animus from this page."
-    if(localStorage["y_WG-autoBattle"]){
+    if(GM_getValue("autoBattle")){
       document.querySelector(".page-content .content.mt-5 table").insertAdjacentHTML("beforebegin",
         `<style>.autoBattleButton { background-color: #000; border: solid 2px #700 }</style>` +
         `<div><label><input type="checkbox"${localStorage["y_WG-autoBattle"]==="all" ? " checked" : ""}> Auto-battle all <i>(includes gym)</i></label> <label>until level <input type="number" min="1" max="120" value="${GM_getValue("objectiveLevel") || maximumLevel}"></label></div>`
       )
       let box = document.querySelector(`.page-content .content.mt-5 label input[type="checkbox"]`)
       box.addEventListener("change", ()=>{
-        localStorage["y_WG-autoBattle"] = box.checked ? "all" : true
+        GM_setValue("autoBattle",  box.checked ? "all" : true)
       })
       let level = document.querySelector(`.page-content .content.mt-5 label input[type="number"]`)
       level.addEventListener("change", ()=>{
@@ -255,8 +249,8 @@
     }
     party[card.id] = {...c}
   }
-  localStorage["y_WG-party"] = JSON.stringify(previousParty)
-  window.battleHelpVars.auto = localStorage["y_WG-autoBattle"]===battleID || localStorage["y_WG-autoBattle"]==="all"
+  GM_setValue("party", previousParty)
+  window.battleHelpVars.auto = [battleID, "all"].includes(GM_getValue("autoBattle"))
   window.battleHelpVars.objectiveLevel = GM_getValue("objectiveLevel") || maximumLevel
   
   let handleSwapParty = (cards=[])=>{
@@ -278,12 +272,12 @@
   playSequence = (...args)=>{
     for(let e of args[0]){
       if(e.a==="playerwin" && e.t==="player1"){
-        let battles = localStorage["y_WG-battles"] && JSON.parse(localStorage["y_WG-battles"])
+        let battles = GM_getValue("battles")
         if(!battles){continue}
         let i = battles.findIndex(b=>b.id===battleID)
         if(i>=0){
           battles.splice(i, 1)
-          localStorage["y_WG-battles"] = JSON.stringify(battles)
+          GM_setValue("battles", battles)
         }
         let lowest = Object.values(party).reduce((p,c)=>(c.level<p ? c.level : p), 999)
         battles.reverse()
@@ -292,11 +286,11 @@
         document.querySelector("#winner_block").insertAdjacentHTML("beforeend", `<button class="btn btn-secondary btn-block" id="btn_nextBattle"><i class="fas fa-sword"></i> Next ${window.battleHelpVars.auto ? "auto " : ""}battle<p style="margin-bottom:0px; color:#ccc; font-size:80%">${battle.element.slice(0,1).toUpperCase()+battle.element.slice(1)}, lv. ${battle.level}</p></button>`)
         document.querySelector("#btn_nextBattle").addEventListener("click", ()=>{
           if(window.battleHelpVars.auto){
-            localStorage["y_WG-autoBattle"] = battle.id
+            GM_setValue("autoBattle", battle.id)
           }
           document.location.href = "/battle/"+battle.id
         })
-        if(localStorage["y_WG-autoBattle"]==="all" && winText?.includes("<br") && (!window.battleHelpVars.objectiveLevel || lowest<window.battleHelpVars.objectiveLevel)){
+        if(GM_getValue("autoBattle")==="all" && winText?.includes("<br") && (!window.battleHelpVars.objectiveLevel || lowest<window.battleHelpVars.objectiveLevel)){
           let cancel
           setTimeout(()=>{
             if(cancel){return}
@@ -318,7 +312,7 @@
         winText = e.p.text
       continue}
       if(e.a!=="debug"){continue}
-      if(e.p.text.startsWith("DEBUG XP GAIN:")){
+      if(e.p.text.startsWith("DEBUG XP GAIN:")){ // Doesn't work?
         for(let c of e.p.text.slice(e.p.text.indexOf("[")+1, e.p.text.indexOf("]")).split(";")){
           if(!party[c]){continue}
           party[c].receivingXP = true
@@ -340,7 +334,7 @@
           previousParty[stats.id].stats = stats.stats
           previousParty[stats.id].level = stats.level
           previousParty[stats.id].moves = stats.moves
-          localStorage["y_WG-party"] = JSON.stringify(previousParty)
+          GM_setValue("party", previousParty)
         }
         if(Object.keys(fullStats).length===2){
           showInventory({
@@ -352,18 +346,18 @@
       }
     }
     setTimeout(async ()=>{
-      if(fullStats.p2?.card.shard_sponsor_user_id==403880 && !localStorage["y_WG-autoBattle"] && !document.querySelector("#unlockAutoBattle")){
+      if(fullStats.p2?.card.shard_sponsor_user_id==403880 && !GM_getValue("autoBattle") && !document.querySelector("#unlockAutoBattle")){
         narate("Oh, you are battling against one of <span>my developer's cards</span>;<br>I <i>(the user-script)</i> don't want to see that...<br>Please do it <span>fast</span>!")
         document.querySelector("#battle_view_player").insertAdjacentHTML("afterbegin", `<div style="width:100%; text-align:center; overflow:hidden; padding:10px;"><button id="unlockAutoBattle" class="btn" style="margin-top:-150px; background-color:#000; filter:drop-shadow(0 0 10px #ff0); display:inline-flex; align-items:center">Unlock auto-battle</button></div>`)
         setTimeout(()=>{
           let button = document.querySelector("#unlockAutoBattle")
           button.addEventListener("click", ()=>{
-            if(localStorage["y_WG-autoBattle"]){
+            if(GM_getValue("autoBattle")){
               button.style.marginTop = "-150px"
               window.battleHelpVars.auto = true
               showSuccessToast("Use a move to start the auto-battle.")
             }else{
-              localStorage["y_WG-autoBattle"] = true
+              GM_setValue("autoBattle", true)
               button.innerText = "Auto-battle"
               button.style.filter = "drop-shadow(0 0 10px #f0f)"
               showSuccessToast("Unlocked auto-battle!")
@@ -401,7 +395,7 @@
       if(args[0].output){
         // Sequence hasn't played yet, fullStats is outdated
         previousParty[currentCard.id].moves = fullStats.p1.moves = currentCard.moves = args[0].output.move_data
-        localStorage["y_WG-party"] = JSON.stringify(previousParty)
+        GM_setValue("party", previousParty)
       }
       if(!fullStats.p1.element && fullStats.p1.card?.element){fullStats.p1.element=fullStats.p1.card.element.toLowerCase()}
       let noPP = true

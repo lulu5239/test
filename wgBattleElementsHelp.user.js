@@ -294,11 +294,11 @@
           }
           document.location.href = "/battle/"+battle.id
         })
-        if(GM_getValue("autoBattle")==="all" && winText?.includes("<br") && (!window.battleHelpVars.objectiveLevel || lowest<window.battleHelpVars.objectiveLevel)){
+        if(GM_getValue("autoBattle")==="all" && winText?.includes("<br")){
           let cancel
           setTimeout(()=>{
             if(cancel){return}
-            document.location.href = "/battle/"+battle.id
+            document.location.href = !window.battleHelpVars.objectiveLevel || lowest<window.battleHelpVars.objectiveLevel ? "/battle/"+battle.id : "/battle"
           }, 2500 + Math.random())
           for(let e of document.querySelectorAll("#winner_block a, #winner_block button")){
             e.addEventListener("click", ()=>{cancel=true})

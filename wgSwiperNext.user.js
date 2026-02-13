@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-14
+// @version      2026-02-15
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -452,6 +452,8 @@
           if(gainXP){gainXP(xp)}
         }else if(data.result.includes("... Outcome:")){
           let words = data.result.split(" ")
+          let levelUp = words.findIndex(w=>w==="Lv.UP")
+          if(levelUp >= 0){words.splice(levelUp, 2)}
           let xpPos = words.findIndex(w=>w.slice(0, 1)==="+" && w.slice(-2)==="XP")
           let xp = +words[xpPos].slice(1, -2).replace(/\,/g, "")
           let name = words.slice(words.findIndex(w=>w==="Outcome:")+1, xpPos).join(" ")

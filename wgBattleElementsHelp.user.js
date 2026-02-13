@@ -374,7 +374,7 @@
         if(busy){await new Promise(ok=>setTimeout(ok, 500))}else{break}
       }
       if(busy){return}
-      window.scrollTo(0, 185)
+      window.scrollTo(0, window.scrollY + document.querySelector("#battle_view_opponent .hpBar").getBoundingClientRect().y - 55)
       if(!battleHelpVars.auto || document.querySelector("#action_block").style.display==="none"){return}
       if(document.querySelector("#swapForXPoption").dataset.card && lastSequenceData.output.foes.alive <= 2){
         document.querySelector("#btn_swapForXP").click()

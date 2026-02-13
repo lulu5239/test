@@ -49,7 +49,7 @@
       }
     }
   });
-  observer.observe(document, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: false });
   await p
 
   if(path.startsWith("/profile/") && !document.querySelector("#aboutMeEditor")){
@@ -172,6 +172,10 @@
       GM_setValue("party", party)
     }
     
+    if(localStorage["y_WG-autoBattle"]){
+      GM_setValue("autoBattle", localStorage["y_WG-autoBattle"])
+      delete localStorage["y_WG-autoBattle"]
+    }
     let list = []
     for(let card of document.querySelectorAll("img.battle-card")){
       let element = card.parentElement.querySelector("p").innerText.split(", ").slice(-1)[0].toLowerCase()

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-15
+// @version      2026-02-18
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -127,6 +127,10 @@
 
   if(settings.lighterTextColor){
     document.querySelector("#page").style.color = "#aaa"
+  }
+
+  if(areYouSure){
+    Array.from(document.querySelectorAll(`#areYouSure .content a[href="#"]`)).forEach(a=>a.href = "javascript:void 0")
   }
 
   if(path==="/festival"){

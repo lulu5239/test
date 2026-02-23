@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-15
+// @version      2026-02-23
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -127,6 +127,10 @@
 
   if(settings.lighterTextColor){
     document.querySelector("#page").style.color = "#aaa"
+  }
+
+  if(areYouSure){
+    Array.from(document.querySelectorAll(`a[href="#"]`)).forEach(a=>a.href = "javascript:void 0")
   }
 
   if(path==="/festival"){
@@ -1113,9 +1117,10 @@
         best[name][flavor] = storableItem(item)
       }
     }
-    let gift = Array.from(document.querySelectorAll(`.actionShowItemSheet[data-type="gift"]`)).reduce((p, item)=>!p || +item.dataset.count>+p.dataset.count ? item : p, null)
+    let presents = {"151": "present5000", "150": "present10000", "149": "present20000", "161": "candy"}
+    let gift = Array.from(document.querySelectorAll(`.actionShowItemSheet[data-type="gift"]`)).reduce((p, item)=>presents[item.dataset.iid] ? p : !p || +item.dataset.count>+p.dataset.count ? item : p, null)
     if(gift){best.gift = storableItem(gift)}
-    for(let e of Object.entries({"151": "present5000", "150": "present10000", "149": "present20000", "161": "candy"})){
+    for(let e of Object.entries(presents)){
       let item = getItem(e[0])
       if(!item){continue}
       best[e[1]] = storableItem(item)

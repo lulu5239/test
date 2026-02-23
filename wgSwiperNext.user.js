@@ -130,7 +130,7 @@
   }
 
   if(areYouSure){
-    Array.from(document.querySelectorAll(`#areYouSure .content a[href="#"]`)).forEach(a=>a.href = "javascript:void 0")
+    Array.from(document.querySelectorAll(`a[href="#"]`)).forEach(a=>a.href = "javascript:void 0")
   }
 
   if(path==="/festival"){

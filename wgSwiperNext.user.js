@@ -120,8 +120,8 @@
     if(e){
       e.dataset.absxp = args[0].currentXP
       if(path==="/battle"){
-        let center = e.parentElement.querySelector("center")
-        center.innerHTML = [...center.innerHTML.split("\n").slice(0, 2), args[0].relativeHP + " %"].join("\n")
+        let center = e.querySelector("center")
+        center.innerHTML = [...center.innerHTML.split("\n").slice(0, 2), args[0].relativeHP + "% HP"].join("\n")
       }
     }
     if(!settings.manualRerollOnly){return originalGive(...args)}
@@ -431,7 +431,7 @@
       }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
-      let nextAction = nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id])
+      let nextAction = nextCardData?.card_id===card.card_id ? action : nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id])
       if(!nextCard){
         noNextCard = true
       }else if(nextAction){
@@ -451,7 +451,7 @@
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
         let gotCard = data.result.includes(" Card (\u2116 ")
-        if(gotCard && action!==1 || settings.keepActions){
+        if(settings.keepActions || gotCard && action!==1){
           cardActions[card.card_id] = action
           GM_setValue("cardActions", cardActions)
         }

@@ -116,8 +116,13 @@
       receiving.xp = args[0].currentXP
       GM_setValue("levelingUpAnimus", levelingUp)
     }
-    if(path==="/battle"){
-      //
+    let e = document.querySelector(`[data-amid="${selectedAnniemay}"]`) || document.querySelector(`[data-anniemay="${selectedAnniemay}"]`)
+    if(e){
+      e.dataset.absxp = args[0].currentXP
+      if(path==="/battle"){
+        let center = e.parentElement.querySelector("center")
+        center.innerHTML = [...center.innerHTML.split("\n").slice(0, 2), args[0].hpAbs].join("\n")
+      }
     }
     if(!settings.manualRerollOnly){return originalGive(...args)}
     let p = document.querySelector("#waifuFeed")

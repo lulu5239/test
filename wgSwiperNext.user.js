@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-23
+// @version      2026-02-25
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -107,17 +107,27 @@
       if(settings.manualRerollOnly && !args[0] && document.querySelector(".giftableItem")){return}
       return originalReroll(...args)
     }
-    let originalGive = giveItemHandler
-    giveItemHandler = (...args)=>{
-      let p = document.querySelector("#waifuFeed")
-      p.id = "originalWaifuFeed"
-      let thing = document.querySelector(".text-justify.opacity-30.px-4.font-9.mt-4") || document.querySelector(".replaceGroupName")
-      thing.id = "waifuFeed"
-      let r = originalGive(...args)
-      thing.removeAttribute("id")
-      p.id = "waifuFeed"
-      return r
+  }
+  let originalGive = giveItemHandler
+  giveItemHandler = (...args)=>{
+    let levelingUp = GM_getValue("levelingUpAnimus", [])
+    let receiving = levelingUp.find(am=>am.id==selectedAnniemay)
+    if(receiving){
+      receiving.xp = args[0].currentXP
+      GM_setValue("levelingUpAnimus", levelingUp)
     }
+    if(path==="/battle"){
+      //
+    }
+    if(!settings.manualRerollOnly){return originalGive(...args)}
+    let p = document.querySelector("#waifuFeed")
+    p.id = "originalWaifuFeed"
+    let thing = document.querySelector(".text-justify.opacity-30.px-4.font-9.mt-4") || document.querySelector("#subscriberPage h1.color-white.font-italic.font-22") || document.querySelector(".replaceGroupName")
+    thing.id = "waifuFeed"
+    let r = originalGive(...args)
+    thing.removeAttribute("id")
+    p.id = "waifuFeed"
+    return r
   }
 
   navigator.serviceWorker.originalRegister = navigator.serviceWorker.register

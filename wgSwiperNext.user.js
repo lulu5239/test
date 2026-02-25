@@ -116,12 +116,12 @@
       receiving.xp = args[0].currentXP
       GM_setValue("levelingUpAnimus", levelingUp)
     }
-    let e = document.querySelector(`[data-amid="${selectedAnniemay}"]`) || document.querySelector(`[data-anniemay="${selectedAnniemay}"]`)
+    let e = document.querySelector(`#page .page-content [data-amid="${selectedAnniemay}"]`) || document.querySelector(`#page .page-content [data-anniemay="${selectedAnniemay}"]`)
     if(e){
       e.dataset.absxp = args[0].currentXP
       if(path==="/battle"){
         let center = e.parentElement.querySelector("center")
-        center.innerHTML = [...center.innerHTML.split("\n").slice(0, 2), args[0].hpAbs].join("\n")
+        center.innerHTML = [...center.innerHTML.split("\n").slice(0, 2), args[0].relativeHP + " %"].join("\n")
       }
     }
     if(!settings.manualRerollOnly){return originalGive(...args)}

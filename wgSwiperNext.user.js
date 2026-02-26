@@ -429,6 +429,10 @@
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
       }
+      if(settings.keepActions){
+        cardActions[card.card_id] = action
+        GM_setValue("cardActions", cardActions)
+      }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
       let nextAction = nextCardData?.card_id===card.card_id ? action : nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id])
@@ -451,7 +455,7 @@
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
         let gotCard = data.result.includes(" Card (\u2116 ")
-        if(settings.keepActions || gotCard && action!==1){
+        if(!settings.keepActions && gotCard && action!==1){
           cardActions[card.card_id] = action
           GM_setValue("cardActions", cardActions)
         }

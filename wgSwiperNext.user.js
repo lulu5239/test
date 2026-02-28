@@ -431,7 +431,7 @@
       }
       if(settings.keepActions){
         cardActions[card.card_id] = action
-        GM_setValue("cardActions", cardActions)
+        setTimeout(()=>GM_setValue("cardActions", cardActions), 0)
       }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")

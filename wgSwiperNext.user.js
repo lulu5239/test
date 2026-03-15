@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-23
+// @version      2026-03-15
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -85,8 +85,8 @@
               best.present10000,
               best.present20000,
               best.candy,
-              best.snack?.[flavor] || Object.values(best.snack)[0],
-              best.meal?.[flavor] || Object.values(best.meal)[0],
+              selectedAnimu.xpText!=="Max Level!" && best.snack?.[flavor] || Object.values(best.snack).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
+              selectedAnimu.xpText!=="Max Level!" && best.meal?.[flavor] || Object.values(best.meal).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
               best.gift,
             ].map((item, i)=>{if(item){item.i = i}; return item}).filter(Boolean)
 
@@ -107,17 +107,32 @@
       if(settings.manualRerollOnly && !args[0] && document.querySelector(".giftableItem")){return}
       return originalReroll(...args)
     }
-    let originalGive = giveItemHandler
-    giveItemHandler = (...args)=>{
-      let p = document.querySelector("#waifuFeed")
-      p.id = "originalWaifuFeed"
-      let thing = document.querySelector(".text-justify.opacity-30.px-4.font-9.mt-4") || document.querySelector(".replaceGroupName")
-      thing.id = "waifuFeed"
-      let r = originalGive(...args)
-      thing.removeAttribute("id")
-      p.id = "waifuFeed"
-      return r
+  }
+  let originalGive = giveItemHandler
+  giveItemHandler = (...args)=>{
+    let levelingUp = GM_getValue("levelingUpAnimus", [])
+    let receiving = levelingUp.find(am=>am.id==selectedAnniemay)
+    if(receiving){
+      receiving.xp = args[0].currentXP
+      GM_setValue("levelingUpAnimus", levelingUp)
     }
+    let e = document.querySelector(`#page .page-content [data-amid="${selectedAnniemay}"]`) || document.querySelector(`#page .page-content [data-anniemay="${selectedAnniemay}"]`)
+    if(e){
+      e.dataset.absxp = args[0].currentXP
+      if(path==="/battle"){
+        let center = e.querySelector("center")
+        center.innerHTML = [...center.innerHTML.split("\n").slice(0, 2), args[0].relativeHP + "% HP"].join("\n")
+      }
+    }
+    if(!settings.manualRerollOnly){return originalGive(...args)}
+    let p = document.querySelector("#waifuFeed")
+    p.id = "originalWaifuFeed"
+    let thing = document.querySelector(".text-justify.opacity-30.px-4.font-9.mt-4") || document.querySelector("#subscriberPage h1.color-white.font-italic.font-22") || document.querySelector(".replaceGroupName")
+    thing.id = "waifuFeed"
+    let r = originalGive(...args)
+    thing.removeAttribute("id")
+    p.id = "waifuFeed"
+    return r
   }
 
   navigator.serviceWorker.originalRegister = navigator.serviceWorker.register
@@ -414,9 +429,13 @@
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
       }
+      if(settings.keepActions){
+        cardActions[card.card_id] = action
+        setTimeout(()=>GM_setValue("cardActions", cardActions), 0)
+      }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
-      let nextAction = nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id])
+      let nextAction = nextCardData?.card_id===card.card_id ? action : nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id])
       if(!nextCard){
         noNextCard = true
       }else if(nextAction){
@@ -436,7 +455,7 @@
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
         let gotCard = data.result.includes(" Card (\u2116 ")
-        if(gotCard && action!==1 || settings.keepActions){
+        if(!settings.keepActions && gotCard && action!==1){
           cardActions[card.card_id] = action
           GM_setValue("cardActions", cardActions)
         }

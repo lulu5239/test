@@ -85,8 +85,8 @@
               best.present10000,
               best.present20000,
               best.candy,
-              best.snack?.[flavor] || Object.values(best.snack)[0],
-              best.meal?.[flavor] || Object.values(best.meal)[0],
+              selectedAnimu.xpText!=="Max Level!" && best.snack?.[flavor] || Object.values(best.snack).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
+              selectedAnimu.xpText!=="Max Level!" && best.meal?.[flavor] || Object.values(best.meal).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
               best.gift,
             ].map((item, i)=>{if(item){item.i = i}; return item}).filter(Boolean)
 

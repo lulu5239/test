@@ -417,11 +417,11 @@
             ( // Player attack with this the move
               fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] // Attack statistic in use
               // Element modifier (calculated later)
-              * 1 // Trait modifier (soon)
+              * (["lonely", "adamant", "naughty", "brave"].includes(fullStats.p1.nature) ? 1.1 : ["bold", "modest", "calm", "timid"].includes(fullStats.p1.nature) ? 0.9 : 1) // Nature modifier
             ) / ( // Opponent defense
               fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] // Defense statistic in use
               // Element modifier (calculated later)
-              * 1 // Trait modifier (soon)
+              * (["bold", "impish", "lax", "relaxed"].includes(fullStats.p2.nature) ? 1.1 : ["lonely", "mild", "gentle", "hasty"].includes(fullStats.p2.nature) ? 0.9 : 1) // Nature modifier
             )
             )
           * ([null, "><", "<>"].includes(effect) ? 1 : effect.startsWith(">>") ? 4 : effect.startsWith("<<") ? 1/4 : effect===">" ? 2 : effect==="<" ? 1/2 : 1) // Element modifier
@@ -510,7 +510,7 @@
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
   actionMenu.querySelector("#btn_bestMove").addEventListener("click", ()=>{
-    if(!currentCard.stats){return document.location.reload()}
+    if(!currentCard.stats || !currentCard.nature){return document.location.reload()}
     let best; let canEnd
     for(let move of currentCard.moves){
       if(!move.pp){continue}

@@ -426,7 +426,7 @@
             )
           * ([null, "><", "<>"].includes(effect) ? 1 : effect.startsWith(">>") ? 4 : effect.startsWith("<<") ? 1/4 : effect===">" ? 2 : effect==="<" ? 1/2 : 1) // Element modifier
           * (move.elemental_type===fullStats.p1.element || move.elemental_type==="normal" ? 1.2 : 1) // Moves are more efficient with their element match the Animu element
-          * 0.52 // Not sure why
+          * 0.50 // Not sure why
       }
       if(noPP){currentCard.noPP = true}
     }

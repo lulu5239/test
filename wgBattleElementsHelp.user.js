@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-13
+// @version      2026-03-15
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -145,7 +145,8 @@
   window.battleHelpVars = battleHelpVars = {party}
   if(!path.startsWith("/battle")){return}
   
-  var advantages = `normal >< normal;fight > normal;light < normal;wind >> fight;bug <> fight;tech > fight;dark < fight;light < fight;fight << wind;earth <> wind;bug << wind;grass << wind;electric >> wind;ice > wind;fight < poison;poison <> poison;earth >> poison;bug < poison;blood < poison;psychic > poison;dark > poison;light >< poison;normal < earth;wind <> earth;poison <<< earth;metal >< earth;grass >> earth;fire <<< earth;water > earth;electric <<< earth;ice > earth;music < earth;normal > bug;fight <> bug;wind >>> bug;earth < bug;tech << bug;grass << bug;fire >>> bug;ice > bug;normal < metal;fight > metal;wind < metal;poison < metal;earth >< metal;bug < metal;metal <> metal;grass <<< metal;fire >> metal;water > metal;electric >> metal;psychic < metal;ice <<< metal;music > metal;tech > blood;grass > blood;fire > blood;water << blood;normal > tech;wind < tech;bug >>> tech;tech >< tech;fire < tech;water >>> tech;electric > tech;psychic > tech;ice < tech;music << tech;wind >> grass;poison > grass;earth << grass;bug >> grass;metal >> grass;tech < grass;grass <> grass;fire >> grass;electric < grass;ice > grass;earth >> fire;bug << fire;metal << fire;grass << fire;fire <> fire;water >> fire;ice << fire;blood >> water;tech << water;grass > water;water <> water;fire << water;electric > water;ice <> water;wind << electric;earth >> electric;metal << electric;electric <> electric;fight < psychic;bug > psychic;blood > psychic;psychic <> psychic;dark >> psychic;light > psychic;fight > ice;metal >> ice;fire >> ice;water <> ice;ice <> ice;music < ice;tech >> music;electric < music;normal < dark;psychic <<< dark;music > dark;dark <> dark;light >< dark;poison >< light;blood < light;dark >< light;light <> light`.split(";").map(e=>e.split(" "))
+  var advantages = `normal >< normal;fight > normal;light < normal;wind >> fight;bug <> fight;tech > fight;dark < fight;light < fight;fight << wind;earth <> wind;bug << wind;grass << wind;electric >> wind;ice > wind;fight < poison;poison <> poison;earth >> poison;bug < poison;blood < poison;psychic > poison;dark > poison;light >< poison;normal < earth;wind <> earth;poison <<< earth;metal >< earth;grass >> earth;fire <<< earth;water > earth;electric <<< earth;ice > earth;music < earth;normal > bug;fight <> bug;wind >>> bug;earth < bug;tech << bug;grass << bug;fire >>> bug;ice > bug;normal < metal;fight > metal;wind < metal;poison < metal;earth >< metal;bug < metal;metal <> metal;grass <<< metal;fire >> metal;water > metal;electric >> metal;psychic < metal;ice <<< metal;music > metal;tech > blood;grass > blood;fire > blood;water << blood;normal > tech;wind < tech;bug >>> tech;tech >< tech;fire < tech;water >>> tech;electric > tech;psychic > tech;ice < tech;music << tech;wind >> grass;poison > grass;earth << grass;bug >> grass;metal >> grass;tech < grass;grass <> grass;fire >> grass;electric < grass;ice > grass;earth >> fire;bug << fire;metal << fire;grass << fire;fire <> fire;water >> fire;ice << fire;blood >> water;tech << water;grass > water;water <> water;fire << water;electric > water;ice <> water;wind << electric;earth >> electric;metal << electric;electric <> electric;fight < psychic;bug > psychic;blood > psychic;psychic <> psychic;dark >> psychic;light > psychic;fight > ice;metal >> ice;fire >> ice;water <> ice;ice <> ice;music < ice;tech >> music;electric < music;normal < dark;psychic <<< dark;music > dark;dark <> dark;light >< dark;poison >< light;blood < light;dark >< light;light <> light`
+    .split(";").map(e=>e.split(" "))
   var advantagesSymbols = {
     ">": {text:"More damage", good:1},
     ">>": {text:"Good", good:2},
@@ -406,8 +407,23 @@
       for(let m in fullStats.p1.moves){
         let move = fullStats.p1.moves[m] = {...fullStats.p1.moves[m], ...args[0].output.moves_metadata[fullStats.p1.moves[m].m]}
         if(move.pp>0){noPP=false}
-        let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1]
-        move.estimatedDamage = move.power * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] * (move.elemental_type===fullStats.p1.element || move.elemental_type==="normal" ? 1.2 : 1) * (!effect ? 1 : effect.startsWith(">") ? 2 : 0.5) *0.52
+        let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1] || null
+        move.estimatedDamage =
+          move.power // Move power
+          * (
+            ( // Player attack with this the move
+              fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] // Attack statistic in use
+              // Element modifier (calculated later)
+              * 1 // Trait modifier (soon)
+            ) / ( // Opponent defense
+              fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] // Defense statistic in use
+              // Element modifier (calculated later)
+              * 1 // Trait modifier (soon)
+            )
+            )
+          * ([null, "><", "<>"].includes(effect) ? 1 : effect.startsWith(">>") ? 4 : effect.startsWith("<<") ? 1/4 : effect===">" ? 2 : effect==="<" ? 1/2 : 1) // Element modifier
+          * (move.elemental_type===fullStats.p1.element || move.elemental_type==="normal" ? 1.2 : 1) // Moves are more efficient with their element match the Animu element
+          * 0.52 // Not sure why
       }
       if(noPP){currentCard.noPP = true}
     }

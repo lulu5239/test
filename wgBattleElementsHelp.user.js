@@ -336,7 +336,7 @@
           currentCard = party[stats.id]
           currentCard.receivingXP = true
           currentCard.stats = stats.stats
-          currentCard.nature = stats.natuee
+          currentCard.nature = stats.nature
           // Store stats in party
           previousParty[stats.id].stats = stats.stats
           previousParty[stats.id].level = stats.level

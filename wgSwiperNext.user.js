@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-03-15
+// @version      2026-03-16
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -79,14 +79,15 @@
             
             let $p = $('#waifuFeed')
             let htmlBag = ""
+            let max = ["Max Level!", "Lv. 120"].includes(selectedAnimu?.xpText)
             
             let items = [
               best.present5000,
               best.present10000,
               best.present20000,
               best.candy,
-              selectedAnimu.xpText!=="Max Level!" && best.snack?.[flavor] || Object.values(best.snack).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
-              selectedAnimu.xpText!=="Max Level!" && best.meal?.[flavor] || Object.values(best.meal).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
+              !max && best.snack?.[flavor] || Object.values(best.snack).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
+              !max && best.meal?.[flavor] || Object.values(best.meal).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
               best.gift,
             ].map((item, i)=>{if(item){item.i = i}; return item}).filter(Boolean)
 

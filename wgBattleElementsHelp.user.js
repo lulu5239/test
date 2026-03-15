@@ -335,10 +335,12 @@
           currentCard = party[stats.id]
           currentCard.receivingXP = true
           currentCard.stats = stats.stats
+          currentCard.nature = stats.card.nature.toLowerCase()
           // Store stats in party
           previousParty[stats.id].stats = stats.stats
           previousParty[stats.id].level = stats.level
           previousParty[stats.id].moves = stats.moves
+          previousParty[stats.id].nature = currentCard.nature
           GM_setValue("party", previousParty)
         }
         if(Object.keys(fullStats).length===2){

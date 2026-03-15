@@ -331,16 +331,17 @@
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }
+        stats.nature = stats.card.nature.toLowerCase()
         if(party[stats.id]){
           currentCard = party[stats.id]
           currentCard.receivingXP = true
           currentCard.stats = stats.stats
-          currentCard.nature = stats.card.nature.toLowerCase()
+          currentCard.nature = stats.natuee
           // Store stats in party
           previousParty[stats.id].stats = stats.stats
           previousParty[stats.id].level = stats.level
           previousParty[stats.id].moves = stats.moves
-          previousParty[stats.id].nature = currentCard.nature
+          previousParty[stats.id].nature = stats.nature
           GM_setValue("party", previousParty)
         }
         if(Object.keys(fullStats).length===2){

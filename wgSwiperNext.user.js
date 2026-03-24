@@ -61,49 +61,53 @@
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     let rerolled = false
+    let setRerollItems = (card)=>{
+      let flavor
+      if(card){
+        flavor = {
+          spicy: ["Hardy", "Lonely", "Adamant", "Naughty", "Brave"],
+          sour: ["Bold", "Docile", "Impish", "Lax", "Relaxed"],
+          greasy: ["Modest", "Mild", "Bashful", "Rash", "Quiet"],
+          bitter: ["Calm", "Gentle", "Careful", "Quirky", "Sassy"],
+          sweet: ["Timid", "Hasty", "Jolly", "Naive", "Serious"],
+        }
+        flavor = Object.entries(flavor).find(e=>e[1].includes(card.Nature))?.[0]
+      }
+      
+      let $p = $('#waifuFeed')
+      let htmlBag = ""
+      let max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
+
+      let order = max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
+      let items = order.map(item=>({
+        name: item,
+        color: item==="snack" ? "gray" : item==="meal" ? "green" : item==="gift" ? "blue" : item.startsWith("present") ? "magenta" : item==="candy" ? "yellow" : null,
+      }))
+      items.forEach((item, i)=>{
+        item.item = item.name==="snack" || item.name==="meal" ? !max && flavor && best[item.name]?.[flavor] || Object.values(best[item.name] || []).reduce((p, e)=>!p || e.count > p.count ? e : p, null) : best[item.name]
+        item.i = i
+      })
+      items = items.filter(item=>item.item)
+
+      for(let item of items){
+        let bgClass = "bg-"+item.color+"-dark";
+        htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.item.id + '" href="#" '
+          + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
+          + '<img src="' + item.item.icon + '" />'
+          + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
+          + item.item.name + '</p></div>';
+      }
+      
+      $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
+      $p.prepend(htmlBag);
+    }
     ReRollGifts = (...args)=>{
       if(args[0]){rerolled = true}
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
         if(best){
-          fetchCardData(selectedAnimu.cardID).then(card=>{
-            if(!card){return}
-            let flavor = {
-              spicy: ["Hardy", "Lonely", "Adamant", "Naughty", "Brave"],
-              sour: ["Bold", "Docile", "Impish", "Lax", "Relaxed"],
-              greasy: ["Modest", "Mild", "Bashful", "Rash", "Quiet"],
-              bitter: ["Calm", "Gentle", "Careful", "Quirky", "Sassy"],
-              sweet: ["Timid", "Hasty", "Jolly", "Naive", "Serious"],
-            }
-            flavor = Object.entries(flavor).find(e=>e[1].includes(card.Nature))?.[0]
-            
-            let $p = $('#waifuFeed')
-            let htmlBag = ""
-            let max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
-
-            let order = max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
-            let items = order.map(item=>({
-              name: item,
-              color: item==="snack" ? "gray" : item==="meal" ? "green" : item==="gift" ? "blue" : item.startsWith("present") ? "magenta" : item==="candy" ? "yellow" : null,
-            }))
-            items.forEach((item, i)=>{
-              item.item = item.name==="snack" || item.name==="meal" ? !max && best[item.name]?.[flavor] || Object.values(best[item.name] || []).reduce((p, e)=>!p || e.count > p.count ? e : p, null) : best[item.name]
-              item.i = i
-            })
-            items = items.filter(item=>item.item)
-
-            for(let item of items){
-              let bgClass = "bg-"+item.color+"-dark";
-              htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.item.id + '" href="#" '
-                + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
-                + '<img src="' + item.item.icon + '" />'
-                + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
-                + item.item.name + '</p></div>';
-            }
-            
-            $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
-            $p.prepend(htmlBag);
-          })
+          setRerollItems()
+          fetchCardData(selectedAnimu.cardID).then(setRerollItems)
         return}
       }
       if(settings.manualRerollOnly && !args[0] && document.querySelector(".giftableItem")){return}

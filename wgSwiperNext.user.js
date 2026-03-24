@@ -79,7 +79,7 @@
             
             let $p = $('#waifuFeed')
             let htmlBag = ""
-            let max = ["Max Level!", "Lv. 120"].includes(selectedAnimu?.xpText)
+            let max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
 
             let order = max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
             let items = order.map(item=>({
@@ -87,7 +87,7 @@
               color: item==="snack" ? "gray" : item==="meal" ? "green" : item==="gift" ? "blue" : item.startsWith("present") ? "magenta" : item==="candy" ? "yellow" : null,
             }))
             items.forEach((item, i)=>{
-              item.item = item.name==="snack" || item.name==="meal" ? !max && best[item.name]?.[flavor] || Object.values(best[item.name] || []).reduce((p, e)=>!p || e.count > p.count ? e : p, null) : best[item.name])
+              item.item = item.name==="snack" || item.name==="meal" ? !max && best[item.name]?.[flavor] || Object.values(best[item.name] || []).reduce((p, e)=>!p || e.count > p.count ? e : p, null) : best[item.name]
               item.i = i
             })
             items = items.filter(item=>item.item)

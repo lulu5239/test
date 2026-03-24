@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-03-16
+// @version      2026-03-24
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -80,24 +80,25 @@
             let $p = $('#waifuFeed')
             let htmlBag = ""
             let max = ["Max Level!", "Lv. 120"].includes(selectedAnimu?.xpText)
-            
-            let items = [
-              best.present5000,
-              best.present10000,
-              best.present20000,
-              best.candy,
-              !max && best.snack?.[flavor] || Object.values(best.snack).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
-              !max && best.meal?.[flavor] || Object.values(best.meal).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
-              best.gift,
-            ].map((item, i)=>{if(item){item.i = i}; return item}).filter(Boolean)
+
+            let order = max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
+            let items = order.map(item=>({
+              name: item,
+              color: item==="snack" ? "gray" : item==="meal" ? "green" : item==="gift" ? "blue" : item.startsWith("present") ? "magenta" : item==="candy" ? "yellow" : null,
+            }))
+            items.forEach((item, i)=>{
+              item.item = item.name==="snack" || item.name==="meal" ? !max && best[item.name]?.[flavor] || Object.values(best[item.name] || []).reduce((p, e)=>!p || e.count > p.count ? e : p, null) : best[item.name])
+              item.i = i
+            })
+            items = items.filter(item=>item.item)
 
             for(let item of items){
-              let bgClass = "bg-"+["magenta", "magenta", "magenta", "yellow", "gray", "green", "blue"][item.i]+"-dark";
-              htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.id + '" href="#" '
+              let bgClass = "bg-"+item.color+"-dark";
+              htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.item.id + '" href="#" '
                 + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
-                + '<img src="' + item.icon + '" />'
+                + '<img src="' + item.item.icon + '" />'
                 + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
-                + item.name + '</p></div>';
+                + item.item.name + '</p></div>';
             }
             
             $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();

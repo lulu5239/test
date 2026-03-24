@@ -61,7 +61,8 @@
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     let rerolled = false
-    let setRerollItems = (card)=>{
+    let setRerollItems = (o)=>{
+      let { best, card } = o
       let flavor
       if(card){
         flavor = {
@@ -106,9 +107,9 @@
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
         if(best){
-          setRerollItems()
+          setRerollItems({ best })
           if(!["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)){
-            fetchCardData(selectedAnimu.cardID).then(setRerollItems)
+            fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
           }
         return}
       }

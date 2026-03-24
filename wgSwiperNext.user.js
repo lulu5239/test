@@ -107,7 +107,9 @@
         let best = GM_getValue("bestItems")
         if(best){
           setRerollItems()
-          fetchCardData(selectedAnimu.cardID).then(setRerollItems)
+          if(!["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)){
+            fetchCardData(selectedAnimu.cardID).then(setRerollItems)
+          }
         return}
       }
       if(settings.manualRerollOnly && !args[0] && document.querySelector(".giftableItem")){return}

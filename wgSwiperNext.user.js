@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-03-15
+// @version      2026-04-01
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -61,47 +61,56 @@
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     let rerolled = false
+    let setRerollItems = (o)=>{
+      let { best, card } = o
+      let flavor
+      if(card){
+        flavor = {
+          spicy: ["Hardy", "Lonely", "Adamant", "Naughty", "Brave"],
+          sour: ["Bold", "Docile", "Impish", "Lax", "Relaxed"],
+          greasy: ["Modest", "Mild", "Bashful", "Rash", "Quiet"],
+          bitter: ["Calm", "Gentle", "Careful", "Quirky", "Sassy"],
+          sweet: ["Timid", "Hasty", "Jolly", "Naive", "Serious"],
+        }
+        flavor = Object.entries(flavor).find(e=>e[1].includes(card.Nature))?.[0]
+      }
+      
+      let $p = $('#waifuFeed')
+      let htmlBag = ""
+      let max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
+
+      let order = max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
+      let items = order.map(item=>({
+        name: item,
+        color: item==="snack" ? "gray" : item==="meal" ? "green" : item==="gift" ? "blue" : item.startsWith("present") ? "magenta" : item==="candy" ? "yellow" : null,
+      }))
+      items.forEach((item, i)=>{
+        item.item = item.name==="snack" || item.name==="meal" ? !max && flavor && best[item.name]?.[flavor] || Object.values(best[item.name] || []).reduce((p, e)=>!p || e.count > p.count ? e : p, null) : best[item.name]
+        item.i = i
+      })
+      items = items.filter(item=>item.item)
+
+      for(let item of items){
+        let bgClass = "bg-"+item.color+"-dark";
+        htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.item.id + '" href="#" '
+          + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
+          + '<img src="' + item.item.icon + '" />'
+          + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
+          + item.item.name + '</p></div>';
+      }
+      
+      $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
+      $p.prepend(htmlBag);
+    }
     ReRollGifts = (...args)=>{
       if(args[0]){rerolled = true}
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
         if(best){
-          fetchCardData(selectedAnimu.cardID).then(card=>{
-            if(!card){return}
-            let flavor = {
-              spicy: ["Hardy", "Lonely", "Adamant", "Naughty", "Brave"],
-              sour: ["Bold", "Docile", "Impish", "Lax", "Relaxed"],
-              greasy: ["Modest", "Mild", "Bashful", "Rash", "Quiet"],
-              bitter: ["Calm", "Gentle", "Careful", "Quirky", "Sassy"],
-              sweet: ["Timid", "Hasty", "Jolly", "Naive", "Serious"],
-            }
-            flavor = Object.entries(flavor).find(e=>e[1].includes(card.Nature))?.[0]
-            
-            let $p = $('#waifuFeed')
-            let htmlBag = ""
-            
-            let items = [
-              best.present5000,
-              best.present10000,
-              best.present20000,
-              best.candy,
-              selectedAnimu.xpText!=="Max Level!" && best.snack?.[flavor] || Object.values(best.snack).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
-              selectedAnimu.xpText!=="Max Level!" && best.meal?.[flavor] || Object.values(best.meal).reduce((p, e)=>!p || e.count > p.count ? e : p, null),
-              best.gift,
-            ].map((item, i)=>{if(item){item.i = i}; return item}).filter(Boolean)
-
-            for(let item of items){
-              let bgClass = "bg-"+["magenta", "magenta", "magenta", "yellow", "gray", "green", "blue"][item.i]+"-dark";
-              htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.id + '" href="#" '
-                + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
-                + '<img src="' + item.icon + '" />'
-                + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
-                + item.name + '</p></div>';
-            }
-            
-            $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
-            $p.prepend(htmlBag);
-          })
+          setRerollItems({ best })
+          if(!["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)){
+            fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
+          }
         return}
       }
       if(settings.manualRerollOnly && !args[0] && document.querySelector(".giftableItem")){return}
@@ -320,7 +329,7 @@
       gainXP(0)
     }
     let updateMainButton = ()=>{
-      mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")
+      mainButton.querySelector(".fa, .fas").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")
     }
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){
@@ -423,19 +432,19 @@
     let flirtAnyways; let noNextCard = true
     let originalPostServer = postServer
     postServer = (...args)=>{
-      let card = $('.tinder--card[data-encounterid=' + args[0] + ']').data("data")
+      let card = $('.tinder--card[data-encounterid="' + args[0] + '"]').data("data")
       let action = getSelected()
       if(selectedOnce!==null){
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
       }
-      if(settings.keepActions){
-        cardActions[card.card_id] = action
+      if(settings.keepActions && card.card){
+        cardActions[card.card.id] = action
         setTimeout(()=>GM_setValue("cardActions", cardActions), 0)
       }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
-      let nextAction = nextCardData?.card_id===card.card_id ? action : nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id])
+      let nextAction = nextCardData?.card?.id===card.card?.id ? action : nextCardData?.card && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card.id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card?.id]!==selected && +cardActions[""+nextCardData.card?.id])
       if(!nextCard){
         noNextCard = true
       }else if(nextAction){
@@ -446,7 +455,7 @@
         selectedOnce = null
       }
       if(settings.forceFlirtEventEncounters && card.flag && !["1", "15", "16"].includes(card.flag) && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘")
-      || action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination){
+      || action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination || !+card.id){
         args[1] = "😘"
       }else if(action===0 && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘") && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
         args[1] = settings.crushManualBattles && card.card.element!=="???" ? "🗑️" : "👊"
@@ -455,13 +464,14 @@
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
         let gotCard = data.result.includes(" Card (\u2116 ")
-        if(!settings.keepActions && gotCard && action!==1){
-          cardActions[card.card_id] = action
+        if(!settings.keepActions && gotCard && card.card && action!==1){
+          cardActions[card.card.id] = action
           GM_setValue("cardActions", cardActions)
         }
-        if(gotCard && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card_id)){
-          if(settings.unwishlistObtainedCards==="confirm" && !confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){return}
-          unwishlistCard(card.card_id, wishedCards)
+        if(gotCard && card.card && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card.id)){
+          if(!settings.unwishlistObtainedCards==="confirm" || confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){
+            unwishlistCard(card.card.id, wishedCards)
+          }
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
@@ -493,7 +503,7 @@
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.forceflirt = settings.forceFlirtEventEncounters && data.flag && !["1", "15", "16"].includes(data.flag) ? true : ""
         button.dataset.battlemode = !button.dataset.forceflirt && (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
-        button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
+        button.innerText = !+data.id ? "Take" : button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
         updateMainButton()
       }
       if(noNextCard){

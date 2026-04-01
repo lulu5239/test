@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-04-01
+// @version      2026-04-02
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -469,7 +469,7 @@
           GM_setValue("cardActions", cardActions)
         }
         if(gotCard && card.card && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card.id)){
-          if(!settings.unwishlistObtainedCards==="confirm" || confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){
+          if(settings.unwishlistObtainedCards!=="confirm" || confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){
             unwishlistCard(card.card.id, wishedCards)
           }
         }

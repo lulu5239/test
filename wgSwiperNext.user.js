@@ -432,7 +432,7 @@
     let flirtAnyways; let noNextCard = true
     let originalPostServer = postServer
     postServer = (...args)=>{
-      let card = $('.tinder--card[data-encounterid=' + args[0] + ']').data("data")
+      let card = $('.tinder--card[data-encounterid="' + args[0] + '"]').data("data")
       let action = getSelected()
       if(selectedOnce!==null){
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected

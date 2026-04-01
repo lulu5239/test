@@ -468,7 +468,7 @@
           cardActions[card.card.id] = action
           GM_setValue("cardActions", cardActions)
         }
-        if(gotCard && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card_id)){
+        if(gotCard && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card.id)){
           if(settings.unwishlistObtainedCards==="confirm" && !confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){return}
           unwishlistCard(card.card.id, wishedCards)
         }

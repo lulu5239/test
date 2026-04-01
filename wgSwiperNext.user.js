@@ -429,7 +429,7 @@
 
     let wishedCards = GM_getValue("wishedCards") || []
 
-    let flirtAnyways; let noNextCard = true
+    let flirtAnyways; let expectedNextEncounter
     let originalPostServer = postServer
     postServer = (...args)=>{
       let card = $('.tinder--card[data-encounterid="' + args[0] + '"]').data("data")
@@ -442,11 +442,11 @@
         cardActions[card.card.id] = action
         setTimeout(()=>GM_setValue("cardActions", cardActions), 0)
       }
-      let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
+      let nextCard = expectedNextEncounter = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
       let nextAction = nextCardData?.card?.id===card.card?.id ? action : nextCardData?.card && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card.id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card?.id]!==selected && +cardActions[""+nextCardData.card?.id])
       if(!nextCard){
-        noNextCard = true
+        //
       }else if(nextAction){
         selectedOnce = nextAction
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
@@ -498,7 +498,12 @@
 
     let originalApplyEncounterStyle = applyEncounterStyle
     applyEncounterStyle = (...args)=>{
-      let data = $('.tinder--card:not(.removed)').first()?.data("data")
+      let encounter = $('.tinder--card:not(.removed)').first()
+      if(expectedNextEncounter && encounter!==expectedNextEncounter && settings.preventRemovingShownEncounter){
+        encounter.parentElement.appendChild(expectedNextEncounter) // Find correct position
+        encounter = expectedNextEncounter
+      }
+      let data = encounter?.data("data")
       if(data && charisma){
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.forceflirt = settings.forceFlirtEventEncounters && data.flag && !["1", "15", "16"].includes(data.flag) ? true : ""
@@ -506,9 +511,9 @@
         button.innerText = !+data.id ? "Take" : button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
         updateMainButton()
       }
-      if(noNextCard){
-        noNextCard = false
-        let nextAction = settings.wishedCardDestination && wishedCards.includes(""+data.card_id) ? settings.wishedCardDestination : +cardActions[""+data.card_id]!==selected && +cardActions[""+data.card_id]
+      if(!expectedNextEncounter){
+        expectedNextEncounter = encounter
+        let nextAction = settings.wishedCardDestination && wishedCards.includes(""+data.card.id) ? settings.wishedCardDestination : +cardActions[""+data.card.id]!==selected && +cardActions[""+data.card.id]
         if(nextAction){
           selectedOnce = nextAction
           document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
@@ -785,6 +790,7 @@
           ${settingCheckbox("swiperShowLevel", "Guess Animu <b>level</b>")}<br>
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
           ${settingCheckbox("swapFlirtCrush", "<b>Swap flirt and crush</b> buttons")}<br>
+          ${settingCheckbox("preventRemovingShownEncounter", "Disallow other scripts to remove the encounter you're seeing")}<br>
           On the cards page:<br>
           ${settingCheckbox("disableOnCardsPage", "<b>Remove</b> from cards page")}<br>
           ${settingCheckbox("showTopSimps", "Add button to <b>load top simps</b>")}<br>

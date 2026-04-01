@@ -545,7 +545,7 @@
       }else if(action==="battle"){
         document.querySelector(".btnBattle").click()
       }else if(action==="unwishlist"){
-        unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card_id, wishedCards)
+        unwishlistCard($('.tinder--card:not(.removed)').first()?.data("data").card.id, wishedCards)
         showSuccessToast("Unwishlisting card.")
       }else if(action==="cardInfos"){
         document.querySelector("#options").click()

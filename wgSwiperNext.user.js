@@ -455,7 +455,7 @@
         selectedOnce = null
       }
       if(settings.forceFlirtEventEncounters && card.flag && !["1", "15", "16"].includes(card.flag) && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘")
-      || action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination){
+      || action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination || !+card.id){
         args[1] = "😘"
       }else if(action===0 && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘") && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
         args[1] = settings.crushManualBattles && card.card.element!=="???" ? "🗑️" : "👊"
@@ -503,7 +503,7 @@
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.forceflirt = settings.forceFlirtEventEncounters && data.flag && !["1", "15", "16"].includes(data.flag) ? true : ""
         button.dataset.battlemode = !button.dataset.forceflirt && (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
-        button.innerText = button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
+        button.innerText = !+data.id ? "Take" : button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
         updateMainButton()
       }
       if(noNextCard){

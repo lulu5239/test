@@ -498,12 +498,12 @@
 
     let originalApplyEncounterStyle = applyEncounterStyle
     applyEncounterStyle = (...args)=>{
-      let encounter = $('.tinder--card:not(.removed)').first()
+      let encounter = document.querySelector('.tinder--card:not(.removed)')
       if(expectedNextEncounter && encounter!==expectedNextEncounter && settings.preventRemovingShownEncounter){
         document.querySelector(".tinder--cards .system-card").after(expectedNextEncounter) // Find correct position
         encounter = expectedNextEncounter
       }
-      let data = encounter?.data("data")
+      let data = encounter && $(encounter).data("data")
       if(data && charisma){
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.forceflirt = settings.forceFlirtEventEncounters && data.flag && !["1", "15", "16"].includes(data.flag) ? true : ""

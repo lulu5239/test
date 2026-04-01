@@ -429,7 +429,7 @@
 
     let wishedCards = GM_getValue("wishedCards") || []
 
-    let flirtAnyways; let expectedNextEncounter
+    let flirtAnyways; let expectedShownEncounter
     let originalPostServer = postServer
     postServer = (...args)=>{
       let card = $('.tinder--card[data-encounterid="' + args[0] + '"]').data("data")
@@ -442,17 +442,23 @@
         cardActions[card.card.id] = action
         setTimeout(()=>GM_setValue("cardActions", cardActions), 0)
       }
-      let nextCard = expectedNextEncounter = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
+      let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
       let nextAction = nextCardData?.card?.id===card.card?.id ? action : nextCardData?.card && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card.id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card?.id]!==selected && +cardActions[""+nextCardData.card?.id])
       if(!nextCard){
-        //
-      }else if(nextAction){
-        selectedOnce = nextAction
-        document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
-        document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = "solid 3px #"+colors.selectedOnce
+        expectedShownEncounter = null
       }else{
-        selectedOnce = null
+        expectedShownEncounter = {
+          element: nextCard,
+          data: nextCardData,
+        }
+        if(nextAction){
+          selectedOnce = nextAction
+          document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow
+          document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = "solid 3px #"+colors.selectedOnce
+        }else{
+          selectedOnce = null
+        }
       }
       if(settings.forceFlirtEventEncounters && card.flag && !["1", "15", "16"].includes(card.flag) && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘")
       || action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination || !+card.id){
@@ -499,9 +505,10 @@
     let originalApplyEncounterStyle = applyEncounterStyle
     applyEncounterStyle = (...args)=>{
       let encounter = document.querySelector('.tinder--card:not(.removed)')
-      if(expectedNextEncounter && encounter!==expectedNextEncounter && settings.preventRemovingShownEncounter){
-        document.querySelector(".tinder--cards .system-card").after(expectedNextEncounter) // Find correct position
-        encounter = expectedNextEncounter
+      if(expectedShownEncounter && encounter!==expectedShownEncounter.element && settings.preventRemovingShownEncounter){
+        document.querySelector(".tinder--cards .system-card").after(expectedShownEncounter.element)
+        encounter = expectedShownEncounter.element
+        $(encounter).data("data", expectedShownEncounter.data)
         args[0] = $('.tinder--card:not(.removed)')
       }
       let data = encounter && $(encounter).data("data")
@@ -512,8 +519,10 @@
         button.innerText = !+data.id ? "Take" : button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
         updateMainButton()
       }
-      if(!expectedNextEncounter){
-        expectedNextEncounter = encounter
+      if(!expectedShownEncounter){
+        expectedShownEncounter = {
+          element: encounter, data
+        }
         let nextAction = settings.wishedCardDestination && wishedCards.includes(""+data.card.id) ? settings.wishedCardDestination : +cardActions[""+data.card.id]!==selected && +cardActions[""+data.card.id]
         if(nextAction){
           selectedOnce = nextAction

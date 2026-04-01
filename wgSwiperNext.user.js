@@ -500,7 +500,7 @@
     applyEncounterStyle = (...args)=>{
       let encounter = $('.tinder--card:not(.removed)').first()
       if(expectedNextEncounter && encounter!==expectedNextEncounter && settings.preventRemovingShownEncounter){
-        encounter.parentElement.appendChild(expectedNextEncounter) // Find correct position
+        document.querySelector(".tinder--cards .system-card").after(expectedNextEncounter) // Find correct position
         encounter = expectedNextEncounter
       }
       let data = encounter?.data("data")

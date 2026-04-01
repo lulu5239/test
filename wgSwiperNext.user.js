@@ -438,13 +438,13 @@
         document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selected
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
       }
-      if(settings.keepActions){
+      if(settings.keepActions && card.card){
         cardActions[card.card.id] = action
         setTimeout(()=>GM_setValue("cardActions", cardActions), 0)
       }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
-      let nextAction = nextCardData?.card?.id===card.card?.id ? action : nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card.id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card?.id]!==selected && +cardActions[""+nextCardData.card?.id])
+      let nextAction = nextCardData?.card?.id===card.card?.id ? action : nextCardData?.card && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card.id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card?.id]!==selected && +cardActions[""+nextCardData.card?.id])
       if(!nextCard){
         noNextCard = true
       }else if(nextAction){
@@ -464,13 +464,14 @@
       let originalSuccessFn = args[2]
       return originalPostServer(...args.slice(0,2), data=>{
         let gotCard = data.result.includes(" Card (\u2116 ")
-        if(!settings.keepActions && gotCard && action!==1){
+        if(!settings.keepActions && gotCard && card.card && action!==1){
           cardActions[card.card.id] = action
           GM_setValue("cardActions", cardActions)
         }
-        if(gotCard && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card.id)){
-          if(settings.unwishlistObtainedCards==="confirm" && !confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){return}
-          unwishlistCard(card.card.id, wishedCards)
+        if(gotCard && card.card && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card.id)){
+          if(!settings.unwishlistObtainedCards==="confirm" || confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){
+            unwishlistCard(card.card.id, wishedCards)
+          }
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")

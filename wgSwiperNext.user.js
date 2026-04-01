@@ -502,6 +502,7 @@
       if(expectedNextEncounter && encounter!==expectedNextEncounter && settings.preventRemovingShownEncounter){
         document.querySelector(".tinder--cards .system-card").after(expectedNextEncounter) // Find correct position
         encounter = expectedNextEncounter
+        args[0] = $('.tinder--card:not(.removed)')
       }
       let data = encounter && $(encounter).data("data")
       if(data && charisma){

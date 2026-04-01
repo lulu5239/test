@@ -329,7 +329,7 @@
       gainXP(0)
     }
     let updateMainButton = ()=>{
-      mainButton.querySelector(".fa").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")
+      mainButton.querySelector(".fa, .fas").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")
     }
     for(let button of document.querySelectorAll(".swiperNextButton")){
       if(button.dataset.nextaction==="swap"){

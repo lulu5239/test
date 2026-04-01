@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-03-24
+// @version      2026-04-01
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -439,12 +439,12 @@
         document.querySelector(`.swiperNextButton[data-nextaction="${selectedOnce}"]`).style.border = null
       }
       if(settings.keepActions){
-        cardActions[card.card_id] = action
+        cardActions[card.card.id] = action
         setTimeout(()=>GM_setValue("cardActions", cardActions), 0)
       }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
-      let nextAction = nextCardData?.card_id===card.card_id ? action : nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card_id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card_id]!==selected && +cardActions[""+nextCardData.card_id])
+      let nextAction = nextCardData?.card?.id===card.card?.id ? action : nextCardData && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card.id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card?.id]!==selected && +cardActions[""+nextCardData.card?.id])
       if(!nextCard){
         noNextCard = true
       }else if(nextAction){
@@ -465,12 +465,12 @@
       return originalPostServer(...args.slice(0,2), data=>{
         let gotCard = data.result.includes(" Card (\u2116 ")
         if(!settings.keepActions && gotCard && action!==1){
-          cardActions[card.card_id] = action
+          cardActions[card.card.id] = action
           GM_setValue("cardActions", cardActions)
         }
         if(gotCard && settings.unwishlistObtainedCards && wishedCards.includes(""+card.card_id)){
           if(settings.unwishlistObtainedCards==="confirm" && !confirm(`Do you want to remove ${card.card.name} from your wishlist?`)){return}
-          unwishlistCard(card.card_id, wishedCards)
+          unwishlistCard(card.card.id, wishedCards)
         }
         if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")

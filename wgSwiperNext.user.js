@@ -800,7 +800,7 @@
           ${settingCheckbox("swiperShowLevel", "Guess Animu <b>level</b>")}<br>
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
           ${settingCheckbox("swapFlirtCrush", "<b>Swap flirt and crush</b> buttons")}<br>
-          ${settingCheckbox("preventRemovingShownEncounter", "Disallow other scripts to remove the encounter you're seeing")}<br>
+          ${settingCheckbox("preventRemovingShownEncounter", "Disallow other scripts to remove the encounter you're seeing")} <i>(only needed if the swiper page has bugs)</i><br>
           On the cards page:<br>
           ${settingCheckbox("disableOnCardsPage", "<b>Remove</b> from cards page")}<br>
           ${settingCheckbox("showTopSimps", "Add button to <b>load top simps</b>")}<br>

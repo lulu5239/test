@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-04-02
+// @version      2026-04-03
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -523,7 +523,7 @@
         expectedShownEncounter = {
           element: encounter, data
         }
-        let nextAction = settings.wishedCardDestination && wishedCards.includes(""+data.card.id) ? settings.wishedCardDestination : +cardActions[""+data.card.id]!==selected && +cardActions[""+data.card.id]
+        let nextAction = !+data.id ? 0 : settings.wishedCardDestination && wishedCards.includes(""+data.card.id) ? settings.wishedCardDestination : +cardActions[""+data.card.id]!==selected && +cardActions[""+data.card.id]
         if(nextAction){
           selectedOnce = nextAction
           document.querySelector(`.swiperNextButton[data-nextaction="${selected}"]`).style.border = "solid 3px #"+colors.selectedNotNow

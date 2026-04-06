@@ -317,7 +317,6 @@
       let levelIndicator = document.querySelector("#levelIndicator")
       gainXP = (xp, name)=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
-        navigator.levelingUp = levelingUp
         let receiving = (name ? levelingUp.filter(am=>am.name===name) : levelingUp)
         .filter(am=>am.xp < Math.pow(120, 3))
         for(let am of receiving){

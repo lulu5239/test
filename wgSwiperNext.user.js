@@ -302,7 +302,7 @@
     let gainXP
     if(settings.swiperShowLevel){
       document.querySelector(`.tinder--buttons`).insertAdjacentHTML("beforeend",
-        `<div style="${settings.swiperVerticalButtons ? "text-align: left; margin-bottom: -10px;" : "position: fixed; top: 3px; left: 3px"}" id="levelIndicator">
+        `<div style="${settings.swiperVerticalButtons ? "text-align: left; margin-bottom: -10px;" : "position: fixed; top: 3px; right: 3px"}" id="levelIndicator">
           <span style="padding: 3px">This thing broke!</span>
           <div style="position: relative; width: 50%; height: 3px; background-color: #f86; bottom: 0px; left: 0px"></div>
         </div>`)

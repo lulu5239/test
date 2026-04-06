@@ -479,7 +479,9 @@
             unwishlistCard(card.card.id, wishedCards)
           }
         }
-        if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
+        if(!card.card){
+          //
+        }else if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
           let xp = +words[words.findIndex(words.includes("+") ? (c=>c==="+") : (c=>c==="and"))+1]
           charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1) /(data.result.endsWith(" (300% BOOST)") ? 3 : data.result.endsWith(" (200% BOOST)") ? 2 : 1)
@@ -515,7 +517,7 @@
       if(data && charisma){
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.forceflirt = settings.forceFlirtEventEncounters && data.flag && !["1", "15", "16"].includes(data.flag) ? true : ""
-        button.dataset.battlemode = !button.dataset.forceflirt && (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
+        button.dataset.battlemode = !!+data.id && !button.dataset.forceflirt && (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
         button.innerText = !+data.id ? "Take" : button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
         updateMainButton()
       }

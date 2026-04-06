@@ -1205,7 +1205,7 @@
       let onChange = ()=>{
         recommendations[quest] = select.value
         GM_setValue("questRecommendedFormations", recommendations)
-        button.style.display = !select.value || Object.entries(GM_getValue("formations", {})).find(f=>f[1].selected)?.[0]===recommendations[quest] ? "none" : null
+        button.style.display = !select.value || "f-"+Object.entries(GM_getValue("formations", {})).find(f=>f[1].selected)?.[0]===recommendations[quest] ? "none" : null
       }
       select.addEventListener("change", onChange)
       onChange()

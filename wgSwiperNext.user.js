@@ -463,7 +463,7 @@
       if(settings.forceFlirtEventEncounters && card.flag && !["1", "15", "16"].includes(card.flag) && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘")
       || action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination || !+card.id){
         args[1] = "😘"
-      }else if(action===0 && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘") && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
+      }else if(action===0 && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘") && (+settings.replaceFlirtWithBattle||charisma-7)>card.card?.rarity && !flirtAnyways){
         args[1] = settings.crushManualBattles && card.card.element!=="???" ? "🗑️" : "👊"
       }
       flirtAnyways = null

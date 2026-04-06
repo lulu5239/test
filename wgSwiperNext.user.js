@@ -1195,7 +1195,7 @@
         <select class="btn btn-block"><optgroup label="Recommended party formation">
           <option value=""${!recommendations[quest] ? " selected" : ""}>None</option>
           ${Object.entries(GM_getValue("formations", {})).map(f=>
-            `<option value="${f[0]}"${recommendations[quest]===f[0] ? " selected" : ""}>${f[1].name}</option>`
+            `<option value="f-${f[0]}"${recommendations[quest]===f[0] ? " selected" : ""}>${f[1].name}</option>`
           )}
         </optgroup></select>
       </div>`)

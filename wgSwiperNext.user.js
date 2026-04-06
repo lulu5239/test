@@ -182,7 +182,7 @@
       body:"_token="+token+"&selected_formation="+id
     })
     for(let f of Object.entries(formations)){
-      f[1].selected = f[0]===id || undefined
+      f[1].selected = f[0]===id.slice(2) || undefined
     }
     let formation = formations[id.slice(2)]
     if(settings.levelUpSlots && formation?.levelUpSlots?.length){
@@ -1047,7 +1047,7 @@
         data = formations[formation.value.slice(2)] = {}
       }
       data.selected = formation.selected ? true : undefined
-      data.name = data.selected ? document.querySelector(`#formationform input[name="formation_name=]`)?.value : formation.innerText
+      data.name = data.selected ? document.querySelector(`#formationform input[name="formation_name"]`)?.value : formation.innerText
       if(data.selected){
         for(let i of [2,3,4]){
           data[["perception", "charisma", "luck"][i-2]] = +document.querySelector(`a#im${i} .icon`).innerText
@@ -1195,7 +1195,7 @@
         <select class="btn btn-block"><optgroup label="Recommended party formation">
           <option value=""${!recommendations[quest] ? " selected" : ""}>None</option>
           ${Object.entries(GM_getValue("formations", {})).map(f=>
-            `<option value="f-${f[0]}"${recommendations[quest]===f[0] ? " selected" : ""}>${f[1].name}</option>`
+            `<option value="f-${f[0]}"${recommendations[quest]==="f-"+f[0] ? " selected" : ""}>${f[1].name}</option>`
           )}
         </optgroup></select>
       </div>`)

@@ -1043,7 +1043,7 @@
         for(let i of [2,3,4]){
           data[["perception", "charisma", "luck"][i-2]] = +document.querySelector(`a#im${i} .icon`).innerText
         }
-        if(settings.levelUpSlots){
+        if(settings.levelUpSlots || settings.swiperShowLevel){
           let l = Array.from(document.querySelectorAll(".page-content div.card[data-nameonly]"))
           let newLevelUpSlots = []
           for(let i in l){

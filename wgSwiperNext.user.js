@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-04-03
+// @version      2026-04-06
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -19,6 +19,9 @@
   let path = document.location.pathname
   if(path.startsWith("/index.php/")){
     path = path.slice(10)
+  }
+  if(path.endsWith("/")){
+    path = path.slice(0, -1)
   }
 
   var colors = {
@@ -153,7 +156,7 @@
     document.querySelector("#page").style.color = "#aaa"
   }
 
-  if(areYouSure){
+  if(typeof(areYouSure)!=="undefined"){
     Array.from(document.querySelectorAll(`a[href="#"]`)).forEach(a=>a.href = "javascript:void 0")
   }
 
@@ -178,6 +181,10 @@
       headers:{"content-type":"application/x-www-form-urlencoded"},
       body:"_token="+token+"&selected_formation="+id
     })
+    for(let f of Object.entries(formations)){
+      f[1].selected = f[0]===id.slice(2) || undefined
+    }
+    GM_setValue("formations", formations)
     let formation = formations[id.slice(2)]
     if(settings.levelUpSlots && formation?.levelUpSlots?.length){
       let levelingUp = GM_getValue("levelingUpAnimus", [])
@@ -195,6 +202,7 @@
         });
       }
     }
+    return formation
   }
 
   let unwishlistCard = async (id, wl=GM_getValue("wishedCards") || [])=>{
@@ -302,7 +310,7 @@
     let gainXP
     if(settings.swiperShowLevel){
       document.querySelector(`.tinder--buttons`).insertAdjacentHTML("beforeend",
-        `<div style="${settings.swiperVerticalButtons ? "text-align: left; margin-bottom: -10px;" : "position: fixed; top: 3px; left: 3px"}" id="levelIndicator">
+        `<div style="${settings.swiperVerticalButtons ? "text-align: left; margin-bottom: -10px;" : "position: fixed; top: 3px; right: 3px"}" id="levelIndicator">
           <span style="padding: 3px">This thing broke!</span>
           <div style="position: relative; width: 50%; height: 3px; background-color: #f86; bottom: 0px; left: 0px"></div>
         </div>`)
@@ -463,7 +471,7 @@
       if(settings.forceFlirtEventEncounters && card.flag && !["1", "15", "16"].includes(card.flag) && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘")
       || action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination || !+card.id){
         args[1] = "😘"
-      }else if(action===0 && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘") && (+settings.replaceFlirtWithBattle||charisma-7)>card.card.rarity && !flirtAnyways){
+      }else if(action===0 && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘") && (+settings.replaceFlirtWithBattle||charisma-7)>card.card?.rarity && !flirtAnyways){
         args[1] = settings.crushManualBattles && card.card.element!=="???" ? "🗑️" : "👊"
       }
       flirtAnyways = null
@@ -479,7 +487,9 @@
             unwishlistCard(card.card.id, wishedCards)
           }
         }
-        if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
+        if(!card.card){
+          //
+        }else if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
           let xp = +words[words.findIndex(words.includes("+") ? (c=>c==="+") : (c=>c==="and"))+1]
           charisma = xp /(card.card.rarity+1) /30 /(words[1]==="Essence" ? 2 : 1) /(data.result.endsWith(" (300% BOOST)") ? 3 : data.result.endsWith(" (200% BOOST)") ? 2 : 1)
@@ -515,7 +525,7 @@
       if(data && charisma){
         let button = document.querySelector(`.swiperNextButton[data-nextaction="0"]`)
         button.dataset.forceflirt = settings.forceFlirtEventEncounters && data.flag && !["1", "15", "16"].includes(data.flag) ? true : ""
-        button.dataset.battlemode = !button.dataset.forceflirt && (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
+        button.dataset.battlemode = !!+data.id && !button.dataset.forceflirt && (+settings.replaceFlirtWithBattle||charisma-7)>data.card.rarity ? true : ""
         button.innerText = !+data.id ? "Take" : button.dataset.battlemode ? (data.card.element==="???" ? "Auto-battle" : settings.crushManualBattles ? "Crush" : "Battle") : "Disenchant"
         updateMainButton()
       }
@@ -886,6 +896,7 @@
             {value:4, name:"Box 3"},
           ])} as destination for wishlisted cards.<br>
           ${settingCheckbox("levelUpSlots", "When switching party, keep the Animus that didn't reach level 120")}
+          ${settingCheckbox("questsRecommendedFormation", "Remember best party for each gym")}
         </div>
       </div>
       <style>
@@ -1036,11 +1047,12 @@
         data = formations[formation.value.slice(2)] = {}
       }
       data.selected = formation.selected ? true : undefined
+      data.name = data.selected ? document.querySelector(`#formationform input[name="formation_name"]`)?.value : formation.innerText
       if(data.selected){
         for(let i of [2,3,4]){
           data[["perception", "charisma", "luck"][i-2]] = +document.querySelector(`a#im${i} .icon`).innerText
         }
-        if(settings.levelUpSlots){
+        if(settings.levelUpSlots || settings.swiperShowLevel){
           let l = Array.from(document.querySelectorAll(".page-content div.card[data-nameonly]"))
           let newLevelUpSlots = []
           for(let i in l){
@@ -1172,5 +1184,41 @@
     }
     GM_setValue("bestItems", best)
     navigator.bestItems = best
+  }
+
+  if(path.startsWith("/quests/")){
+    if(document.querySelector(".content form")?.action?.endsWith("/battle") && settings.questsRecommendedFormation){ // Gyms
+      let recommendations = GM_getValue("questRecommendedFormations", {})
+      let quest = path.split("/")[2] // type string
+      document.querySelector(".content form").insertAdjacentHTML("afterend", `<div id="recommendedFormation" style="margin-top: 10px">
+        <button class="btn btn-block" style="background-color: #b73">Switch to recommended party formation</button>
+        <select class="btn btn-block"><optgroup label="Recommended party formation">
+          <option value=""${!recommendations[quest] ? " selected" : ""}>None</option>
+          ${Object.entries(GM_getValue("formations", {})).map(f=>
+            `<option value="f-${f[0]}"${recommendations[quest]==="f-"+f[0] ? " selected" : ""}>${f[1].name}</option>`
+          )}
+        </optgroup></select>
+      </div>`)
+      let element = document.querySelector("#recommendedFormation")
+      let button = element.children[0]; let select = element.children[1]
+
+      let onChange = ()=>{
+        recommendations[quest] = select.value
+        GM_setValue("questRecommendedFormations", recommendations)
+        button.style.display = !select.value || "f-"+Object.entries(GM_getValue("formations", {})).find(f=>f[1].selected)?.[0]===recommendations[quest] ? "none" : null
+      }
+      select.addEventListener("change", onChange)
+      onChange()
+
+      button.addEventListener("click", async ev=>{
+        ev.target.disabled = true
+        await setFormation(recommendations[quest]).catch(e=>{
+          showErrorToast("Couldn't switch party formation.")
+          console.error(e)
+        })
+        ev.target.disabled = false
+        onChange()
+      })
+    }
   }
 })();

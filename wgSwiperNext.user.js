@@ -1191,7 +1191,7 @@
       let recommendations = GM_getValue("questRecommendedFormations", {})
       let quest = path.split("/")[2] // type string
       document.querySelector(".content form").insertAdjacentHTML("afterend", `<div id="recommendedFormation" style="margin-top: 10px">
-        <button class="btn btn-block" style="color: #b73">Switch to recommended party formation</button>
+        <button class="btn btn-block" style="background-color: #b73">Switch to recommended party formation</button>
         <select class="btn btn-block"><optgroup label="Recommended party formation">
           <option value=""${!recommendations[quest] ? " selected" : ""}>None</option>
           ${Object.entries(GM_getValue("formations", {})).map(f=>

@@ -184,6 +184,7 @@
     for(let f of Object.entries(formations)){
       f[1].selected = f[0]===id.slice(2) || undefined
     }
+    GM_setValue("formations", formations)
     let formation = formations[id.slice(2)]
     if(settings.levelUpSlots && formation?.levelUpSlots?.length){
       let levelingUp = GM_getValue("levelingUpAnimus", [])

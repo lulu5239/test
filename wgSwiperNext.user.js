@@ -20,6 +20,9 @@
   if(path.startsWith("/index.php/")){
     path = path.slice(10)
   }
+  if(path.endsWith("/")){
+    path = path.slice(0, -1)
+  }
 
   var colors = {
     selected: "7fa",
@@ -153,7 +156,7 @@
     document.querySelector("#page").style.color = "#aaa"
   }
 
-  if(areYouSure){
+  if(typeof(areYouSure)!=="undefined"){
     Array.from(document.querySelectorAll(`a[href="#"]`)).forEach(a=>a.href = "javascript:void 0")
   }
 
@@ -178,6 +181,9 @@
       headers:{"content-type":"application/x-www-form-urlencoded"},
       body:"_token="+token+"&selected_formation="+id
     })
+    for(let f of Object.entries(formations)){
+      f[1].selected = f[0]===id || undefined
+    }
     let formation = formations[id.slice(2)]
     if(settings.levelUpSlots && formation?.levelUpSlots?.length){
       let levelingUp = GM_getValue("levelingUpAnimus", [])
@@ -195,6 +201,7 @@
         });
       }
     }
+    return formation
   }
 
   let unwishlistCard = async (id, wl=GM_getValue("wishedCards") || [])=>{
@@ -889,6 +896,7 @@
             {value:4, name:"Box 3"},
           ])} as destination for wishlisted cards.<br>
           ${settingCheckbox("levelUpSlots", "When switching party, keep the Animus that didn't reach level 120")}
+          ${settingCheckbox("questsRecommendedFormation", "Remember best party for each gym")}
         </div>
       </div>
       <style>
@@ -1039,6 +1047,7 @@
         data = formations[formation.value.slice(2)] = {}
       }
       data.selected = formation.selected ? true : undefined
+      data.name = data.selected ? document.querySelector(`#formationform input[name="formation_name=]`)?.value : formation.innerText
       if(data.selected){
         for(let i of [2,3,4]){
           data[["perception", "charisma", "luck"][i-2]] = +document.querySelector(`a#im${i} .icon`).innerText
@@ -1175,5 +1184,41 @@
     }
     GM_setValue("bestItems", best)
     navigator.bestItems = best
+  }
+
+  if(path.startsWith("/quests/")){
+    if(document.querySelector(".content form")?.action?.endsWith("/battle") && settings.questsRecommendedFormation){ // Gyms
+      let recommendations = GM_getValue("questRecommendedFormations", {})
+      let quest = path.split("/")[2] // type string
+      document.querySelector(".content form").insertAdjacentHTML("afterend", `<div id="recommendedFormation" style="margin-top: 10px">
+        <button class="btn btn-block">Switch to recommended party formation</button>
+        <select class="btn btn-block"><optgroup label="Recommended party formation">
+          <option value=""${!recommendations[quest] ? " selected" : ""}>None</option>
+          ${Object.entries(GM_getValue("formations", {})).map(f=>
+            `<option value="${f[0]}"${recommendations[quest]===f[0] ? " selected" : ""}>${f[1].name}</option>`
+          )}
+        </optgroup></select>
+      </div>`)
+      let element = document.querySelector("#recommendedFormation")
+      let button = element.children[0]; let select = element.children[1]
+
+      let onChange = ()=>{
+        recommendations[quest] = select.value
+        GM_setValue("questRecommendedFormations", recommendations)
+        element.style.display = !select.value || Object.entries(GM_getValue("formations", {})).find(f=>f[1].selected)?.[0]===recommendations[quest] ? "none" : null
+      }
+      select.addEventListener("change", onChange)
+      onChange()
+
+      button.addEventListener("click", async ev=>{
+        ev.target.disabled = true
+        await setFormation(recommendations[quest]).catch(e=>{
+          showErrorToast("Couldn't switch party formation.")
+          console.error(e)
+        })
+        ev.target.disabled = false
+        onChange()
+      })
+    }
   }
 })();

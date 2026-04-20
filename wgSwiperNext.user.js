@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-04-06
+// @version      2026-04-20
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -468,7 +468,7 @@
           selectedOnce = null
         }
       }
-      if(settings.forceFlirtEventEncounters && card.flag && !["1", "15", "16"].includes(card.flag) && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘")
+      if(settings.forceFlirtEventEncounters && card.flag && !["1", "15", "16"].includes(""+card.flag) && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘")
       || action>0 && args[1]==="🗑️" && settings.neverCrushWithDestination || !+card.id){
         args[1] = "😘"
       }else if(action===0 && args[1]===(settings.swapFlirtCrush ? "🗑️" : "😘") && (+settings.replaceFlirtWithBattle||charisma-7)>card.card?.rarity && !flirtAnyways){

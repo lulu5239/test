@@ -447,7 +447,7 @@
     )
     let healList = document.querySelector("#healList")
     for(let e of document.querySelectorAll("#action_item table tr")){
-      if(!e.children[0].innerText.includes("Health Potion")){continue}
+      if(!["Health Potion", "Full Restore", "PP Restore"].find(name=>e.children[0].innerText.includes(name))){continue}
       e.remove()
       e.children[0].children[0].classList.remove("mr-2")
       e.children[1].children[0].classList.remove("btn-sm")
@@ -456,8 +456,8 @@
       button.style.flex = "0.5 1"
       button.style.maxHeight = "120px"
       button.style.fontSize = "12px"
-      let l = e.children[0].childNodes[1].nodeValue.match(/Health Potion \((.*?)\) \((.*?)\)/)
-      button.innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${l[1]}<br>(${l[2]})`
+      let l = e.children[0].childNodes[1].nodeValue.match(/(.*?) \((.*?)\)/)
+      button.innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${l[1]==="PP Restore" ? "PP" : l[1]==="Full Restore" ? "MAX" : l[1].slice(l[1].indexOf("("), -1)}<br>(${l[2]})`
       healList.appendChild(button)
     }
     return r

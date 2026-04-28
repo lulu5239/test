@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-03-15
+// @version      2026-04-28
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -142,7 +142,7 @@
     }
     GM_setValue("party", party)
   }
-  window.battleHelpVars = battleHelpVars = {party}
+  window.battleHelpVars = battleHelpVars = navigator.battleHelpVars = {party}
   if(!path.startsWith("/battle")){return}
   
   var advantages = `normal >< normal;fight > normal;light < normal;wind >> fight;bug <> fight;tech > fight;dark < fight;light < fight;fight << wind;earth <> wind;bug << wind;grass << wind;electric >> wind;ice > wind;fight < poison;poison <> poison;earth >> poison;bug < poison;blood < poison;psychic > poison;dark > poison;light >< poison;normal < earth;wind <> earth;poison <<< earth;metal >< earth;grass >> earth;fire <<< earth;water > earth;electric <<< earth;ice > earth;music < earth;normal > bug;fight <> bug;wind >>> bug;earth < bug;tech << bug;grass << bug;fire >>> bug;ice > bug;normal < metal;fight > metal;wind < metal;poison < metal;earth >< metal;bug < metal;metal <> metal;grass <<< metal;fire >> metal;water > metal;electric >> metal;psychic < metal;ice <<< metal;music > metal;tech > blood;grass > blood;fire > blood;water << blood;normal > tech;wind < tech;bug >>> tech;tech >< tech;fire < tech;water >>> tech;electric > tech;psychic > tech;ice < tech;music << tech;wind >> grass;poison > grass;earth << grass;bug >> grass;metal >> grass;tech < grass;grass <> grass;fire >> grass;electric < grass;ice > grass;earth >> fire;bug << fire;metal << fire;grass << fire;fire <> fire;water >> fire;ice << fire;blood >> water;tech << water;grass > water;water <> water;fire << water;electric > water;ice <> water;wind << electric;earth >> electric;metal << electric;electric <> electric;fight < psychic;bug > psychic;blood > psychic;psychic <> psychic;dark >> psychic;light > psychic;fight > ice;metal >> ice;fire >> ice;water <> ice;ice <> ice;music < ice;tech >> music;electric < music;normal < dark;psychic <<< dark;music > dark;dark <> dark;light >< dark;poison >< light;blood < light;dark >< light;light <> light`
@@ -379,6 +379,10 @@
       }
       if(busy){return}
       window.scrollTo(0, window.scrollY + document.querySelector("#battle_view_opponent .hpBar").getBoundingClientRect().y - 55)
+      if(battleHelpVars.autoO?.pause){
+        await new Promise(ok=>{battleHelpVars.autoO.pausePromise = ok})
+      }
+      if(battleHelpVars.autoO?.stop){delete battleHelpVars.auto}
       if(!battleHelpVars.auto || document.querySelector("#action_block").style.display==="none"){return}
       if(document.querySelector("#swapForXPoption").dataset.card && lastSequenceData.output.foes.alive <= 2){
         document.querySelector("#btn_swapForXP").click()
@@ -535,4 +539,14 @@
   })
   
   handleSwapParty(initialSwapData)
+
+  document.querySelector("#action_item table").insertAdjacentHTML("beforebegin", `<div style="background-color: #406"><span>Health potions</span><div style="display:flex; width: 100%" id="healList"></div></div>`)
+  let healList = document.querySelector("#healList")
+  for(let e of document.querySelectorAll("#action_item table tr")){
+    if(!e.children[0].innerText.includes("Health Potion")){continue}
+    e.remove()
+    let l = e.children[0].childNodes[1].nodeValue.match(/Health Potion \((.*?)\) \((.*?)\)/)
+    e.children[1].children[0].innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${l[1]}<br>(${l[2]})`
+    healList.appendChild(e.children[1].children[0])
+  }
 })();

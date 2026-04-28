@@ -442,7 +442,7 @@
     document.querySelector("#action_item table").insertAdjacentHTML("beforebegin",
       `<div style="background-color: #406; position: relative; width: 100%;">
         <span>Health potions</span>
-        <div style="display:flex; position: relative; width: 100%; gap: 2px 2px; justify-content: center; font-size: 15px" id="healList"></div>
+        <div style="display:flex; position: relative; width: 100%; gap: 2px 2px; justify-content: center" id="healList"></div>
       </div>`
     )
     let healList = document.querySelector("#healList")

@@ -446,6 +446,7 @@
       </div>`
     )
     let healList = document.querySelector("#healList")
+    let lastHealthPotion
     for(let e of document.querySelectorAll("#action_item table tr")){
       if(!["Health Potion", "Full Restore", "PP Restore"].find(name=>e.children[0].innerText.includes(name))){continue}
       e.remove()
@@ -456,9 +457,11 @@
       button.style.flex = "0.5 1"
       button.style.maxHeight = "120px"
       button.style.fontSize = "12px"
-      let l = e.children[0].childNodes[1].nodeValue.match(/(.*?) \((.*?)\)/)
-      button.innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${l[1]==="PP Restore" ? "PP" : l[1]==="Full Restore" ? "MAX" : l[1].slice(l[1].indexOf("("), -1)}<br>(${l[2]})`
-      healList.appendChild(button)
+      let words = e.children[0].childNodes[1].nodeValue.split(" ")
+      let name = words.slice(0, -1).join(" ")
+      button.innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${name==="PP Restore" ? "PP" : name==="Full Restore" ? "MAX" : words.slice(-2)[0].slice(1, -1)}<br>${words.slice(-1)[0]}`
+      if(lastHealthPotion){lastHealthPotion.after(button)}else{healList.appendChild(button)}
+      if(name.startsWith("Health Potion")){lastHealthPotion = button}
     }
     return r
   }

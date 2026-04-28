@@ -540,18 +540,21 @@
   
   handleSwapParty(initialSwapData)
 
-  document.querySelector("#action_item table").insertAdjacentHTML("beforebegin",
-    `<div style="background-color: #406; position: relative; width: 100%;">
-      <span>Health potions</span>
-      <div style="display:flex; position: relative; width: 100%" id="healList"></div>
-    </div>`
-  )
-  let healList = document.querySelector("#healList")
-  for(let e of document.querySelectorAll("#action_item table tr")){
-    if(!e.children[0].innerText.includes("Health Potion")){continue}
-    e.remove()
-    let l = e.children[0].childNodes[1].nodeValue.match(/Health Potion \((.*?)\) \((.*?)\)/)
-    e.children[1].children[0].innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${l[1]}<br>(${l[2]})`
-    healList.appendChild(e.children[1].children[0])
-  }
+  document.once("ready", ()=>{
+    document.querySelector("#action_item table").insertAdjacentHTML("beforebegin",
+      `<div style="background-color: #406; position: relative; width: 100%;">
+        <span>Health potions</span>
+        <div style="display:flex; position: relative; width: 100%" id="healList"></div>
+      </div>`
+    )
+    let healList = document.querySelector("#healList")
+    for(let e of document.querySelectorAll("#action_item table tr")){
+      if(!e.children[0].innerText.includes("Health Potion")){continue}
+      e.remove()
+      e.children[0].children[0].classList.remove("mr-2")
+      let l = e.children[0].childNodes[1].nodeValue.match(/Health Potion \((.*?)\) \((.*?)\)/)
+      e.children[1].children[0].innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${l[1]}<br>(${l[2]})`
+      healList.appendChild(e.children[1].children[0])
+    }
+  })
 })();

@@ -440,9 +440,9 @@
       document.querySelector("#healList").parentElement.remove()
     }
     document.querySelector("#action_item table").insertAdjacentHTML("beforebegin",
-      `<div style="background-color: #406; position: relative; width: 100%;">
+      `<div style="background: linear-gradient(90deg, #406, #304); position: relative; width: 100%; margin: 5px; padding: 3px; margin-top: 10px">
         <span>Health potions</span>
-        <div style="display:flex; position: relative; width: 100%; gap: 2px 2px; justify-content: center" id="healList"></div>
+        <div style="display:flex; position: relative; width: 100%; gap: 2px 2px; justify-content: center; flex-wrap: wrap" id="healList"></div>
       </div>`
     )
     let healList = document.querySelector("#healList")
@@ -451,13 +451,14 @@
       e.remove()
       e.children[0].children[0].classList.remove("mr-2")
       e.children[1].children[0].classList.remove("btn-sm")
-      e.children[1].children[0].style.padding = "3px"
-      e.children[1].children[0].style.flexGrow = "1"
-      e.children[1].children[0].style.maxHeight = "120px"
-      e.children[1].children[0].style.fontSize = "12px"
+      let button = e.children[1].children[0]
+      button.style.padding = "3px"
+      button.style.flex = "0.5 1"
+      button.style.maxHeight = "120px"
+      button.style.fontSize = "12px"
       let l = e.children[0].childNodes[1].nodeValue.match(/Health Potion \((.*?)\) \((.*?)\)/)
-      e.children[1].children[0].innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${l[1]}<br>(${l[2]})`
-      healList.appendChild(e.children[1].children[0])
+      button.innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${l[1]}<br>(${l[2]})`
+      healList.appendChild(button)
     }
     return r
   }

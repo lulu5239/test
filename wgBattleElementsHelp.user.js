@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-03-15
+// @version      2026-04-28
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -142,7 +142,7 @@
     }
     GM_setValue("party", party)
   }
-  window.battleHelpVars = battleHelpVars = {party}
+  window.battleHelpVars = battleHelpVars = navigator.battleHelpVars = {party}
   if(!path.startsWith("/battle")){return}
   
   var advantages = `normal >< normal;fight > normal;light < normal;wind >> fight;bug <> fight;tech > fight;dark < fight;light < fight;fight << wind;earth <> wind;bug << wind;grass << wind;electric >> wind;ice > wind;fight < poison;poison <> poison;earth >> poison;bug < poison;blood < poison;psychic > poison;dark > poison;light >< poison;normal < earth;wind <> earth;poison <<< earth;metal >< earth;grass >> earth;fire <<< earth;water > earth;electric <<< earth;ice > earth;music < earth;normal > bug;fight <> bug;wind >>> bug;earth < bug;tech << bug;grass << bug;fire >>> bug;ice > bug;normal < metal;fight > metal;wind < metal;poison < metal;earth >< metal;bug < metal;metal <> metal;grass <<< metal;fire >> metal;water > metal;electric >> metal;psychic < metal;ice <<< metal;music > metal;tech > blood;grass > blood;fire > blood;water << blood;normal > tech;wind < tech;bug >>> tech;tech >< tech;fire < tech;water >>> tech;electric > tech;psychic > tech;ice < tech;music << tech;wind >> grass;poison > grass;earth << grass;bug >> grass;metal >> grass;tech < grass;grass <> grass;fire >> grass;electric < grass;ice > grass;earth >> fire;bug << fire;metal << fire;grass << fire;fire <> fire;water >> fire;ice << fire;blood >> water;tech << water;grass > water;water <> water;fire << water;electric > water;ice <> water;wind << electric;earth >> electric;metal << electric;electric <> electric;fight < psychic;bug > psychic;blood > psychic;psychic <> psychic;dark >> psychic;light > psychic;fight > ice;metal >> ice;fire >> ice;water <> ice;ice <> ice;music < ice;tech >> music;electric < music;normal < dark;psychic <<< dark;music > dark;dark <> dark;light >< dark;poison >< light;blood < light;dark >< light;light <> light`
@@ -379,6 +379,10 @@
       }
       if(busy){return}
       window.scrollTo(0, window.scrollY + document.querySelector("#battle_view_opponent .hpBar").getBoundingClientRect().y - 55)
+      if(battleHelpVars.autoO?.pause){
+        await new Promise(ok=>{battleHelpVars.autoO.pausePromise = ok})
+      }
+      if(battleHelpVars.autoO?.stop){delete battleHelpVars.auto}
       if(!battleHelpVars.auto || document.querySelector("#action_block").style.display==="none"){return}
       if(document.querySelector("#swapForXPoption").dataset.card && lastSequenceData.output.foes.alive <= 2){
         document.querySelector("#btn_swapForXP").click()
@@ -431,7 +435,35 @@
       if(noPP){currentCard.noPP = true}
     }
     if(args[0].faked){return}
-    return originalShowInventory(...args)
+    let r = originalShowInventory(...args)
+    if(document.querySelector("#healList")){
+      document.querySelector("#healList").parentElement.remove()
+    }
+    document.querySelector("#action_item table").insertAdjacentHTML("beforebegin",
+      `<div style="background: linear-gradient(90deg, #406, #304); position: relative; width: 100%; margin: 5px; padding: 3px; margin-top: 10px">
+        <span>Health potions</span>
+        <div style="display:flex; position: relative; width: 100%; gap: 2px 2px; justify-content: center; flex-wrap: wrap" id="healList"></div>
+      </div>`
+    )
+    let healList = document.querySelector("#healList")
+    let lastHealthPotion
+    for(let e of document.querySelectorAll("#action_item table tr")){
+      if(!["Health Potion", "Full Restore", "PP Restore"].find(name=>e.children[0].innerText.includes(name))){continue}
+      e.remove()
+      e.children[0].children[0].classList.remove("mr-2")
+      e.children[1].children[0].classList.remove("btn-sm")
+      let button = e.children[1].children[0]
+      button.style.padding = "3px"
+      button.style.flex = "0.5 1"
+      button.style.maxHeight = "120px"
+      button.style.fontSize = "12px"
+      let words = e.children[0].childNodes[1].nodeValue.split(" ")
+      let name = words.slice(0, -1).join(" ")
+      button.innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${name==="PP Restore" ? "PP" : name==="Full Restore" ? "MAX" : words.slice(-2)[0].slice(1, -1)}<br>${words.slice(-1)[0]}`
+      if(lastHealthPotion){lastHealthPotion.after(button)}else{healList.appendChild(button)}
+      if(name.startsWith("Health Potion")){lastHealthPotion = button}
+    }
+    return r
   }
   
   let originalHandleSwapPlayer2 = handleSwapPlayer2

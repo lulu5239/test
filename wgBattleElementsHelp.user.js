@@ -442,7 +442,7 @@
     document.querySelector("#action_item table").insertAdjacentHTML("beforebegin",
       `<div style="background-color: #406; position: relative; width: 100%;">
         <span>Health potions</span>
-        <div style="display:flex; position: relative; width: 100%" id="healList"></div>
+        <div style="display:flex; position: relative; width: 100%; gap: 2px 2px" id="healList"></div>
       </div>`
     )
     let healList = document.querySelector("#healList")
@@ -452,6 +452,7 @@
       e.children[0].children[0].classList.remove("mr-2")
       e.children[1].children[0].classList.remove("btn-sm")
       e.children[1].children[0].style.padding = "3px"
+      e.children[1].children[0].style.flexGrow = "1"
       let l = e.children[0].childNodes[1].nodeValue.match(/Health Potion \((.*?)\) \((.*?)\)/)
       e.children[1].children[0].innerHTML = e.children[0].innerHTML.split(">")[0]+`><br>${l[1]}<br>(${l[2]})`
       healList.appendChild(e.children[1].children[0])

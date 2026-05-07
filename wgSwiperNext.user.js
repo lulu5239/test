@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-04-20
+// @version      2026-05-07
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -830,7 +830,8 @@
           ${settingCheckbox("fixServiceWorker", "Stop creating service workers")}<br>
           <br>
           ${settingCheckbox("fasterWheels", "Make wheels on festival page less slow")}
-          ${settingCheckbox("lighterTextColor", "Make text more white")}
+          ${settingCheckbox("lighterTextColor", "Make text more white")}<br>
+          ${settingCheckbox("rerollWaifuvilleMissions", "Show button to <b>reroll Waifuville missions</b>")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -1219,6 +1220,78 @@
         ev.target.disabled = false
         onChange()
       })
+    }
+  }
+
+  if(path.startsWith("/ville/") && settings.rerollWaifuvilleMissions){
+    let lastContext
+    let reroll = async ()=>{
+      let vb = dynamicContext.vb
+      
+      let img = document.querySelector("#tab-missions .content h3 img.rounded-circle")
+      let slot = 0
+      for(let row of [...document.querySelector("#specialistsList").children].slice(2)){
+        let e = row.querySelector(`img.rounded[src="${img.src}"]`)
+        if(e){img = e; break}
+        slot++
+      }
+      let s = vb.ville.specialists.find(s=>s.vb_id===vb.id && s.name===img.dataset["tippy-content"])
+
+      let r = await fetch('https://waifugame.com/ville/' + ville_id, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'Accept': '*/*',
+        },
+        body: new URLSearchParams({
+          '_token': token,
+          'ville_id': ville_id,
+          'action': 'remove_myfu',
+          'myfu_id': s.id,
+        }),
+      }).catch(console.warn);
+      if(!r){return showErrorToast("Error unassigning Myfu...")}
+
+      r = await fetch('https://waifugame.com/ville/' + ville_id, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'Accept': '*/*',
+        },
+        body: new URLSearchParams({
+          '_token': token,
+          'ville_id': ville_id,
+          'action': 'assign_myfu',
+          'vb_id': vb.id,
+          'slot_id': slot,
+          'myfu_id': s.id,
+        })
+      }).catch(console.warn);
+      if(!r){showErrorToast("Couldn't re-assign Myfu...")}
+
+      deployMenu("BuildingMenu", lastContext)
+    }
+
+    let originalDeployMenu = deployMenu
+    let loadingBuilding = false
+    deployMenu = (...args)=>{
+      if(args[0]==="BuildingMenu"){loadingBuilding = true; lastContext = args[1]}
+      return originalDeployMenu(...args)
+    }
+
+    let originalDynamicInit = dynamicInit
+    dynamicInit = (...args)=>{
+      if(loadingBuilding){
+        let start = document.querySelector("#startMission")
+        if(start){
+          start.parentElement.insertAdjacentHTML("afterend",
+            `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c" id="rerollMissionBtn"><i class="fas fa-reroll"></i> Reroll</button>`
+          )
+          document.querySelector("#rerollMissionBtn").addEventListener("click", reroll)
+        }
+        loadingBuilding = false
+      }
+      return originalDynamicInit(...args)
     }
   }
 })();

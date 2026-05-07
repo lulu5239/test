@@ -1224,7 +1224,7 @@
   }
 
   if(path.startsWith("/ville/") && settings.rerollWaifuvilleMissions){
-    let lastContext
+    let lastContext; let rerolled
     let reroll = async ()=>{
       let vb = dynamicContext.vb
       
@@ -1236,6 +1236,8 @@
         slot++
       }
       let s = vb.ville.specialists.find(s=>s.vb_id===vb.id && s.name===img.dataset["tippy-content"])
+
+      closeMenu('BuildingMenu')
 
       let r = await fetch('https://waifugame.com/ville/' + ville_id, {
         method: 'POST',
@@ -1252,6 +1254,7 @@
       }).catch(console.warn);
       if(!r){return showErrorToast("Error unassigning Myfu...")}
 
+      await new Promise(ok=>setTimeout(ok, 1000))
       r = await fetch('https://waifugame.com/ville/' + ville_id, {
         method: 'POST',
         headers: {
@@ -1268,6 +1271,7 @@
         })
       }).catch(console.warn);
       if(!r){showErrorToast("Couldn't re-assign Myfu...")}
+      else{rerolled = true}
 
       deployMenu("BuildingMenu", lastContext)
     }
@@ -1285,11 +1289,17 @@
         let start = document.querySelector("#startMission")
         if(start){
           start.parentElement.insertAdjacentHTML("afterend",
-            `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c" id="rerollMissionBtn"><i class="fas fa-reroll"></i> Reroll</button>`
+            `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-reroll"></i> Reroll</button>`
           )
           document.querySelector("#rerollMissionBtn").addEventListener("click", reroll)
         }
         loadingBuilding = false
+      }
+      if(rerolled){
+        setTimeout(()=>{
+          document.querySelector(`[data-tab="tab-missions"]`).click()
+        }, 1)
+        rerolled = false
       }
       return originalDynamicInit(...args)
     }

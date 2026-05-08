@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-07
+// @version      2026-05-08
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1289,7 +1289,7 @@
         let start = document.querySelector("#startMission")
         if(start){
           start.parentElement.insertAdjacentHTML("afterend",
-            `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-reroll"></i> Reroll</button>`
+            `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-random"></i> Reroll</button>`
           )
           document.querySelector("#rerollMissionBtn").addEventListener("click", reroll)
         }

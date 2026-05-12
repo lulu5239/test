@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-08
+// @version      2026-05-13
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -95,7 +95,7 @@
 
       for(let item of items){
         let bgClass = "bg-"+item.color+"-dark";
-        htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.item.id + '" href="#" '
+        htmlBag += '<div class="giftableItem col-3 text-center" style="user-select: none"><a data-id="' + item.item.id + '" href="#" '
           + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
           + '<img src="' + item.item.icon + '" />'
           + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'

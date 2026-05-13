@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-13
+// @version      2026-05-14
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -237,36 +237,6 @@
   }
 
   if(settings.levelUpSlots){
-    /*showSwapModal = (anniemayID)=>{
-      const container = document.querySelector('#waifuSwap');
-      const card = document.querySelector('[data-amid='+anniemayID+']');
-      const position = card.dataset.position
-      
-      // Set name
-      container.querySelector('.insertWaifuName').innerText = card.dataset.nameonly || card.dataset.name || "Animu"
-
-      // Set current slot
-      for(let e of container.querySelectorAll(".actionSetSlot")){
-        if(e.dataset.slot==position){
-          e.classList.add("btn-danger")
-          e.classList.remove("btn-outline-danger")
-        }else{
-          e.classList.remove("btn-danger")
-          e.classList.add("btn-outline-danger")
-        }
-      }
-
-      fetch("/json/party").then(async r=>{
-        let data = await r.json()
-        data = data.reduce((l, e)=>{l[e.position] = e; return l}, [])
-        for(let e of container.querySelector("$swapContainer")){
-          e.style.backgroundImage = e ? `url(${data[e.dataset.slot]})` : null
-        }
-      })
-
-      document.querySelector('#waifuSwapTrigger').click()
-    }*/
-
     document.querySelector("#swapContainer").addEventListener("click", ev=>{
       ev.stopPropagation()
       ev.preventDefault()
@@ -290,14 +260,13 @@
         if(levelingUp.find(a=>a.id==selectedAnniemay)){return document.location.reload()} // Just swapping position of 2 Animus in the party
         let index = levelingUp.findIndex(a=>a.slot===newSlot)
         if(index){levelingUp.splice(index, 1)}
-        if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.amid == selectedAnniemay){
+        if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.id == selectedAnniemay){
           levelingUp.push({
             name: selectedAnimu.name,
             id: selectedAnniemay,
             cardid: selectedAnimu.cardID,
             xp: selectedAnimu.absXP,
             slot: newSlot,
-            name: card.dataset.nameonly,
           })
         }
         GM_setValue("levelingUpAnimus", levelingUp)
@@ -525,7 +494,7 @@
       }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
-      let nextAction = nextCardData?.card?.id===card.card?.id ? action : nextCardData?.card && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card.id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card?.id]!==selected && +cardActions[""+nextCardData.card?.id])
+      let nextAction = nextCardData?.card?.id===card.card?.id ? action : nextCardData?.card && (settings.wishedCardDestination && (wishedCards.includes(""+nextCardData.card.id) || nextCardData.flag === 1 && channel_info[nextCardData.channel_id] === "Just4U") ? settings.wishedCardDestination : +cardActions[""+nextCardData.card?.id]!==selected && +cardActions[""+nextCardData.card?.id])
       if(!nextCard){
         expectedShownEncounter = null
       }else{

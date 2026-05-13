@@ -236,6 +236,75 @@
     }
   }
 
+  if(settings.levelUpSlots){
+    /*showSwapModal = (anniemayID)=>{
+      const container = document.querySelector('#waifuSwap');
+      const card = document.querySelector('[data-amid='+anniemayID+']');
+      const position = card.dataset.position
+      
+      // Set name
+      container.querySelector('.insertWaifuName').innerText = card.dataset.nameonly || card.dataset.name || "Animu"
+
+      // Set current slot
+      for(let e of container.querySelectorAll(".actionSetSlot")){
+        if(e.dataset.slot==position){
+          e.classList.add("btn-danger")
+          e.classList.remove("btn-outline-danger")
+        }else{
+          e.classList.remove("btn-danger")
+          e.classList.add("btn-outline-danger")
+        }
+      }
+
+      fetch("/json/party").then(async r=>{
+        let data = await r.json()
+        data = data.reduce((l, e)=>{l[e.position] = e; return l}, [])
+        for(let e of container.querySelector("$swapContainer")){
+          e.style.backgroundImage = e ? `url(${data[e.dataset.slot]})` : null
+        }
+      })
+
+      document.querySelector('#waifuSwapTrigger').click()
+    }*/
+
+    document.querySelector("#swapContainer").addEventListener("click", ev=>{
+      ev.stopPropagation()
+      ev.preventDefault()
+      const waifu = selectedAnniemay;
+      const newSlot = +ev.target.dataset.slot;
+
+      const request = {
+        '_token': token,
+        'action': 'swap',
+        'slot': newSlot,
+      };
+
+      fetch("/am/" + selectedAnniemay, {
+        method: "POST",
+        body: JSON.stringify(request),
+      }).then(r=>{
+        let levelingUp = GM_getValue("levelingUpAnimus", [])
+        if(levelingUp.find(a=>a.id==selectedAnniemay)){return document.location.reload()} // Just swapping position of 2 Animus in the party
+        let index = levelingUp.findIndex(a=>a.slot===newSlot)
+        if(index){levelingUp.splice(index, 1)}
+        if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu){
+          levelingUp.push({
+            name: selectedAnimu.name,
+            id: selectedAnniemay,
+            cardid: selectedAnimu.cardId,
+            xp: selectedAnimu.absXP,
+            slot: newSlot,
+            name: card.dataset.nameonly,
+          })
+        }
+        document.location.reload()
+      }).catch(e=>{
+        console.error(e)
+        $('#toast-4').toast('show');
+      })
+    }, {capture: true})
+  }
+
   if(path==="/swiper"){
     document.body.insertAdjacentHTML("beforeend", `<style>
       .swiperNextButton {
@@ -1054,10 +1123,12 @@
           data[["perception", "charisma", "luck"][i-2]] = +document.querySelector(`a#im${i} .icon`).innerText
         }
         if(settings.levelUpSlots || settings.swiperShowLevel){
-          let l = Array.from(document.querySelectorAll(".page-content div.card[data-nameonly]"))
+          let l = [...document.querySelectorAll(":has(#formationform) .col-6.col-md-4:has(div.card) :first-child")]
           let newLevelUpSlots = []
+          let slot = -1
           for(let i in l){
             let card = l[i]
+            if(!card.dataset.nameonly){continue}
             let level = +card.querySelector(".levelBadge.badge").innerText.slice(3)
             if(level < 120){
               newLevelUpSlots.push(i)
@@ -1066,6 +1137,7 @@
                 id: card.dataset.amid,
                 cardid: card.dataset.cardid,
                 xp: +card.dataset.absxp,
+                slot: +i,
               })
             }
           }

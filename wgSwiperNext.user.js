@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-07
+// @version      2026-05-14
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -95,7 +95,7 @@
 
       for(let item of items){
         let bgClass = "bg-"+item.color+"-dark";
-        htmlBag += '<div class="giftableItem col-3 text-center"><a data-id="' + item.item.id + '" href="#" '
+        htmlBag += '<div class="giftableItem col-3 text-center" style="user-select: none"><a data-id="' + item.item.id + '" href="#" '
           + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
           + '<img src="' + item.item.icon + '" />'
           + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
@@ -234,6 +234,48 @@
         await new Promise(ok=>setTimeout(ok, 0.7 - t))
       }
     }
+  }
+
+  if(settings.levelUpSlots){
+    document.querySelector("#swapContainer").addEventListener("click", ev=>{
+      ev.stopPropagation()
+      ev.preventDefault()
+      const waifu = selectedAnniemay;
+      const newSlot = +ev.target.dataset.slot;
+
+      const request = {
+        '_token': token,
+        'action': 'swap',
+        'slot': newSlot,
+      };
+
+      fetch("/am/" + selectedAnniemay, {
+        method: "POST",
+        body: JSON.stringify(request),
+        headers: {
+          "content-type": "application/json",
+        },
+      }).then(r=>{
+        let levelingUp = GM_getValue("levelingUpAnimus", [])
+        if(levelingUp.find(a=>a.id==selectedAnniemay)){return document.location.reload()} // Just swapping position of 2 Animus in the party
+        let index = levelingUp.findIndex(a=>a.slot===newSlot)
+        if(index){levelingUp.splice(index, 1)}
+        if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.id == selectedAnniemay){
+          levelingUp.push({
+            name: selectedAnimu.name,
+            id: selectedAnniemay,
+            cardid: selectedAnimu.cardID,
+            xp: selectedAnimu.absXP,
+            slot: newSlot,
+          })
+        }
+        GM_setValue("levelingUpAnimus", levelingUp)
+        document.location.reload()
+      }).catch(e=>{
+        console.error(e)
+        $('#toast-4').toast('show');
+      })
+    }, {capture: true})
   }
 
   if(path==="/swiper"){
@@ -452,7 +494,7 @@
       }
       let nextCard = document.querySelector(".tinder--cards :nth-child(1 of div.tinder--card:not(.removed))")
       let nextCardData = nextCard && $(nextCard).data("data")
-      let nextAction = nextCardData?.card?.id===card.card?.id ? action : nextCardData?.card && (settings.wishedCardDestination && wishedCards.includes(""+nextCardData.card.id) ? settings.wishedCardDestination : +cardActions[""+nextCardData.card?.id]!==selected && +cardActions[""+nextCardData.card?.id])
+      let nextAction = nextCardData?.card?.id===card.card?.id ? action : nextCardData?.card && (settings.wishedCardDestination && (wishedCards.includes(""+nextCardData.card.id) || nextCardData.flag === 1 && channel_info[nextCardData.channel_id] === "Just4U") ? settings.wishedCardDestination : +cardActions[""+nextCardData.card?.id]!==selected && +cardActions[""+nextCardData.card?.id])
       if(!nextCard){
         expectedShownEncounter = null
       }else{
@@ -1054,10 +1096,12 @@
           data[["perception", "charisma", "luck"][i-2]] = +document.querySelector(`a#im${i} .icon`).innerText
         }
         if(settings.levelUpSlots || settings.swiperShowLevel){
-          let l = Array.from(document.querySelectorAll(".page-content div.card[data-nameonly]"))
+          let l = [...document.querySelectorAll(":has(#formationform) .col-6.col-md-4:has(div.card) :first-child")]
           let newLevelUpSlots = []
+          let slot = -1
           for(let i in l){
             let card = l[i]
+            if(!card.dataset.nameonly){continue}
             let level = +card.querySelector(".levelBadge.badge").innerText.slice(3)
             if(level < 120){
               newLevelUpSlots.push(i)
@@ -1066,6 +1110,7 @@
                 id: card.dataset.amid,
                 cardid: card.dataset.cardid,
                 xp: +card.dataset.absxp,
+                slot: +i,
               })
             }
           }
@@ -1289,7 +1334,7 @@
         let start = document.querySelector("#startMission")
         if(start){
           start.parentElement.insertAdjacentHTML("afterend",
-            `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-reroll"></i> Reroll</button>`
+            `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-random"></i> Reroll</button>`
           )
           document.querySelector("#rerollMissionBtn").addEventListener("click", reroll)
         }

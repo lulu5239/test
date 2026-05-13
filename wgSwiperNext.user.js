@@ -290,16 +290,17 @@
         if(levelingUp.find(a=>a.id==selectedAnniemay)){return document.location.reload()} // Just swapping position of 2 Animus in the party
         let index = levelingUp.findIndex(a=>a.slot===newSlot)
         if(index){levelingUp.splice(index, 1)}
-        if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu){
+        if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.amid == selectedAnniemay){
           levelingUp.push({
             name: selectedAnimu.name,
             id: selectedAnniemay,
-            cardid: selectedAnimu.cardId,
+            cardid: selectedAnimu.cardID,
             xp: selectedAnimu.absXP,
             slot: newSlot,
             name: card.dataset.nameonly,
           })
         }
+        GM_setValue("levelingUpAnimus", levelingUp)
         document.location.reload()
       }).catch(e=>{
         console.error(e)

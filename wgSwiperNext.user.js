@@ -282,6 +282,9 @@
       fetch("/am/" + selectedAnniemay, {
         method: "POST",
         body: JSON.stringify(request),
+        headers: {
+          "content-type": "application/json",
+        },
       }).then(r=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
         if(levelingUp.find(a=>a.id==selectedAnniemay)){return document.location.reload()} // Just swapping position of 2 Animus in the party

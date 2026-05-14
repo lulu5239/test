@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-15
+// @version      2026-05-16
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -259,7 +259,7 @@
         let levelingUp = GM_getValue("levelingUpAnimus", [])
         if(levelingUp.find(a=>a.id==selectedAnniemay)){return document.location.reload()} // Just swapping position of 2 Animus in the party
         let index = levelingUp.findIndex(a=>a.slot===newSlot)
-        if(index){levelingUp.splice(index, 1)}
+        if(index>=0){levelingUp.splice(index, 1)}
         if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.id == selectedAnniemay){
           levelingUp.push({
             name: selectedAnimu.name,

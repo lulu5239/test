@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-14
+// @version      2026-05-15
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1096,7 +1096,7 @@
           data[["perception", "charisma", "luck"][i-2]] = +document.querySelector(`a#im${i} .icon`).innerText
         }
         if(settings.levelUpSlots || settings.swiperShowLevel){
-          let l = [...document.querySelectorAll(":has(#formationform) .col-6.col-md-4:has(div.card) :first-child")]
+          let l = [...document.querySelectorAll(":has(#formationform) .col-6.col-md-4:has(div.card)")].map(e=>e.children[0])
           let newLevelUpSlots = []
           let slot = -1
           for(let i in l){

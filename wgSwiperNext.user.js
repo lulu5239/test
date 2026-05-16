@@ -240,7 +240,7 @@
     let box
     if(settings.optionNoSwapReload){
       document.querySelector("#swapContainer").insertAdjacentHTML("beforeend",
-        `<label style="display: block; margin-top: 3px"><input type="checkbox" checked id="swapReloadOption"> Refresh page</label>`
+        `<label style="display: block; margin-top: 10px"><input type="checkbox" checked id="swapReloadOption"> Refresh page</label>`
       )
       box = document.querySelector("#swapContainer #swapReloadOption")
     }

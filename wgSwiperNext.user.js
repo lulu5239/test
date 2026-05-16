@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-16
+// @version      2026-05-17
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -236,8 +236,16 @@
     }
   }
 
-  if(settings.levelUpSlots){
+  if(settings.levelUpSlots || settings.optionNoSwapReload){
+    let box
+    if(settings.optionNoSwapReload){
+      document.querySelector("#swapContainer").insertAdjacentHTML("beforeend",
+        `<label style="display: block; margin-top: 3px"><input type="checkbox" checked id="swapReloadOption"> Refresh page</label>`
+      )
+      box = document.querySelector("#swapContainer #swapReloadOption")
+    }
     document.querySelector("#swapContainer").addEventListener("click", ev=>{
+      if(!ev.target.classList.contains("actionSetSlot")){return}
       ev.stopPropagation()
       ev.preventDefault()
       const waifu = selectedAnniemay;
@@ -257,20 +265,25 @@
         },
       }).then(r=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
-        if(levelingUp.find(a=>a.id==selectedAnniemay)){return document.location.reload()} // Just swapping position of 2 Animus in the party
-        let index = levelingUp.findIndex(a=>a.slot===newSlot)
-        if(index>=0){levelingUp.splice(index, 1)}
-        if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.id == selectedAnniemay){
-          levelingUp.push({
-            name: selectedAnimu.name,
-            id: selectedAnniemay,
-            cardid: selectedAnimu.cardID,
-            xp: selectedAnimu.absXP,
-            slot: newSlot,
-          })
+        if(!levelingUp.find(a=>a.id==selectedAnniemay) && newSlot<6){ // Not just swapping 2 Animus in the party
+          let index = levelingUp.findIndex(a=>a.slot===newSlot)
+          if(index>=0){levelingUp.splice(index, 1)}
+          if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.id == selectedAnniemay && newSlot < 6){
+            levelingUp.push({
+              name: selectedAnimu.name,
+              id: selectedAnniemay,
+              cardid: selectedAnimu.cardID,
+              xp: selectedAnimu.absXP,
+              slot: newSlot,
+            })
+          }
+          GM_setValue("levelingUpAnimus", levelingUp)
         }
-        GM_setValue("levelingUpAnimus", levelingUp)
-        document.location.reload()
+        if(!box || box.checked){
+          document.location.reload()
+        }else{
+          showSuccessToast("Edited team members.")
+        }
       }).catch(e=>{
         console.error(e)
         $('#toast-4').toast('show');
@@ -873,7 +886,8 @@
           <br>
           ${settingCheckbox("fasterWheels", "Make wheels on festival page less slow")}
           ${settingCheckbox("lighterTextColor", "Make text more white")}<br>
-          ${settingCheckbox("rerollWaifuvilleMissions", "Show button to <b>reroll Waifuville missions</b>")}
+          ${settingCheckbox("rerollWaifuvilleMissions", "Show button to <b>reroll Waifuville missions</b>")}<br>
+          ${settingCheckbox("optionNoSwapReload", "Make reloading the page optional when changing party Animus")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-17
+// @version      2026-05-18
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -64,6 +64,11 @@
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     let rerolled = false
+    let alternatives = [
+      ["meal", 2, "snack", "2 snacks"],
+      ["present10000", 2, "present5000", "2 big presents"],
+      ["present20000", 2, "present10000", "2 great presents"],
+    ]
     let setRerollItems = (o)=>{
       let { best, card } = o
       let flavor
@@ -91,15 +96,21 @@
         item.item = item.name==="snack" || item.name==="meal" ? !max && flavor && best[item.name]?.[flavor] || Object.values(best[item.name] || []).reduce((p, e)=>!p || e.count > p.count ? e : p, null) : best[item.name]
         item.i = i
       })
+      for(let a of alternatives){
+        let item = items.find(item=>item.name===a[0])
+        if(!item || item.item){continue}
+        let replacement = items.find(item=>item.name===a[2])
+        if(!replacement || !replacement.item && !replacement.alternative){continue}
+        item.alternative = a[3]
+      }
       items = items.filter(item=>item.item)
 
       for(let item of items){
-        let bgClass = "bg-"+item.color+"-dark";
-        htmlBag += '<div class="giftableItem col-3 text-center" style="user-select: none"><a data-id="' + item.item.id + '" href="#" '
-          + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
-          + '<img src="' + item.item.icon + '" />'
+        htmlBag += <`div class="giftableItem col-3 text-center" style="user-select: none"><a data-id="${item.item?.id || "alternative"}" data-slot="${item.name}" href="#" `
+          + 'class="icon icon-l bg-' + item.color + '-dark rounded-s mb-1" style="width: 48px; height: 48px">'
+          + (item.item ? '<img src="' + item.item.icon + '" />' : "")
           + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
-          + item.item.name + '</p></div>';
+          + (item.item?.name || item.alternative) + '</p></div>';
       }
       
       $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
@@ -116,9 +127,70 @@
           }
         return}
       }
-      if(settings.manualRerollOnly && !args[0] && document.querySelector(".giftableItem")){return}
+      if(settings.manualRerollOnly && !args[0] && document.querySelector("#waifuMenu .giftableItem")){return}
       return originalReroll(...args)
     }
+
+    let delayedClicks = []; let lastClick = 0
+    document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
+      let target = ev.target.closest(".giftableItem")
+      if(!target){return}
+      ev.stopPropagation()
+      ev.preventDefault()
+      target = target.children[0]
+
+      if(target.dataset.id==="alternative"){
+        let a = alternatives.find(a=>a[0]===target.dataset.slot)
+        let e = document.querySelector(`#waifuFeed .giftableItem[data-slot="${a[2]}"]`)
+        if(!e){return showErrorToast("Ran out of the alternative item too!")}
+        for(let i=0; i<a[1]; i++){
+          e.click()
+        }
+      return}
+      
+      let now = +new Date()
+      if(delayedClicks.length || now - lastClick < 500){
+        if(delayedClicks.length>5){return}
+        delayedClicks.push(ev.target.dataset.id)
+      return}
+      lastClick = now
+      if(delayedClicks.length){
+        setTimeout(()=>{
+          while(delayedClicks.length > 0){
+            let e = document.querySelector(`#waifuFeed .giftableItem[data-id="${delayedClicks.splice(0, 1)[0]}"]`)
+            if(!e){continue}
+            e.click()
+          break}
+        }, 500)
+      }
+      
+      let r = await fetch("/am/" + selectedAnniemay, {
+        method: "POST", 
+        body: JSON.stringify({
+          "_token": token,
+          action: "gift",
+          item: target.dataset.id,
+        }),
+        headers: {
+          "content-type": "application/json",
+        },
+      }).catch(e=>{
+        showErrorToast(e.response?.status===429 ? "Rate-limits!" : "Couldn't use item.")
+        throw e
+      })
+      r = await r.json()
+      if(r.message === "Insufficient items available"){
+        showErrorToast("Ran out of that item!")
+        let best = GM_getValue("bestItems")
+        let holder = ["snack", "meal"].includes(target.dataset.slot) ? best[target.dataset.slot] : best
+        for(let k in holder){
+          if(holder[k]?.id == target.dataset.id){delete holder[k]}
+        }
+        GM_setValue("bestItems", best)
+        fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
+      return}
+      return giveItemHandler(r)
+    }, {capture: true})
   }
   let originalGive = giveItemHandler
   giveItemHandler = (...args)=>{
@@ -1235,7 +1307,7 @@
       }
     }
     let presents = {"151": "present5000", "150": "present10000", "149": "present20000", "161": "candy"}
-    let gift = Array.from(document.querySelectorAll(`.actionShowItemSheet[data-type="gift"]`)).reduce((p, item)=>presents[item.dataset.iid] ? p : !p || +item.dataset.count>+p.dataset.count ? item : p, null)
+    let gift = [...document.querySelectorAll(`.actionShowItemSheet[data-type="gift"]`)].reduce((p, item)=>presents[item.dataset.iid] ? p : !p || +item.dataset.count>+p.dataset.count ? item : p, null)
     if(gift){best.gift = storableItem(gift)}
     for(let e of Object.entries(presents)){
       let item = getItem(e[0])

@@ -106,7 +106,7 @@
       items = items.filter(item=>item.item)
 
       for(let item of items){
-        htmlBag += <`div class="giftableItem col-3 text-center" style="user-select: none"><a data-id="${item.item?.id || "alternative"}" data-slot="${item.name}" href="#" `
+        htmlBag += `<div class="giftableItem col-3 text-center" style="user-select: none"><a data-id="${item.item?.id || "alternative"}" data-slot="${item.name}" href="#" `
           + 'class="icon icon-l bg-' + item.color + '-dark rounded-s mb-1" style="width: 48px; height: 48px">'
           + (item.item ? '<img src="' + item.item.icon + '" />' : "")
           + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'

@@ -151,7 +151,7 @@
       let now = +new Date()
       if(delayedClicks.length || now - lastClick < 500){
         if(delayedClicks.length>5){return}
-        delayedClicks.push(ev.target.dataset.id)
+        delayedClicks.push(target.dataset.id)
       return}
       lastClick = now
       if(delayedClicks.length){

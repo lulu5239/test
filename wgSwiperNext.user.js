@@ -139,15 +139,13 @@
         delayedClicks.push(target.dataset.id)
       return}
       lastClick = now
-      if(delayedClicks.length){
-        setTimeout(()=>{
-          while(delayedClicks.length > 0){
-            let e = document.querySelector(`#waifuFeed .giftableItem[data-id="${delayedClicks.splice(0, 1)[0]}"]`)
-            if(!e){continue}
-            clickItem(e)
-          break}
-        }, 500)
-      }
+      setTimeout(()=>{
+        while(delayedClicks.length > 0){
+          let e = document.querySelector(`#waifuFeed .giftableItem a[data-id="${delayedClicks.splice(0, 1)[0]}"]`)
+          if(!e){continue}
+          clickItem(e)
+        break}
+      }, 500)
       
       let r = await fetch("/am/" + selectedAnniemay, {
         method: "POST", 
@@ -158,6 +156,7 @@
         }),
         headers: {
           "content-type": "application/json",
+          accept: "application/json",
         },
       }).catch(e=>{
         showErrorToast(e.response?.status===429 ? "Rate-limits!" : "Couldn't use item.")

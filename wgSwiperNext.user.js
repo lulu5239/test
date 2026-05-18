@@ -132,24 +132,9 @@
     }
 
     let delayedClicks = []; let lastClick = 0
-    document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
-      let target = ev.target.closest(".giftableItem")
-      if(!target){return}
-      ev.stopPropagation()
-      ev.preventDefault()
-      target = target.children[0]
-
-      if(target.dataset.id==="alternative"){
-        let a = alternatives.find(a=>a[0]===target.dataset.slot)
-        let e = document.querySelector(`#waifuFeed .giftableItem[data-slot="${a[2]}"]`)
-        if(!e){return showErrorToast("Ran out of the alternative item too!")}
-        for(let i=0; i<a[1]; i++){
-          e.click()
-        }
-      return}
-      
+    let clickItem; clickItem = async (target, bypass)=>{
       let now = +new Date()
-      if(delayedClicks.length || now - lastClick < 500){
+      if(!bypass && (delayedClicks.length || now - lastClick < 500)){
         if(delayedClicks.length>5){return}
         delayedClicks.push(target.dataset.id)
       return}
@@ -159,7 +144,7 @@
           while(delayedClicks.length > 0){
             let e = document.querySelector(`#waifuFeed .giftableItem[data-id="${delayedClicks.splice(0, 1)[0]}"]`)
             if(!e){continue}
-            e.click()
+            clickItem(e)
           break}
         }, 500)
       }
@@ -190,6 +175,24 @@
         fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
       return}
       return giveItemHandler(r)
+    }
+    document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
+      let target = ev.target.closest(".giftableItem")
+      if(!target){return}
+      ev.stopPropagation()
+      ev.preventDefault()
+      target = target.children[0]
+
+      if(target.dataset.id==="alternative"){
+        let a = alternatives.find(a=>a[0]===target.dataset.slot)
+        let e = document.querySelector(`#waifuFeed .giftableItem[data-slot="${a[2]}"]`)
+        if(!e){return showErrorToast("Ran out of the alternative item too!")}
+        for(let i=0; i<a[1]; i++){
+          e.click()
+        }
+      return}
+      
+      return clickItem(target)
     }, {capture: true})
   }
   let originalGive = giveItemHandler

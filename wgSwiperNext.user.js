@@ -173,6 +173,9 @@
         GM_setValue("bestItems", best)
         fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
       return}
+      if(r.message === "yo wait.."){
+        return showErrorToast("Rate-limits!")
+      }
       return giveItemHandler(r)
     }
     document.querySelector("#waifuFeed").addEventListener("click", async ev=>{

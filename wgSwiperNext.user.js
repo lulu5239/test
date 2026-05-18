@@ -103,7 +103,7 @@
         if(!replacement || !replacement.item && !replacement.alternative){continue}
         item.alternative = a[3]
       }
-      items = items.filter(item=>item.item)
+      items = items.filter(item=>item.item || item.alternative)
 
       for(let item of items){
         htmlBag += `<div class="giftableItem col-3 text-center" style="user-select: none"><a data-id="${item.item?.id || "alternative"}" data-slot="${item.name}" href="#" `
@@ -143,7 +143,7 @@
         while(delayedClicks.length > 0){
           let e = document.querySelector(`#waifuFeed .giftableItem a[data-id="${delayedClicks.splice(0, 1)[0]}"]`)
           if(!e){continue}
-          clickItem(e)
+          clickItem(e, true)
         break}
       }, 500)
       
@@ -184,7 +184,7 @@
 
       if(target.dataset.id==="alternative"){
         let a = alternatives.find(a=>a[0]===target.dataset.slot)
-        let e = document.querySelector(`#waifuFeed .giftableItem[data-slot="${a[2]}"]`)
+        let e = document.querySelector(`#waifuFeed .giftableItem a[data-slot="${a[2]}"]`)
         if(!e){return showErrorToast("Ran out of the alternative item too!")}
         for(let i=0; i<a[1]; i++){
           e.click()

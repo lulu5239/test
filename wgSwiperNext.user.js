@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-18
+// @version      2026-05-20
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -132,6 +132,8 @@
     }
 
     let delayedClicks = []; let lastClick = 0
+    let hpBar = document.querySelector("#waifuMenu .progress .hpBar")
+    $0.style.backgroundColor = "#da4453"; $0.classList.remove("bg-red-dark")
     let clickItem; clickItem = async (target, bypass)=>{
       let now = +new Date()
       if(!bypass && (delayedClicks.length || now - lastClick < 500)){
@@ -139,6 +141,7 @@
         delayedClicks.push(target.dataset.id)
       return}
       lastClick = now
+      hpBar.style.backgroundColor = delayedClicks.length ? "#723" : "#da4453"
       setTimeout(()=>{
         while(delayedClicks.length > 0){
           let e = document.querySelector(`#waifuFeed .giftableItem a[data-id="${delayedClicks.splice(0, 1)[0]}"]`)

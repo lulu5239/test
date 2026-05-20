@@ -134,6 +134,7 @@
     let delayedClicks = []; let lastClick = 0
     let hpBar = document.querySelector("#waifuMenu .progress .hpBar")
     hpBar.style.backgroundColor = "#da4453"; hpBar.classList.remove("bg-red-dark")
+    hpBar.style.transition = "background-color 500ms"
     let clickItem; clickItem = async (target, bypass)=>{
       let now = +new Date()
       if(!bypass && (delayedClicks.length || now - lastClick < 500)){

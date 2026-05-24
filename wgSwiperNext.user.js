@@ -120,7 +120,7 @@
       }
       
       $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
-      p.innerHTML = htmlBag
+      p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{
       if(args[0]){rerolled = true}
@@ -153,8 +153,8 @@
       if(ratelimited){await ratelimited}
       setTimeout(()=>{
         while(delayedClicks.length > 0){
-          let e = document.querySelector(`#waifuFeed .giftableItem a[data-id="${delayedClicks.splice(0, 1)[0]}"]`)
-          if(!e){continue}
+          let e = delayedClicks.splice(0, 1)[0]
+          if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${e[1]}"]`)){continue}
           clickItem(e[0], e[1], true)
         break}
       }, 500)

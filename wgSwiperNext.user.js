@@ -88,7 +88,7 @@
       let max
       if(selectedAnimu?.id == selectedAnniemay){
         if(selectedAnimu.relHP >= 100 && selectedAnimu.relXP >= 100 && !settings.allowWastingItems){
-          return p.innerHTML = "" // No HP or XP is needed
+          return p.style.display = "none" // No HP or XP is needed
         }
         max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
       }
@@ -120,6 +120,7 @@
       }
       
       $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
+      p.style.display = null
       p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{

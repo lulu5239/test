@@ -83,9 +83,15 @@
         flavor = Object.entries(flavor).find(e=>e[1].includes(card.Nature))?.[0]
       }
       
-      let $p = $('#waifuFeed')
+      let p = document.querySelector('#waifuFeed')
       let htmlBag = ""
-      let max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
+      let max
+      if(selectedAnimu?.id == selectedAnniemay){
+        if(selectedAnimu.relHP >= 100 && selectedAnimu.relXP >= 100 && !settings.allowWastingItems){
+          return p.innerHTML = "" // No HP or XP is needed
+        }
+        max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
+      }
 
       let order = max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
       let items = order.map(item=>({
@@ -114,7 +120,7 @@
       }
       
       $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
-      $p.prepend(htmlBag);
+      p.innerHTML = htmlBag
     }
     ReRollGifts = (...args)=>{
       if(args[0]){rerolled = true}
@@ -136,11 +142,11 @@
     hpBar.style.backgroundColor = "#da4453"; hpBar.classList.remove("bg-red-dark")
     hpBar.style.transition = "background-color 600ms, width 600ms"
     let ratelimited
-    let clickItem; clickItem = async (target, bypass)=>{
+    let clickItem; clickItem = async (am, target, bypass)=>{
       let now = +new Date()
       if(!bypass && (delayedClicks.length || now - lastClick < 500)){
         if(delayedClicks.length>5){return}
-        delayedClicks.push(target.dataset.id)
+        delayedClicks.push([am, target])
         hpBar.style.backgroundColor = "#723"
       return}
       lastClick = now
@@ -149,12 +155,15 @@
         while(delayedClicks.length > 0){
           let e = document.querySelector(`#waifuFeed .giftableItem a[data-id="${delayedClicks.splice(0, 1)[0]}"]`)
           if(!e){continue}
-          clickItem(e, true)
+          clickItem(e[0], e[1], true)
         break}
       }, 500)
       if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
-      
-      let r = await fetch("/am/" + selectedAnniemay, {
+
+      if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.relHP >= 100 && selectedAnimu.relXP >= 100 && !settings.allowWastingItems){
+        showErrorToast("The Animu doesn't need items!")
+      }
+      let r = await fetch("/am/" + am, {
         method: "POST", 
         body: JSON.stringify({
           "_token": token,
@@ -184,6 +193,17 @@
       if(r.message === "yo wait.."){
         return showErrorToast("Rate-limits!")
       }
+      if(r.message && !r.currentXP){
+        return showErrorToast(r.message)
+      }
+      if(selectedAnimu?.id == am){
+        selectedAnimu.absXP = r.currentXP
+        selectedAnimu.relHP = r.relativeHP
+        selectedAnimu.relXP = Math.min(r.relativeXP, 100)
+        selectedAnimu.hpText = r.hpAbs
+        selectedAnimu.xpText = r.xpAbs
+        selectedAnimu.levem = r.level
+      }
       return giveItemHandler(r)
     }
     document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
@@ -202,7 +222,7 @@
         }
       return}
       
-      return clickItem(target)
+      return clickItem(selectedAnniemay, target)
     }, {capture: true})
   }
   let originalGive = giveItemHandler

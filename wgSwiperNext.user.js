@@ -154,7 +154,7 @@
       setTimeout(()=>{
         while(delayedClicks.length > 0){
           let e = delayedClicks.splice(0, 1)[0]
-          if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${e[1]}"]`)){continue}
+          if(!e[1].closest("body")){continue}
           clickItem(e[0], e[1], true)
         break}
       }, 500)

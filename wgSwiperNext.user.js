@@ -182,7 +182,7 @@
       r = await r.json()
       if(r.message === "Insufficient items available"){
         showErrorToast("Ran out of that item!")
-        ratelimited = new Promise(ok=>setTimeout(()=>{ratelimited = undefined; ok()}, 3000))
+        ratelimited = new Promise(ok=>setTimeout(()=>{ratelimited = undefined; ok()}, 5000))
         let best = GM_getValue("bestItems")
         let holder = ["snack", "meal"].includes(target.dataset.slot) ? best[target.dataset.slot] : best
         for(let k in holder){

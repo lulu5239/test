@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-21
+// @version      2026-05-24
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -135,14 +135,16 @@
     let hpBar = document.querySelector("#waifuMenu .progress .hpBar")
     hpBar.style.backgroundColor = "#da4453"; hpBar.classList.remove("bg-red-dark")
     hpBar.style.transition = "background-color 600ms, width 600ms"
+    let ratelimited
     let clickItem; clickItem = async (target, bypass)=>{
       let now = +new Date()
       if(!bypass && (delayedClicks.length || now - lastClick < 500)){
         if(delayedClicks.length>5){return}
         delayedClicks.push(target.dataset.id)
+        hpBar.style.backgroundColor = "#723"
       return}
       lastClick = now
-      hpBar.style.backgroundColor = delayedClicks.length ? "#723" : "#da4453"
+      if(ratelimited){await ratelimited}
       setTimeout(()=>{
         while(delayedClicks.length > 0){
           let e = document.querySelector(`#waifuFeed .giftableItem a[data-id="${delayedClicks.splice(0, 1)[0]}"]`)
@@ -150,6 +152,7 @@
           clickItem(e, true)
         break}
       }, 500)
+      if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
       
       let r = await fetch("/am/" + selectedAnniemay, {
         method: "POST", 
@@ -169,6 +172,7 @@
       r = await r.json()
       if(r.message === "Insufficient items available"){
         showErrorToast("Ran out of that item!")
+        ratelimited = new Promise(ok=>setTimeout(()=>{ratelimited = undefined; ok()}, 3000))
         let best = GM_getValue("bestItems")
         let holder = ["snack", "meal"].includes(target.dataset.slot) ? best[target.dataset.slot] : best
         for(let k in holder){

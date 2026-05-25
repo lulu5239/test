@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-16
+// @version      2026-05-24
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -64,6 +64,11 @@
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     let rerolled = false
+    let alternatives = [
+      ["meal", 2, "snack", "2 snacks"],
+      ["present10000", 2, "present5000", "2 big presents"],
+      ["present20000", 2, "present10000", "2 great presents"],
+    ]
     let setRerollItems = (o)=>{
       let { best, card } = o
       let flavor
@@ -78,9 +83,15 @@
         flavor = Object.entries(flavor).find(e=>e[1].includes(card.Nature))?.[0]
       }
       
-      let $p = $('#waifuFeed')
+      let p = document.querySelector('#waifuFeed')
       let htmlBag = ""
-      let max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
+      let max
+      if(selectedAnimu?.id == selectedAnniemay){
+        if(selectedAnimu.relHP >= 100 && selectedAnimu.relXP >= 100 && !settings.allowWastingItems){
+          return p.style.display = "none" // No HP or XP is needed
+        }
+        max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
+      }
 
       let order = max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
       let items = order.map(item=>({
@@ -91,19 +102,26 @@
         item.item = item.name==="snack" || item.name==="meal" ? !max && flavor && best[item.name]?.[flavor] || Object.values(best[item.name] || []).reduce((p, e)=>!p || e.count > p.count ? e : p, null) : best[item.name]
         item.i = i
       })
-      items = items.filter(item=>item.item)
+      for(let a of alternatives){
+        let item = items.find(item=>item.name===a[0])
+        if(!item || item.item){continue}
+        let replacement = items.find(item=>item.name===a[2])
+        if(!replacement || !replacement.item && !replacement.alternative){continue}
+        item.alternative = a[3]
+      }
+      items = items.filter(item=>item.item || item.alternative)
 
       for(let item of items){
-        let bgClass = "bg-"+item.color+"-dark";
-        htmlBag += '<div class="giftableItem col-3 text-center" style="user-select: none"><a data-id="' + item.item.id + '" href="#" '
-          + 'class="icon icon-l ' + bgClass + ' rounded-s mb-1">'
-          + '<img src="' + item.item.icon + '" />'
+        htmlBag += `<div class="giftableItem col-3 text-center" style="user-select: none"><a data-id="${item.item?.id || "alternative"}" data-slot="${item.name}" href="#" `
+          + 'class="icon icon-l bg-' + item.color + '-dark rounded-s mb-1" style="width: 48px; height: 48px">'
+          + (item.item ? '<img src="' + item.item.icon + '" />' : "")
           + '<br></a><p class="font-11 text-center opacity-70 line-height-xs">'
-          + item.item.name + '</p></div>';
+          + (item.item?.name || item.alternative) + '</p></div>';
       }
       
       $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
-      $p.prepend(htmlBag);
+      p.style.display = null
+      p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{
       if(args[0]){rerolled = true}
@@ -116,9 +134,97 @@
           }
         return}
       }
-      if(settings.manualRerollOnly && !args[0] && document.querySelector(".giftableItem")){return}
+      if(settings.manualRerollOnly && !args[0] && document.querySelector("#waifuMenu .giftableItem")){return}
       return originalReroll(...args)
     }
+
+    let delayedClicks = []; let lastClick = 0
+    let hpBar = document.querySelector("#waifuMenu .progress .hpBar")
+    hpBar.style.backgroundColor = "#da4453"; hpBar.classList.remove("bg-red-dark")
+    hpBar.style.transition = "background-color 600ms, width 600ms"
+    let ratelimited
+    let clickItem; clickItem = async (am, target, bypass)=>{
+      let now = +new Date()
+      if(!bypass && (delayedClicks.length || now - lastClick < 500)){
+        if(delayedClicks.length>5){return}
+        delayedClicks.push([am, target])
+        hpBar.style.backgroundColor = "#723"
+      return}
+      lastClick = now
+      if(ratelimited){await ratelimited}
+      setTimeout(()=>{
+        while(delayedClicks.length > 0){
+          let e = delayedClicks.splice(0, 1)[0]
+          if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${e[1].dataset.id}"]`)){continue}
+          clickItem(e[0], e[1], true)
+        break}
+      }, 500)
+      if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
+
+      if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.relHP >= 100 && selectedAnimu.relXP >= 100 && !settings.allowWastingItems){
+        showErrorToast("The Animu doesn't need items!")
+      }
+      let r = await fetch("/am/" + am, {
+        method: "POST", 
+        body: JSON.stringify({
+          "_token": token,
+          action: "gift",
+          item: target.dataset.id,
+        }),
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+      }).catch(e=>{
+        showErrorToast(e.response?.status===429 ? "Rate-limits!" : "Couldn't use item.")
+        throw e
+      })
+      r = await r.json()
+      if(r.message === "Insufficient items available"){
+        showErrorToast("Ran out of that item!")
+        ratelimited = new Promise(ok=>setTimeout(()=>{ratelimited = undefined; ok()}, 5000))
+        let best = GM_getValue("bestItems")
+        let holder = ["snack", "meal"].includes(target.dataset.slot) ? best[target.dataset.slot] : best
+        for(let k in holder){
+          if(holder[k]?.id == target.dataset.id){delete holder[k]}
+        }
+        GM_setValue("bestItems", best)
+        fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
+      return}
+      if(r.message === "yo wait.."){
+        return showErrorToast("Rate-limits!")
+      }
+      if(r.message && !r.currentXP){
+        return showErrorToast(r.message)
+      }
+      if(selectedAnimu?.id == am){
+        selectedAnimu.absXP = r.currentXP
+        selectedAnimu.relHP = r.relativeHP
+        selectedAnimu.relXP = Math.min(r.relativeXP, 100)
+        selectedAnimu.hpText = r.hpAbs
+        selectedAnimu.xpText = r.xpAbs
+        selectedAnimu.levem = r.level
+      }
+      return giveItemHandler(r)
+    }
+    document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
+      let target = ev.target.closest(".giftableItem")
+      if(!target){return}
+      ev.stopPropagation()
+      ev.preventDefault()
+      target = target.children[0]
+
+      if(target.dataset.id==="alternative"){
+        let a = alternatives.find(a=>a[0]===target.dataset.slot)
+        let e = document.querySelector(`#waifuFeed .giftableItem a[data-slot="${a[2]}"]`)
+        if(!e){return showErrorToast("Ran out of the alternative item too!")}
+        for(let i=0; i<a[1]; i++){
+          e.click()
+        }
+      return}
+      
+      return clickItem(selectedAnniemay, target)
+    }, {capture: true})
   }
   let originalGive = giveItemHandler
   giveItemHandler = (...args)=>{
@@ -236,8 +342,16 @@
     }
   }
 
-  if(settings.levelUpSlots){
+  if(settings.levelUpSlots || settings.optionNoSwapReload){
+    let box
+    if(settings.optionNoSwapReload){
+      document.querySelector("#swapContainer").insertAdjacentHTML("beforeend",
+        `<label style="display: block; margin-top: 10px"><input type="checkbox" checked id="swapReloadOption"> Refresh page</label>`
+      )
+      box = document.querySelector("#swapContainer #swapReloadOption")
+    }
     document.querySelector("#swapContainer").addEventListener("click", ev=>{
+      if(!ev.target.classList.contains("actionSetSlot")){return}
       ev.stopPropagation()
       ev.preventDefault()
       const waifu = selectedAnniemay;
@@ -257,20 +371,25 @@
         },
       }).then(r=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
-        if(levelingUp.find(a=>a.id==selectedAnniemay)){return document.location.reload()} // Just swapping position of 2 Animus in the party
-        let index = levelingUp.findIndex(a=>a.slot===newSlot)
-        if(index>=0){levelingUp.splice(index, 1)}
-        if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.id == selectedAnniemay){
-          levelingUp.push({
-            name: selectedAnimu.name,
-            id: selectedAnniemay,
-            cardid: selectedAnimu.cardID,
-            xp: selectedAnimu.absXP,
-            slot: newSlot,
-          })
+        if(!levelingUp.find(a=>a.id==selectedAnniemay) && newSlot<6){ // Not just swapping 2 Animus in the party
+          let index = levelingUp.findIndex(a=>a.slot===newSlot)
+          if(index>=0){levelingUp.splice(index, 1)}
+          if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.id == selectedAnniemay && newSlot < 6){
+            levelingUp.push({
+              name: selectedAnimu.name,
+              id: selectedAnniemay,
+              cardid: selectedAnimu.cardID,
+              xp: selectedAnimu.absXP,
+              slot: newSlot,
+            })
+          }
+          GM_setValue("levelingUpAnimus", levelingUp)
         }
-        GM_setValue("levelingUpAnimus", levelingUp)
-        document.location.reload()
+        if(!box || box.checked){
+          document.location.reload()
+        }else{
+          showSuccessToast("Edited team members.")
+        }
       }).catch(e=>{
         console.error(e)
         $('#toast-4').toast('show');
@@ -873,7 +992,8 @@
           <br>
           ${settingCheckbox("fasterWheels", "Make wheels on festival page less slow")}
           ${settingCheckbox("lighterTextColor", "Make text more white")}<br>
-          ${settingCheckbox("rerollWaifuvilleMissions", "Show button to <b>reroll Waifuville missions</b>")}
+          ${settingCheckbox("rerollWaifuvilleMissions", "Show button to <b>reroll Waifuville missions</b>")}<br>
+          ${settingCheckbox("optionNoSwapReload", "Make reloading the page optional when changing party Animus")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -1221,7 +1341,7 @@
       }
     }
     let presents = {"151": "present5000", "150": "present10000", "149": "present20000", "161": "candy"}
-    let gift = Array.from(document.querySelectorAll(`.actionShowItemSheet[data-type="gift"]`)).reduce((p, item)=>presents[item.dataset.iid] ? p : !p || +item.dataset.count>+p.dataset.count ? item : p, null)
+    let gift = [...document.querySelectorAll(`.actionShowItemSheet[data-type="gift"]`)].reduce((p, item)=>presents[item.dataset.iid] ? p : !p || +item.dataset.count>+p.dataset.count ? item : p, null)
     if(gift){best.gift = storableItem(gift)}
     for(let e of Object.entries(presents)){
       let item = getItem(e[0])

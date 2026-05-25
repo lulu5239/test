@@ -518,8 +518,8 @@
           name: lowest.name,
           id: lowest.id,
           cardID: lowest.cardid,
-          xpText: `Level ${level}, ${lowest.xp - levelXP}/${needXP} XP`,
-          relXP: (lowest.xp - levelXP) / needXP,
+          xpText: `${lowest.xp - levelXP}/${needXP} XP to Lv.${level+1}`,
+          relXP: (lowest.xp - levelXP) / needXP *100,
           hpText: "unloaded",
           relHP: 0,
         }, true)

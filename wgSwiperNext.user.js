@@ -88,7 +88,7 @@
       let max
       if(selectedAnimu?.id == selectedAnniemay){
         if(selectedAnimu.relHP >= 100 && selectedAnimu.relXP >= 100 && !settings.allowWastingItems){
-          return p.style.display = "none" // No HP or XP is needed
+          return // No HP or XP is needed
         }
         max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
       }
@@ -120,7 +120,6 @@
       }
       
       $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
-      p.style.display = null
       p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{
@@ -161,7 +160,7 @@
       }, 500)
       if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
 
-      if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.relHP >= 100 && selectedAnimu.relXP >= 100 && !settings.allowWastingItems){
+      if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>!p || n===p, null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
         showErrorToast("The Animu doesn't need items!")
       }
       let r = await fetch("/am/" + am, {
@@ -203,7 +202,7 @@
         selectedAnimu.relXP = Math.min(r.relativeXP, 100)
         selectedAnimu.hpText = r.hpAbs
         selectedAnimu.xpText = r.xpAbs
-        selectedAnimu.levem = r.level
+        selectedAnimu.level = r.level
       }
       return giveItemHandler(r)
     }

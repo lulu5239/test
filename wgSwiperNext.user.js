@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-24
+// @version      2026-05-25
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -476,15 +476,28 @@
           <div style="position: relative; width: 50%; height: 3px; background-color: #f86; bottom: 0px; left: 0px"></div>
         </div>`)
       let levelIndicator = document.querySelector("#levelIndicator")
-      gainXP = (xp, name)=>{
+      let lowest
+      gainXP = async (xp, name)=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
         let receiving = (name ? levelingUp.filter(am=>am.name===name) : levelingUp)
         .filter(am=>am.xp < Math.pow(120, 3))
-        for(let am of receiving){
-          am.xp += Math.floor(xp / receiving.length)
+        if(xp === "fetch"){
+          if(settings.swiperShowLevel !== "exact"){return}
+          for(let am of receiving){
+            let data = await fetch("/json/am/" + am.id)
+            data = await data.json()
+            if(data.message && !data.absXP){
+              showErrorToast(data.message)
+            continue}
+            am.xp = data.absXP
+          }
+        }else{
+          for(let am of receiving){
+            am.xp += Math.floor(xp / receiving.length)
+          }
         }
         GM_setValue("levelingUpAnimus", levelingUp)
-        let lowest = receiving.reduce((p, am)=>!p || am.xp<p.xp ? am : p, null)
+        lowest = receiving.reduce((p, am)=>!p || am.xp<p.xp ? am : p, null)
         if(!lowest){
           levelIndicator.querySelector("span").innerText = "Wasting XP"
           levelIndicator.querySelector("div").style.width = "100%"
@@ -496,6 +509,21 @@
         levelIndicator.querySelector("div").style.width = Math.floor((lowest.xp - levelXP) / (Math.pow(level+1, 3) - levelXP) * 100)+"%"
       }
       gainXP(0)
+      levelIndicator.addEventListener("click", ()=>{
+        if(!lowest){return}
+        let level = Math.floor(Math.pow(lowest.xp, 1/3))
+        let levelXP = Math.pow(level, 3)
+        let needXP = Math.pow(level+1, 3) - levelXP
+        showWaifuMenu({
+          name: lowest.name,
+          id: lowest.id,
+          cardID: lowest.cardid,
+          xpText: `Level ${level}, ${lowest.xp - levelXP}/${needXP} XP`,
+          relXP: (lowest.xp - levelXP) / needXP,
+          hpText: "unloaded",
+          relHP: 0,
+        }, true)
+      })
     }
     let updateMainButton = ()=>{
       mainButton.querySelector(".fa, .fas").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")
@@ -666,8 +694,10 @@
           if(levelUp >= 0){words.splice(levelUp, 2)}
           let xpPos = words.findIndex(w=>w.slice(0, 1)==="+" && w.slice(-2)==="XP")
           let xp = +words[xpPos].slice(1, -2).replace(/\,/g, "")
-          let name = words.slice(words.findIndex(w=>w==="Outcome:")+1, xpPos).join(" ")
+          let name = words.slice(words.findIndex(w=>w==="Outcome:")+1, xpPos).join(" ") // Support split XP
           if(gainXP){gainXP(xp, name)}
+        }else if(data.result.endsWith("...")){
+          if(gainXP){gainXP("fetch")}
         }
         if(originalSuccessFn){return originalSuccessFn(data)}
       })
@@ -968,7 +998,11 @@
             {value: "right", name: "vertically (right side)"},
             {value: "left", name: "vertically (left side)"},
           ])}<br>
-          ${settingCheckbox("swiperShowLevel", "Guess Animu <b>level</b>")}<br>
+          ${settingSelect("swiperShowLevel", [
+            {value: "", name: "Don't show"},
+            {value: "true", name: "Guess"},
+            {value: "exact", name: "Show exact"},
+          ])} Animu <b>level</b><br>
           On the swiper page, depending of your play style, you might want the big button to become the crush button (it also works with the other features).<br>
           ${settingCheckbox("swapFlirtCrush", "<b>Swap flirt and crush</b> buttons")}<br>
           ${settingCheckbox("preventRemovingShownEncounter", "Disallow other scripts to remove the encounter you're seeing")} <i>(only needed if the swiper page has bugs)</i><br>

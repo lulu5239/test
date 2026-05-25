@@ -160,7 +160,7 @@
       }, 500)
       if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
 
-      if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>!p || n===p, null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
+      if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
         showErrorToast("The Animu doesn't need items!")
       }
       let r = await fetch("/am/" + am, {

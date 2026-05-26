@@ -475,7 +475,6 @@
           <div style="position: relative; width: 50%; height: 3px; background-color: #f86; bottom: 0px; left: 0px"></div>
         </div>`)
       let levelIndicator = document.querySelector("#levelIndicator")
-      let lowest
       gainXP = async (xp, name)=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
         let receiving = (name ? levelingUp.filter(am=>am.name===name) : levelingUp)
@@ -495,8 +494,9 @@
             am.xp += Math.floor(xp / receiving.length)
           }
         }
+        // Support removing now level 120 Animus
         GM_setValue("levelingUpAnimus", levelingUp)
-        lowest = receiving.reduce((p, am)=>!p || am.xp<p.xp ? am : p, null)
+        let lowest = receiving.reduce((p, am)=>!p || am.xp<p.xp ? am : p, null)
         if(!lowest){
           levelIndicator.querySelector("span").innerText = "Wasting XP"
           levelIndicator.querySelector("div").style.width = "100%"
@@ -510,16 +510,17 @@
       gainXP(0)
       document.addEventListener("focus", ()=>{gainXP(0)})
       levelIndicator.addEventListener("click", ()=>{
-        if(!lowest){return}
-        let level = Math.floor(Math.pow(lowest.xp, 1/3))
+        let am = GM_getValue("levelingUpAnimus", [])[0]
+        if(!am){return}
+        let level = Math.floor(Math.pow(am.xp, 1/3))
         let levelXP = Math.pow(level, 3)
         let needXP = Math.pow(level+1, 3) - levelXP
         showWaifuMenu({
-          name: lowest.name,
-          id: lowest.id,
-          cardID: lowest.cardid,
-          xpText: `${lowest.xp - levelXP}/${needXP} XP to Lv.${level+1}`,
-          relXP: (lowest.xp - levelXP) / needXP *100,
+          name: am.name,
+          id: am.id,
+          cardID: am.cardid,
+          xpText: `${am.xp - levelXP}/${needXP} XP to Lv.${level+1}`,
+          relXP: (am.xp - levelXP) / needXP *100,
           hpText: "unloaded",
           relHP: 0,
         }, true)

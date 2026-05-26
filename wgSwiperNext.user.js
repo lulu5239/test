@@ -508,6 +508,7 @@
         levelIndicator.querySelector("div").style.width = Math.floor((lowest.xp - levelXP) / (Math.pow(level+1, 3) - levelXP) * 100)+"%"
       }
       gainXP(0)
+      document.addEventListener("focus", ()=>{gainXP(0)})
       levelIndicator.addEventListener("click", ()=>{
         if(!lowest){return}
         let level = Math.floor(Math.pow(lowest.xp, 1/3))

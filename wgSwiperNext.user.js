@@ -679,6 +679,8 @@
         }
         if(!card.card){
           //
+        }else if(data.result.endsWith("..."){
+          if(gainXP){gainXP("fetch")}
         }else if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")
           let xp = +words[words.findIndex(words.includes("+") ? (c=>c==="+") : (c=>c==="and"))+1]
@@ -689,16 +691,20 @@
             swiperNextButtons.querySelector(`div[data-formation="${Object.keys(formations).find(k=>(formations[k]===formation))}"]`).innerText = charisma
           }
           if(gainXP){gainXP(xp)}
-        }else if(data.result.includes("... Outcome:")){
-          let words = data.result.split(" ")
-          let levelUp = words.findIndex(w=>w==="Lv.UP")
-          if(levelUp >= 0){words.splice(levelUp, 2)}
-          let xpPos = words.findIndex(w=>w.slice(0, 1)==="+" && w.slice(-2)==="XP")
-          let xp = +words[xpPos].slice(1, -2).replace(/\,/g, "")
-          let name = words.slice(words.findIndex(w=>w==="Outcome:")+1, xpPos).join(" ") // Support split XP
-          if(gainXP){gainXP(xp, name)}
-        }else if(data.result.endsWith("...")){
-          if(gainXP){gainXP("fetch")}
+        }else if(data.result.includes("... Outcome: ")){
+          // 👊❓ “Lulu5239” auto-battled Mishima Kazuya #22 (Lv.85)... Outcome: Lv.UP +1 Asuna #1307 +8,655XP
+          // 👊❓ “Lulu5239” auto-battled Cersea Soulstorm #12 (Lv.95)... Outcome: Asuna #956 +5,606XP KO, Adult Neptune #43 +5,606XP
+          let i = 0
+          let words = data.result.slice(data.result.indexOf("... Outcome: ")+13).split(" ")
+          while(i<words.length){
+            if(words[i]==="Lv.UP"){i += 2}
+            let name = words.slice(i, words.findIndex((w, p)=>p>i && w.slice(0, 1)==="+" && w.slice(-2)==="XP"))
+            i += name.length // name is array of words
+            let xp = +words[i].slice(1, -2).replace(/\,/g, "")
+            i++
+            if(words[i]==="KO,"){i++}
+            if(gainXP){gainXP(xp, name.join(" "))}
+          }
         }
         if(originalSuccessFn){return originalSuccessFn(data)}
       })

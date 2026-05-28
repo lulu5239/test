@@ -231,7 +231,7 @@
     let receiving = levelingUp.find(am=>am.id==selectedAnniemay)
     if(receiving){
       receiving.xp = args[0].currentXP
-      GM_setValue("levelingUpAnimus", levelingUp)
+      GM_setValue("levelingUpAnimus", levelingUp.filter(am=>!(am.xp > Math.pow(120, 3))))
     }
     let e = document.querySelector(`#page .page-content [data-amid="${selectedAnniemay}"]`) || document.querySelector(`#page .page-content [data-anniemay="${selectedAnniemay}"]`)
     if(e){
@@ -478,7 +478,7 @@
       gainXP = async (xp, name)=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
         let receiving = (name ? levelingUp.filter(am=>am.name===name) : levelingUp)
-        .filter(am=>am.xp < Math.pow(120, 3))
+        .filter(am=>!(am.xp > Math.pow(120, 3)))
         if(xp === "fetch"){
           if(settings.swiperShowLevel !== "exact"){return}
           for(let am of receiving){
@@ -494,8 +494,7 @@
             am.xp += Math.floor(xp / receiving.length)
           }
         }
-        // Support removing now level 120 Animus
-        GM_setValue("levelingUpAnimus", levelingUp)
+        GM_setValue("levelingUpAnimus", levelingUp.filter(am=>!(am.xp > Math.pow(120, 3))))
         let lowest = receiving.reduce((p, am)=>!p || am.xp<p.xp ? am : p, null)
         if(!lowest){
           levelIndicator.querySelector("span").innerText = "Wasting XP"
@@ -525,6 +524,12 @@
           relHP: 0,
         }, true)
       })
+      let previousGiveItemHandler = giveItemHandler
+      giveItemHandler = (...args)=>{
+        let r = previousGiveItemHandler(...args)
+        gainXP(0)
+        return r
+      }
     }
     let updateMainButton = ()=>{
       mainButton.querySelector(".fa, .fas").className = "fa fa-"+(getSelected()===0 && document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.battlemode ? "swords" : settings.swapFlirtCrush && !(settings.neverCrushWithDestination && getSelected()>0 || document.querySelector(`.swiperNextButton[data-nextaction="0"]`).dataset.forceflirt) ? "trash" : "heart")

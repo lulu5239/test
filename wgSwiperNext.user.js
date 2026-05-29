@@ -685,7 +685,7 @@
         }
         if(!card.card){
           //
-        }else if(data.result.endsWith("..."){
+        }else if(data.result.endsWith("...")){
           if(gainXP){gainXP("fetch")}
         }else if(!data.result.endsWith("...") && (data.result.includes(" + ") || data.result.includes(" and "))){
           let words = data.result.split(" ")

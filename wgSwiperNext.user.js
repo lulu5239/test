@@ -700,15 +700,17 @@
         }else if(data.result.includes("... Outcome: ")){
           // 👊❓ “Lulu5239” auto-battled Mishima Kazuya #22 (Lv.85)... Outcome: Lv.UP +1 Asuna #1307 +8,655XP
           // 👊❓ “Lulu5239” auto-battled Cersea Soulstorm #12 (Lv.95)... Outcome: Asuna #956 +5,606XP KO, Adult Neptune #43 +5,606XP
+          // 👊❓ “Lulu5239” auto-battled Towa Herschel #73 (Lv.75)... Outcome: Lv.UP +1 Asuna #5292 +5,265XP LowHP
           let i = 0
           let words = data.result.slice(data.result.indexOf("... Outcome: ")+13).split(" ")
           while(i<words.length){
             if(words[i]==="Lv.UP"){i += 2}
             let name = words.slice(i, words.findIndex((w, p)=>p>i && w.slice(0, 1)==="+" && w.slice(-2)==="XP"))
+            if(!name.length){break}
             i += name.length // name is array of words
             let xp = +words[i].slice(1, -2).replace(/\,/g, "")
             i++
-            if(words[i]==="KO,"){i++}
+            if(words[i]==="KO," || words[i]==="LowHP"){i++}
             if(gainXP){gainXP(xp, name.join(" "))}
           }
         }

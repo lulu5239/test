@@ -137,27 +137,19 @@
       return originalReroll(...args)
     }
 
-    let delayedClicks = []; let lastClick = 0
+    let delayedClicks = []; let clicked = 0
     let hpBar = document.querySelector("#waifuMenu .progress .hpBar")
     hpBar.style.backgroundColor = "#da4453"; hpBar.classList.remove("bg-red-dark")
     hpBar.style.transition = "background-color 600ms, width 600ms"
     let ratelimited
     let clickItem; clickItem = async (am, target, bypass)=>{
-      if(ratelimited){await ratelimited}
       let now = +new Date()
-      if(!bypass && (delayedClicks.length || now - lastClick < 500)){
+      if(!bypass && (clicked || delayedClicks.length)){
         if(delayedClicks.length>5){return}
         delayedClicks.push([am, target])
         hpBar.style.backgroundColor = "#723"
       return}
-      lastClick = now
-      setTimeout(async ()=>{
-        while(delayedClicks.length > 0){
-          let e = delayedClicks.splice(0, 1)[0]
-          if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${e[1].dataset.id}"]`)){continue}
-          clickItem(e[0], e[1], true)
-        break}
-      }, 500)
+      if(ratelimited){await ratelimited}
       if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
 
       if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
@@ -176,9 +168,18 @@
         },
       }).catch(e=>{
         showErrorToast(e.response?.status===429 ? "Rate-limits!" : "Couldn't use item.")
+        clicked = false
         throw e
       })
-      r = await r.json()
+      r = await r.json().catch(console.warn) || {message: "Couldn't parse JSON..."}
+      setTimeout(()=>{
+        clicked = false
+        while(delayedClicks.length > 0){
+          let e = delayedClicks.splice(0, 1)[0]
+          if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${e[1].dataset.id}"]`)){continue}
+          clickItem(e[0], e[1], true)
+        break}
+      }, Math.max(0, 500 - (+new Date() - now)))
       if(r.message === "Insufficient items available"){
         showErrorToast("Ran out of that item!")
         ratelimited = new Promise(ok=>setTimeout(()=>{ratelimited = undefined; ok()}, 5000))

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-30
+// @version      2026-06-01
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -141,8 +141,16 @@
     let hpBar = document.querySelector("#waifuMenu .progress .hpBar")
     hpBar.style.backgroundColor = "#da4453"; hpBar.classList.remove("bg-red-dark")
     hpBar.style.transition = "background-color 600ms, width 600ms"
-    let ratelimited
-    let clickItem; clickItem = async (am, target, bypass)=>{
+    let ratelimited; let clickItem
+    let clickNext = ()=>{
+      clicked = false
+      while(delayedClicks.length > 0){
+        let e = delayedClicks.splice(0, 1)[0]
+        if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${e[1].dataset.id}"]`)){continue}
+        clickItem(e[0], e[1], true)
+      break}
+    }
+    clickItem = async (am, target, bypass)=>{
       let now = +new Date()
       if(!bypass && (clicked || delayedClicks.length)){
         if(delayedClicks.length>5){return}
@@ -154,8 +162,11 @@
       if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
 
       if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
-clicked = false
+        clicked = false
         return showErrorToast("The Animu doesn't need items!")
+      }
+      if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${target.dataset.id}"]`)){
+        return clickNext()
       }
       let r = await fetch("/am/" + am, {
         method: "POST", 
@@ -174,14 +185,7 @@ clicked = false
         throw e
       })
       r = await r.json().catch(console.warn) || {message: "Couldn't parse JSON..."}
-      setTimeout(()=>{
-        clicked = false
-        while(delayedClicks.length > 0){
-          let e = delayedClicks.splice(0, 1)[0]
-          if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${e[1].dataset.id}"]`)){continue}
-          clickItem(e[0], e[1], true)
-        break}
-      }, Math.max(0, 500 - (+new Date() - now)))
+      setTimeout(clickNext, Math.max(0, 500 - (+new Date() - now)))
       if(r.message === "Insufficient items available"){
         showErrorToast("Ran out of that item!")
         ratelimited = new Promise(ok=>setTimeout(()=>{ratelimited = undefined; ok()}, 5000))

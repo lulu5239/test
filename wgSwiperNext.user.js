@@ -713,7 +713,7 @@
           let words = data.result.slice(data.result.indexOf("... Outcome: ")+13).split(" ")
           while(i<words.length){
             if(words[i]==="Lv.UP"){i += 2}
-            let words.findIndex((w, p)=>p>i && w.slice(0, 1)==="+" && w.slice(-2)==="XP")
+            let words = words.findIndex((w, p)=>p>i && w.slice(0, 1)==="+" && w.slice(-2)==="XP")
             if(name===-1){break}
             name = words.slice(i, name)
             i += name.length // name is array of words

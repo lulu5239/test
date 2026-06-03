@@ -613,13 +613,10 @@
         switchingFormation = false
         if(previous){
           swiperNextButtons.querySelector(`div[data-formation="${previous}"]`).style.border = null
-          delete formations[previous].selected
         }
         button.style.border = "solid 2px #"+colors.selectedCharisma
         formation = thisFormation
-        formation.selected = true
         charisma = formation.charisma
-        GM_setValue("formations", formations)
         applyEncounterStyle({each:()=>{}})
       })
       button.innerText = thisFormation.charisma==="undefined" ? "?" : thisFormation.charisma

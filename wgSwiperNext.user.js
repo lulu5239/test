@@ -603,6 +603,7 @@
         if(switchingFormation || thisFormation===formation){return}
         switchingFormation = true
         button.style.border = "solid 2px #ee4"
+        let previous = Object.keys(formations).find(id=>formations[id].selected)
         let r = await setFormation("f-"+id, formations).catch(e=>{
           showErrorToast("Couldn't switch party.")
           switchingFormation = false
@@ -610,10 +611,9 @@
           throw e
         })
         switchingFormation = false
-        let current = Object.keys(formations).find(id=>formations[id].selected)
-        if(current){
-          swiperNextButtons.querySelector(`div[data-formation="${current}"]`).style.border = null
-          delete formations[current].selected
+        if(previous){
+          swiperNextButtons.querySelector(`div[data-formation="${previous}"]`).style.border = null
+          delete formations[previous].selected
         }
         button.style.border = "solid 2px #"+colors.selectedCharisma
         formation = thisFormation

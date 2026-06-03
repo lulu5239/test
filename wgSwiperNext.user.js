@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-06-03
+// @version      2026-06-04
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -709,6 +709,7 @@
           // 👊❓ “Lulu5239” auto-battled Cersea Soulstorm #12 (Lv.95)... Outcome: Asuna #956 +5,606XP KO, Adult Neptune #43 +5,606XP
           // 👊❓ “Lulu5239” auto-battled Towa Herschel #73 (Lv.75)... Outcome: Lv.UP +1 Asuna #5292 +5,265XP LowHP
           // 👊❓ “Lulu5239” auto-battled Momose Rio #81 (Lv.55)... Outcome: Asuna #2282 +7,704XP 200% XP BONUS
+          // 👊❓ “Lulu5239” auto-battled Tsunomaki Watame #1059 (Lv.75)... Outcome: Asuna #4075 +6,075XP KO 200% XP BONUS, Adult Neptune #43 +6,075XP 200% XP BONUS
           let i = 0
           let words = data.result.slice(data.result.indexOf("... Outcome: ")+13).split(" ")
           while(i<words.length){
@@ -718,10 +719,9 @@
             name = words.slice(i, name)
             i += name.length // name is array of words
             let xp = +words[i].slice(1, -2).replace(/\,/g, "")
-            i++
-            if(words[i+1]==="XP" && words[i+2]==="BONUS"){i+=3}
-            if(words[i]==="KO," || words[i]==="LowHP"){i++}
+            i = words.findIndex((w, p)=>p>i && w.endsWith(",")) +1
             if(gainXP){gainXP(xp, name.join(" "))}
+            if(!i){break}
           }
         }
         if(originalSuccessFn){return originalSuccessFn(data)}

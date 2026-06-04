@@ -363,19 +363,23 @@
       const waifu = selectedAnniemay;
       const newSlot = +ev.target.dataset.slot;
 
-      const request = {
-        '_token': token,
-        'action': 'swap',
-        'slot': newSlot,
-      };
-
       fetch("/am/" + selectedAnniemay, {
         method: "POST",
-        body: JSON.stringify(request),
+        body: JSON.stringify({
+          '_token': token,
+          'action': 'swap',
+          'slot': newSlot,
+        }),
         headers: {
           "content-type": "application/json",
+          accept: "application/json",
         },
-      }).then(r=>{
+      }).then(async r=>{
+        let body = await r.json()
+        if(body.message){
+          console.warn(body)
+          return showErrorToast(body.message)
+        }
         let levelingUp = GM_getValue("levelingUpAnimus", [])
         if(!levelingUp.find(a=>a.id==selectedAnniemay) && newSlot<6){ // Not just swapping 2 Animus in the party
           let index = levelingUp.findIndex(a=>a.slot===newSlot)

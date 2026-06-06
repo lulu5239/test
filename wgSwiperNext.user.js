@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-06-04
+// @version      2026-06-07
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -85,15 +85,9 @@
       
       let p = document.querySelector('#waifuFeed')
       let htmlBag = ""
-      let max
-      if(selectedAnimu?.id == selectedAnniemay){
-        if(selectedAnimu.relHP >= 100 && selectedAnimu.relXP >= 100 && !settings.allowWastingItems){
-          return // No HP or XP is needed
-        }
-        max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
-      }
+      let max = selectedAnimu?.id == selectedAnniemay && (selectedAnimu.hpText?.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems ? "full" : ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText))
 
-      let order = max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
+      let order = max==="full" ? [] : max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
       let items = order.map(item=>({
         name: item,
         color: item==="snack" ? "gray" : item==="meal" ? "green" : item==="gift" ? "blue" : item.startsWith("present") ? "magenta" : item==="candy" ? "yellow" : null,

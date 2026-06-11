@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-06-07
+// @version      2026-06-11
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -399,6 +399,16 @@
         $('#toast-4').toast('show');
       })
     }, {capture: true})
+  }
+
+  if(settings.cardInfoPage){
+    let original = document.location.href
+    let menu = document.querySelector("#cardInfo")
+    let observer = new MutationObserver(()=>{
+      let id = menu.querySelector("#addCardToWish").dataset.id
+      window.history.replaceState(null, "", !menu.classList.has("menu-active") ? original : settings.cardInfoPage==="shards" ? "/shards/"+id : "/c/"+id)
+    })
+    observer.observe(menu, { attributes: true, attributeFilter: ["class"] })
   }
 
   if(path==="/swiper"){
@@ -1047,7 +1057,12 @@
           ${settingCheckbox("fasterWheels", "Make wheels on festival page less slow")}
           ${settingCheckbox("lighterTextColor", "Make text more white")}<br>
           ${settingCheckbox("rerollWaifuvilleMissions", "Show button to <b>reroll Waifuville missions</b>")}<br>
-          ${settingCheckbox("optionNoSwapReload", "Make reloading the page optional when changing party Animus")}
+          ${settingCheckbox("optionNoSwapReload", "Make reloading the page optional when changing party Animus")}<br>
+          Change URL to ${settingSelect("cardInfoPage", [
+            {value: "", name: "nothing different"},
+            {value: "card", name: "direct link"},
+            {value: "shards", name: "upgrade page"},
+          ])} when viewing card
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-06-11
+// @version      2026-06-12
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -414,7 +414,7 @@
     let previousState = window.state
     window.addEventListener("popstate", ev=>{
       if(ev.state.menu){
-        if(ev.state.open){window[ev.state.open[0], ...ev.state.open.slice(1)]}
+        if(ev.state.open){window[ev.state.open[0]](...ev.state.open.slice(1))}
       }else if(previousState.menu){
         menu.querySelector(`#${previousState.menu} .close-menu`).click()
       }

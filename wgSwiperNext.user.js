@@ -409,12 +409,18 @@
         if(window.history.state?.menu === "cardInfo"){window.history.back()}
       return}
       let id = menu.querySelector("#addCardToWish").dataset.id
-      window.history.pushState(previousHistory = {menu: "cardInfo", open: ["showCardInfoMenu", id]}, "", settings.cardInfoPage==="shards" ? "/shards/"+id : "/c/"+id)
+      window.history.pushState(previousState = {menu: "cardInfo", open: [id]}, "", settings.cardInfoPage==="shards" ? "/shards/"+id : "/c/"+id)
     })
     observer.observe(menu, { attributes: true, attributeFilter: ["class"] })
+    let openMenuFunctions
+    setTimeout(()=>{
+      openMenuFunctions = {
+        cardInfo: showCardInfoMenu,
+      }
+    }, 1) // Some time for other user-scripts to edit functions
     window.addEventListener("popstate", ev=>{
       if(ev.state?.menu){
-        if(ev.state.open){window[ev.state.open[0]](...ev.state.open.slice(1))}
+        if(ev.state.open && openMenuFunctions(ev.state.menu)){openMenuFunctions[ev.state.menu](...ev.state.open)}
       }else if(previousState?.menu){
         menu.querySelector(`#${previousState.menu} .close-menu`).click()
       }

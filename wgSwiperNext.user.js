@@ -420,7 +420,7 @@
     }, 1) // Some time for other user-scripts to edit functions
     window.addEventListener("popstate", ev=>{
       if(ev.state?.menu){
-        if(ev.state.open && openMenuFunctions(ev.state.menu)){openMenuFunctions[ev.state.menu](...ev.state.open)}
+        if(ev.state.open && openMenuFunctions[ev.state.menu]){openMenuFunctions[ev.state.menu](...ev.state.open)}
       }else if(previousState?.menu){
         menu.querySelector(`#${previousState.menu} .close-menu`).click()
       }

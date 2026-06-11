@@ -402,13 +402,24 @@
   }
 
   if(settings.cardInfoPage){
-    let original = document.location.href
     let menu = document.querySelector("#cardInfo")
     let observer = new MutationObserver(()=>{
+      if(!menu.classList.contains("menu-active")){
+        if(window.state?.menu === "cardInfo"){window.history.back()}
+      return}
       let id = menu.querySelector("#addCardToWish").dataset.id
-      window.history.replaceState(null, "", !menu.classList.contains("menu-active") ? original : settings.cardInfoPage==="shards" ? "/shards/"+id : "/c/"+id)
+      window.history.pushState({menu: "cardInfo", open: ["showCardInfoMenu", id]}, "", settings.cardInfoPage==="shards" ? "/shards/"+id : "/c/"+id)
     })
     observer.observe(menu, { attributes: true, attributeFilter: ["class"] })
+    let previousState = window.state
+    window.addEventListener("popstate", ev=>{
+      if(ev.state.menu){
+        if(ev.state.open){window[ev.state.open[0], ...ev.state.open.slice(1)]}
+      }else if(previousState.menu){
+        menu.querySelector(`#${previousState.menu} .close-menu`).click()
+      }
+      previousState = ev.state
+    })
   }
 
   if(path==="/swiper"){

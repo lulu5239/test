@@ -406,7 +406,7 @@
     let menu = document.querySelector("#cardInfo")
     let observer = new MutationObserver(()=>{
       let id = menu.querySelector("#addCardToWish").dataset.id
-      window.history.replaceState(null, "", !menu.classList.has("menu-active") ? original : settings.cardInfoPage==="shards" ? "/shards/"+id : "/c/"+id)
+      window.history.replaceState(null, "", !menu.classList.contains("menu-active") ? original : settings.cardInfoPage==="shards" ? "/shards/"+id : "/c/"+id)
     })
     observer.observe(menu, { attributes: true, attributeFilter: ["class"] })
   }

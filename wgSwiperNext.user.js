@@ -415,7 +415,7 @@
     let openMenuFunctions
     setTimeout(()=>{
       openMenuFunctions = {
-        cardInfo: showCardInfoMenu,
+        cardInfo: showCardInfoMenuLookup,
       }
     }, 1) // Some time for other user-scripts to edit functions
     window.addEventListener("popstate", ev=>{

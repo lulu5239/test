@@ -408,6 +408,7 @@
       if(!menu.classList.contains("menu-active")){
         if(window.history.state?.menu === "cardInfo"){window.history.back()}
       return}
+      if(previousState && window.history.state === previousState){return}
       let id = menu.querySelector("#addCardToWish").dataset.id
       window.history.pushState(previousState = {menu: "cardInfo", open: [id]}, "", settings.cardInfoPage==="shards" ? "/shards/"+id : "/c/"+id)
     })

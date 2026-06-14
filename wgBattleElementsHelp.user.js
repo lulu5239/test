@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-04-28
+// @version      2026-06-15
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -90,11 +90,13 @@
           let r = await fetch(`/dojo/${id}`, {
             method: "POST",
             body: `_token=${token}&learn=${encodeURIComponent(`11_gg`)}`,
-            headers: {"content-type": "application/x-www-form-urlencoded"},
+            headers: {"content-type": "application/x-www-form-urlencoded", accept: "application/json"},
           }).catch(e=>{
             showErrorToast("There was an error...")
             throw e
           })
+          let body = await r.json()
+          if(body.message){return showErrorToast(body.message)}
           showSuccessToast("Restored PP!")
           for(let move of data.moves){
             move.pp = move.maxpp

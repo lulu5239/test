@@ -95,9 +95,12 @@
             showErrorToast("There was an error...")
             throw e
           })
-          if(r.headers["content-type"]==="application/json"){
+          if(r.headers.get("content-type")==="application/json"){
             let json = await r.json()
-            if(json.message){return showErrorToast(json.message)}
+            if(json.message){
+              showErrorToast(json.message)
+              document.querySelector("a.close-menu").click()
+            return}
           }
           showSuccessToast("Restored PP!")
           for(let move of data.moves){

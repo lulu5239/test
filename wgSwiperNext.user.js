@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-06-04
+// @version      2026-06-12
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -85,15 +85,9 @@
       
       let p = document.querySelector('#waifuFeed')
       let htmlBag = ""
-      let max
-      if(selectedAnimu?.id == selectedAnniemay){
-        if(selectedAnimu.relHP >= 100 && selectedAnimu.relXP >= 100 && !settings.allowWastingItems){
-          return // No HP or XP is needed
-        }
-        max = ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)
-      }
+      let max = selectedAnimu?.id == selectedAnniemay && (selectedAnimu.hpText?.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems ? "full" : ["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText))
 
-      let order = max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
+      let order = max==="full" ? [] : max ? ["snack", "meal", "candy"] : ["present5000", "present10000", "present20000", "candy", "snack", "meal", "gift"]
       let items = order.map(item=>({
         name: item,
         color: item==="snack" ? "gray" : item==="meal" ? "green" : item==="gift" ? "blue" : item.startsWith("present") ? "magenta" : item==="candy" ? "yellow" : null,
@@ -405,6 +399,34 @@
         $('#toast-4').toast('show');
       })
     }, {capture: true})
+  }
+
+  if(settings.cardInfoPage){
+    let menu = document.querySelector("#cardInfo")
+    let previousState = window.history.state
+    let observer = new MutationObserver(()=>{
+      if(!menu.classList.contains("menu-active")){
+        if(window.history.state?.menu === "cardInfo"){window.history.back()}
+      return}
+      if(previousState && window.history.state === previousState){return}
+      let id = menu.querySelector("#addCardToWish").dataset.id
+      window.history.pushState(previousState = {menu: "cardInfo", open: [id]}, "", settings.cardInfoPage==="shards" ? "/shards/"+id : "/c/"+id)
+    })
+    observer.observe(menu, { attributes: true, attributeFilter: ["class"] })
+    let openMenuFunctions
+    setTimeout(()=>{
+      openMenuFunctions = {
+        cardInfo: showCardInfoMenuLookup,
+      }
+    }, 1) // Some time for other user-scripts to edit functions
+    window.addEventListener("popstate", ev=>{
+      if(ev.state?.menu){
+        if(ev.state.open && openMenuFunctions[ev.state.menu]){openMenuFunctions[ev.state.menu](...ev.state.open)}
+      }else if(previousState?.menu){
+        menu.querySelector(`#${previousState.menu} .close-menu`).click()
+      }
+      previousState = ev.state
+    })
   }
 
   if(path==="/swiper"){
@@ -1053,7 +1075,12 @@
           ${settingCheckbox("fasterWheels", "Make wheels on festival page less slow")}
           ${settingCheckbox("lighterTextColor", "Make text more white")}<br>
           ${settingCheckbox("rerollWaifuvilleMissions", "Show button to <b>reroll Waifuville missions</b>")}<br>
-          ${settingCheckbox("optionNoSwapReload", "Make reloading the page optional when changing party Animus")}
+          ${settingCheckbox("optionNoSwapReload", "Make reloading the page optional when changing party Animus")}<br>
+          Change URL to ${settingSelect("cardInfoPage", [
+            {value: "", name: "nothing different"},
+            {value: "card", name: "direct link"},
+            {value: "shards", name: "upgrade page"},
+          ])} when viewing card
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>

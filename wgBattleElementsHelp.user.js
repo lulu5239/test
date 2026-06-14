@@ -95,8 +95,11 @@
             showErrorToast("There was an error...")
             throw e
           })
-          let body = await r.json()
-          if(body.message){return showErrorToast(body.message)}
+          let body = await r.body()
+          try{
+            let json = JSON.parse(body)
+            if(json.message){return showErrorToast(body.message)}
+          }catch(e){}
           showSuccessToast("Restored PP!")
           for(let move of data.moves){
             move.pp = move.maxpp

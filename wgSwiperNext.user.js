@@ -1083,7 +1083,7 @@
           ])} when viewing card<br>
           Only keep ${settingSelect("deleteUselessGymMessages", [
             {value: "", name: "all"},
-            ...[1, 2, 5, 11, 21, 25].map(option=>({value: ""+option, name: ""+option}))
+            ...[0, 1, 2, 5, 11, 21, 25].map(option=>({value: ""+option, name: ""+option}))
           ])} useless gym messages
         </div>
         <div data-page="keybinds">

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-06-12
+// @version      2026-06-22
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1080,7 +1080,11 @@
             {value: "", name: "nothing different"},
             {value: "card", name: "direct link"},
             {value: "shards", name: "upgrade page"},
-          ])} when viewing card
+          ])} when viewing card<br>
+          Only keep ${settingSelect("deleteUselessGymMessages", [
+            {value: "", name: "all"},
+            ...[1, 2, 5, 11, 21, 25].map(option=>({value: ""+option, name: ""+option}))
+          ])} useless gym messages
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -1554,6 +1558,25 @@
         rerolled = false
       }
       return originalDynamicInit(...args)
+    }
+  }
+
+  if(path==="/inbox" && settings.deleteUselessGymMessages){
+    for(let e of [...document.querySelectorAll(`#accordion > .card:has(a[href="/quests"])`)].filter(e=>e.querySelector(".card-header button").innerText.includes("GYM: ") && !e.querySelector(".fa-paperclip, .fa-enveloppe.scale-icon")).slice(+settings.deleteUselessGymMessages || 0)){
+      fetch("/inbox", {
+        method: "POST",
+        headers: {"content-type": "application/json", accept: "application/json"},
+        body: JSON.stringify({
+          action: "delete",
+          _token: token,
+          parcel_id: e.querySelector(".collapse").dataset.parcelid,
+        }),
+      }).then(async r=>{
+        let dts = await r.json()
+        if(dts.message){return showErrorToast(dts.message)
+        e.remove()
+      })
+      await new Promise(ok=>setTimeout(ok, 1000))
     }
   }
 })();

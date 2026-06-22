@@ -1573,7 +1573,7 @@
         }),
       }).then(async r=>{
         let dts = await r.json()
-        if(dts.message){return showErrorToast(dts.message)}
+        if(!dts.title && dts.message){return showErrorToast(dts.message)}
         e.remove()
       })
       await new Promise(ok=>setTimeout(ok, 1000))

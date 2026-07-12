@@ -934,6 +934,9 @@
       })
     }
 
+    if(settings.disableNextCardAnimation){
+      $cab.animate = (...a)=>a[2] && a[2]()
+    }
     let originalNextCard = nextCard
     nextCard = (...args)=>{
       selectedCard = args[0]
@@ -1292,10 +1295,6 @@
       }
       ev.preventDefault()
     }, {capture: true})
-
-    if(settings.disableNextCardAnimation){
-      $cab.animate = (...a)=>a[2] && a[2]()
-    }
   return}
 
   if(path==="/home"){

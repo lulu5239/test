@@ -941,7 +941,7 @@
         selectedCard = selectedCard[0]
       }
       if(settings.cardsListFixedSize){
-        $0.scrollTop = selectedCard.offsetTop -40
+        document.querySelector("#cardListing").scrollTop = selectedCard.offsetTop -40
       }
       let action = cards[$(selectedCard).data("card").id]
       document.querySelector(`#swiperNextButtons div[data-nextaction="${action!==undefined ? ""+action : "nothing"}"]`).click()

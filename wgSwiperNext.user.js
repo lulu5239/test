@@ -1091,7 +1091,8 @@
           Only keep ${settingSelect("deleteUselessGymMessages", [
             {value: "", name: "all"},
             ...[0, 1, 2, 5, 11, 21, 25].map(option=>({value: ""+option, name: ""+option}))
-          ])} useless gym messages
+          ])} useless gym messages<br>
+          ${settingCheckbox("cardCreatorPageInput", "Add box to choose images page on card creator page")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -1584,6 +1585,19 @@
         e.remove()
       })
       await new Promise(ok=>setTimeout(ok, 1000))
+    }
+  }
+
+  if(path==="/cards/new" && settings.cardCreatorPageInput){
+    document.querySelector("#searchForm").insertAdjacentHTML("beforebegin", `<center>Page: <input type="number" id="pageBox" /></center>`)
+    let box = document.querySelector("#pageBox")
+    box.addEventListener("change", ev=>{page = +ev.target.value})
+
+    let originalSearch = search
+    search = (...a)=>{
+      let r = originalSearch(...a)
+      box.value = page
+      return r
     }
   }
 })();

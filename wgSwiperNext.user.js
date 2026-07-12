@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-06-22
+// @version      2026-07-12
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -940,6 +940,9 @@
       if(selectedCard.length){
         selectedCard = selectedCard[0]
       }
+      if(settings.cardsListFixedSize){
+        $0.scrollTop = selectedCard.offsetTop -40
+      }
       let action = cards[$(selectedCard).data("card").id]
       document.querySelector(`#swiperNextButtons div[data-nextaction="${action!==undefined ? ""+action : "nothing"}"]`).click()
       if(settings.showTopSimps){
@@ -1063,6 +1066,7 @@
             {value:"500", name:"Fixed size (500 pixels)"},
             {value:"1000", name:"Fixed size (1000 pixels)"},
           ])}<br>
+          ${settingCheckbox("disableNextCardAnimation", "Disable animation when viewing card")}<br>
           <br>
           When feeding an Animu:<br>
           ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}<br>
@@ -1288,6 +1292,10 @@
       }
       ev.preventDefault()
     }, {capture: true})
+
+    if(settings.disableNextCardAnimation){
+      $cab.animate = (...a)=>a[2] && a[2]()
+    }
   return}
 
   if(path==="/home"){

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-06-22
+// @version      2026-07-13
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -934,11 +934,17 @@
       })
     }
 
+    if(settings.disableNextCardAnimation){
+      $cab.animate = (...a)=>a[2] && a[2]()
+    }
     let originalNextCard = nextCard
     nextCard = (...args)=>{
       selectedCard = args[0]
       if(selectedCard.length){
         selectedCard = selectedCard[0]
+      }
+      if(settings.cardsListFixedSize){
+        document.querySelector("#searchResults").scrollTop = selectedCard.offsetTop -40
       }
       let action = cards[$(selectedCard).data("card").id]
       document.querySelector(`#swiperNextButtons div[data-nextaction="${action!==undefined ? ""+action : "nothing"}"]`).click()
@@ -1063,6 +1069,7 @@
             {value:"500", name:"Fixed size (500 pixels)"},
             {value:"1000", name:"Fixed size (1000 pixels)"},
           ])}<br>
+          ${settingCheckbox("disableNextCardAnimation", "Disable animation when viewing card")}<br>
           <br>
           When feeding an Animu:<br>
           ${settingCheckbox("manualRerollOnly", "Only manually reroll buttons")}<br>
@@ -1084,7 +1091,8 @@
           Only keep ${settingSelect("deleteUselessGymMessages", [
             {value: "", name: "all"},
             ...[0, 1, 2, 5, 11, 21, 25].map(option=>({value: ""+option, name: ""+option}))
-          ])} useless gym messages
+          ])} useless gym messages<br>
+          ${settingCheckbox("cardCreatorPageInput", "Add box to choose images page on card creator page")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -1480,9 +1488,19 @@
   }
 
   if(path.startsWith("/ville/") && settings.rerollWaifuvilleMissions){
-    let lastContext; let rerolled
+    let openBuildingMenu = building=>deployMenu('BuildingMenu', {
+      i: building.i,
+      j: building.j,
+      buildingMetaData: building,
+      phaserObject: occupancyMap[building.i][building.j].building,
+      ville_id: ville_id
+    }) // The non-existent in-game version of this function uses ville building IDs, which aren't stored client-side...
+    
+    let rerolled
     let reroll = async ()=>{
       let vb = dynamicContext.vb
+      let mapBuilding = playerMap.find(b=>b.i == vb.position_i && b.j == vb.position_j)
+      let ignoreMissions = playerMap.filter(b=>b.overlays?.find(o=>o.type === "mission") && b!==mapBuilding).map(b=>[b.building, b.i, b.j].join(","))
       
       let img = document.querySelector("#tab-missions .content h3 img.rounded-circle")
       let slot = 0
@@ -1528,14 +1546,19 @@
       }).catch(console.warn);
       if(!r){showErrorToast("Couldn't re-assign Myfu...")}
       else{rerolled = true}
+      r = await r.json()
+      playerMap = r.playerMap
+      buildMap()
 
-      deployMenu("BuildingMenu", lastContext)
+      mapBuilding = playerMap.find(b=>b.overlays?.find(o=>o.type === "mission") && !ignoreMissions.includes([b.building, b.i, b.j].join(",")))
+      if(!mapBuilding){return}
+      openBuildingMenu(mapBuilding)
     }
 
     let originalDeployMenu = deployMenu
     let loadingBuilding = false
     deployMenu = (...args)=>{
-      if(args[0]==="BuildingMenu"){loadingBuilding = true; lastContext = args[1]}
+      if(args[0]==="BuildingMenu"){loadingBuilding = true}
       return originalDeployMenu(...args)
     }
 
@@ -1577,6 +1600,19 @@
         e.remove()
       })
       await new Promise(ok=>setTimeout(ok, 1000))
+    }
+  }
+
+  if(path==="/cards/new" && settings.cardCreatorPageInput){
+    document.querySelector("#searchForm").insertAdjacentHTML("beforebegin", `<center>Page: <input type="number" id="pageBox" /></center>`)
+    let box = document.querySelector("#pageBox")
+    box.addEventListener("change", ev=>{page = +ev.target.value})
+
+    let originalSearch = search
+    search = (...a)=>{
+      let r = originalSearch(...a)
+      box.value = page
+      return r
     }
   }
 })();

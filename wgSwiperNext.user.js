@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-07-12
+// @version      2026-07-13
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1488,9 +1488,19 @@
   }
 
   if(path.startsWith("/ville/") && settings.rerollWaifuvilleMissions){
+    let openBuildingMenu = building=>deployMenu('BuildingMenu', {
+      i: building.i,
+      j: building.j,
+      buildingMetaData: building,
+      phaserObject: occupancyMap[building.i][building.j].building,
+      ville_id: ville_id
+    }) // The non-existent in-game version of this function uses ville building IDs, which aren't stored client-side...
+    
     let lastContext; let rerolled
     let reroll = async ()=>{
       let vb = dynamicContext.vb
+      let mapBuilding = playerMap.find(b=>b.i == vb.position_i && b.j == vb.position_j)
+      let ignoreMissions = playerMap.filter(b=>b.overlays?.find(o=>o.type === "mission") && b!==mapBuilding)
       
       let img = document.querySelector("#tab-missions .content h3 img.rounded-circle")
       let slot = 0
@@ -1536,8 +1546,13 @@
       }).catch(console.warn);
       if(!r){showErrorToast("Couldn't re-assign Myfu...")}
       else{rerolled = true}
+      r = await r.json()
+      playerMap = r.playerMap
+      buildMap()
 
-      deployMenu("BuildingMenu", lastContext)
+      mapBuilding = playerMap.find(b=>b.overlays?.find(o=>o.type === "mission") && !ignoreMissions.includes(b))
+      if(!mapBuilding){return}
+      openBuildingMenu(mapBuilding)
     }
 
     let originalDeployMenu = deployMenu

@@ -1496,11 +1496,11 @@
       ville_id: ville_id
     }) // The non-existent in-game version of this function uses ville building IDs, which aren't stored client-side...
     
-    let lastContext; let rerolled
+    let rerolled
     let reroll = async ()=>{
       let vb = dynamicContext.vb
       let mapBuilding = playerMap.find(b=>b.i == vb.position_i && b.j == vb.position_j)
-      let ignoreMissions = playerMap.filter(b=>b.overlays?.find(o=>o.type === "mission") && b!==mapBuilding)
+      let ignoreMissions = playerMap.filter(b=>b.overlays?.find(o=>o.type === "mission") && b!==mapBuilding).map(b=>[b.building, b.i, b.j].join(","))
       
       let img = document.querySelector("#tab-missions .content h3 img.rounded-circle")
       let slot = 0
@@ -1550,7 +1550,7 @@
       playerMap = r.playerMap
       buildMap()
 
-      mapBuilding = playerMap.find(b=>b.overlays?.find(o=>o.type === "mission") && !ignoreMissions.includes(b))
+      mapBuilding = playerMap.find(b=>b.overlays?.find(o=>o.type === "mission") && !ignoreMissions.includes([b.building, b.i, b.j].join(",")))
       if(!mapBuilding){return}
       openBuildingMenu(mapBuilding)
     }
@@ -1558,7 +1558,7 @@
     let originalDeployMenu = deployMenu
     let loadingBuilding = false
     deployMenu = (...args)=>{
-      if(args[0]==="BuildingMenu"){loadingBuilding = true; lastContext = args[1]}
+      if(args[0]==="BuildingMenu"){loadingBuilding = true}
       return originalDeployMenu(...args)
     }
 

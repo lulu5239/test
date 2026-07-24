@@ -1623,6 +1623,24 @@
       })
       await new Promise(ok=>setTimeout(ok, 1000))
     }
+
+    if(settings.recordWaifuvilleMissions){
+      let missions = GM_getValue("WaifuvilleMissions", [])
+      for(let e of [...document.querySelectorAll(`#accordion > .card:has(a.btn-danger .fa-city)`)].filter(e=>e.querySelector(".card-header button").innerText.includes("Mission Success ("))){
+        let data = {
+          name: e.querySelector("button[type=button]").childNodes[2].data.trim().split(" (")[1].slice(0, -1),
+          CR: +e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
+          situation: e.querySelector("p").innerText,
+        }
+        let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
+        if(index===-1){
+          missions.push(data)
+        }else{
+          missions[index] = {...missions[index], data}
+        }
+      }
+      GM_setValue("WaifuvilleMissions", missions)
+    }
   }
 
   if(path==="/cards/new" && settings.cardCreatorPageInput){

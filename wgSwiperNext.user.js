@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-07-13
+// @version      2026-07-30
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1092,7 +1092,9 @@
             {value: "", name: "all"},
             ...[0, 1, 2, 5, 11, 21, 25].map(option=>({value: ""+option, name: ""+option}))
           ])} useless gym messages<br>
-          ${settingCheckbox("cardCreatorPageInput", "Add box to choose images page on card creator page")}
+          ${settingCheckbox("cardCreatorPageInput", "Add box to choose images page on card creator page")}<br>
+          <br>
+          ${settingCheckbox("highlightRewardingRaffles", "Highlight rewarding raffles")} <i>(this uses Lulu5239's website)</i>
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -1571,6 +1573,28 @@
             `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-random"></i> Reroll</button>`
           )
           document.querySelector("#rerollMissionBtn").addEventListener("click", reroll)
+          if(settings.recordWaifuvilleMissions){
+            let missions = GM_getValue("WaifuvilleMissions", [])
+            let data = {
+              name: document.querySelector("#tab-missions h3").childNodes[2].data.trim(),
+              CR: +document.querySelector("#tab-missions h3 strong").innerText.trim().slice(3).replace(/\,/g, ""),
+              building: dynamicContext.vb.building_identifier,
+              reward: [...document.querySelectorAll(`div.col-md-12:has(#startMission) div.text-center nobr`)].map(r=>{
+                if(r.querySelector("abbr")){return ["shards", +r.childNodes[1].data.trim().slice(0, -7)]}
+                let fa = Object.values(r.querySelector("i").classList).find(c=>c.startsWith("fa-"))
+                if(fa==="fa-crown"){return ["SP", +r.innerText.trim().slice(0, -3)]}
+                if(fa==="fa-gg"){return ["GG", +r.innerText.trim()]}
+                return ["item", r.innerText.trim()]
+              }),
+            }
+            let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
+            if(index===-1){
+              missions.push(data)
+            }else{
+              missions[index] = {...missions[index], data}
+            }
+            GM_setValue("WaifuvilleMissions", missions)
+          }
         }
         loadingBuilding = false
       }
@@ -1601,6 +1625,24 @@
       })
       await new Promise(ok=>setTimeout(ok, 1000))
     }
+
+    if(settings.recordWaifuvilleMissions){
+      let missions = GM_getValue("WaifuvilleMissions", [])
+      for(let e of [...document.querySelectorAll(`#accordion > .card:has(a.btn-danger .fa-city)`)].filter(e=>e.querySelector(".card-header button").innerText.includes("Mission Success ("))){
+        let data = {
+          name: e.querySelector("button[type=button]").childNodes[2].data.trim().split(" (")[1].slice(0, -1),
+          CR: +e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
+          situation: e.querySelector("p").innerText,
+        }
+        let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
+        if(index===-1){
+          missions.push(data)
+        }else{
+          missions[index] = {...missions[index], data}
+        }
+      }
+      GM_setValue("WaifuvilleMissions", missions)
+    }
   }
 
   if(path==="/cards/new" && settings.cardCreatorPageInput){
@@ -1614,5 +1656,22 @@
       box.value = page
       return r
     }
+  }
+
+  if(path==="/raffles" && settings.highlightRewardingRaffles){
+    fetch("https://lublox.xyz/wg/raffles", {
+      headers: {accept: "application/json"},
+    }).then(async r=>{
+      let list = await r.json()
+      for(let e of list){
+        let row = document.querySelector(`.row.raffle-row[data-id="${e.id}"]`)
+        if(!row){continue}
+        if(e.reward){
+          row.querySelector(".buybtn").style.backgroundColor = "#161"
+          row.querySelector(".col-10 .row .col-6").insertAdjacentHTML("beforeend", `<b>Earn <span class="rafflereward"></span> by winning this raffle!</b>`)
+          row.querySelector("span.rafflereward").innerText = e.reward // Not parsing as HTML
+        }
+      }
+    })
   }
 })();

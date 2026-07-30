@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-07-24
+// @version      2026-07-30
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1092,7 +1092,9 @@
             {value: "", name: "all"},
             ...[0, 1, 2, 5, 11, 21, 25].map(option=>({value: ""+option, name: ""+option}))
           ])} useless gym messages<br>
-          ${settingCheckbox("cardCreatorPageInput", "Add box to choose images page on card creator page")}
+          ${settingCheckbox("cardCreatorPageInput", "Add box to choose images page on card creator page")}<br>
+          <br>
+          ${settingCheckbox("highlightRewardingRaffles", "Highlight rewarding raffles")} <i>(this uses Lulu5239's website)</i>
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -1654,5 +1656,22 @@
       box.value = page
       return r
     }
+  }
+
+  if(path==="/raffles" && settings.highlightRewardingRaffles){
+    fetch("https://lublox.xyz/wg/raffles", {
+      headers: {accept: "application/json"},
+    }).then(async r=>{
+      let list = await r.json()
+      for(let e of list){
+        let row = document.querySelector(`.row.raffle-row[data-id="${e.id}"]`)
+        if(!row){continue}
+        if(e.reward){
+          row.querySelector(".buybtn").style.backgroundColor = "#161"
+          row.querySelector(".col-10 .row .col-6").insertAdjacentHTML("beforeend", `<b>Earn <span class="rafflereward"></span> by winning this raffle!</b>`)
+          row.querySelector("span.rafflereward").innerText = e.reward // Not parsing as HTML
+        }
+      }
+    })
   }
 })();

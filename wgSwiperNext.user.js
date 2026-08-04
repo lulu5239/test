@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-07-30
+// @version      2026-08-04
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1667,7 +1667,8 @@
         let row = document.querySelector(`.row.raffle-row[data-id="${e.id}"]`)
         if(!row){continue}
         if(e.reward){
-          row.querySelector(".buybtn").style.backgroundColor = "#161"
+          let buy = row.querySelector(".buybtn")
+          if(buy){buy.style.backgroundColor = "#161"}
           row.querySelector(".col-10 .row .col-6").insertAdjacentHTML("beforeend", `<b>Earn <span class="rafflereward"></span> by winning this raffle!</b>`)
           row.querySelector("span.rafflereward").innerText = e.reward // Not parsing as HTML
         }

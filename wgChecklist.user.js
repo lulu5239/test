@@ -64,7 +64,7 @@
       let CR = +startForm.querySelector("#myfuMissionChallengeRating").value
       trying = {
         type: "mission."+Myfus[0].dataset.id,
-        MyfuName: Myfus.querySelector("h5").innerText,
+        MyfuName: Myfus[0].querySelector("h5").innerText,
         t: +new Date() + Math.max(CR - Myfus.reduce((p, m)=>p+m.dataset.sp, 0), CR*0.2),
       }
     }

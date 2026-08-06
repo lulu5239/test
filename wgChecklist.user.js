@@ -33,14 +33,14 @@
 
     let LubloxKey = GM_getValue("LubloxKey")
     if(LubloxKey){
-      fetch("https://lublox.xyz/wg/cooldown", {
+      fetch("https://lublox.xyz/wg/cooldown/api", {
         method: "POST",
         headers: {
           "content-type": "application/json",
           authorization: LubloxKey,
         },
         body: JSON.stringify(e),
-      })
+      }).catch(e=>showErrroToast(e.body))
     }
   }
 

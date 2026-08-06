@@ -47,7 +47,6 @@
   // Bookmarks in side bar
 
   if(path.startsWith("/ville/")){
-    let startForm = document.querySelector("#startMission")
     let trying = null
 
     let originalBuildMap = buildMap
@@ -55,10 +54,10 @@
       if(trying){
         addCooldown(trying)
       trying = null}
-      return buildMap(...args)
+      return originalBuildMap(...args)
     }
 
-    startForm.addEventListener("submit", ()=>{
+    let startFormHandler = ()=>{
       let Myfus = [...startForm.querySelectorAll(".myfu-item.active")]
       let CR = +startForm.querySelector("#myfuMissionChallengeRating").value
       trying = {
@@ -66,6 +65,21 @@
         MyfuName: Myfu.querySelector("h5").innerText,
         t: +new Date() + Math.max(CR - Myfus.reduce((p, m)=>p+m.dataset.sp, 0), CR*0.2),
       }
-    })
+    }
+
+    let originalDeployMenu = deployMenu
+    let loadingBuilding = false
+    deployMenu = (...args)=>{
+      if(args[0]==="BuildingMenu"){loadingBuilding = true}
+      return originalDeployMenu(...args)
+    }
+
+    let originalDynamicInit = dynamicInit
+    dynamicInit = (...args)=>{
+      if(loadingBuilding){
+        document.querySelector("#startMission")?.addEventListener("submit", startFormHandler)
+      }
+      return originalDynamicInit(...args)
+    }
   }
 })()

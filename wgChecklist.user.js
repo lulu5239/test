@@ -46,6 +46,16 @@
   }
 
   // Bookmarks in side bar
+  document.querySelector("#main-menu").insertAdjacentHTML("beforeend",
+    `<h6 class="menu-divider mt-4">Bookmarks</h6>
+    <div class="list-group list-custom-small list-menu" id="bookmarks-list">
+      <a href="javascript: void 0">
+        <i class="fa fa-bookmark color-white" style="background: linear-gradient(20deg, #2a2, #397)"></i>
+        <span>Bookmark</span>
+      </a>
+    </div>`
+  )
+  let bookmarks = document.querySelector("#bookmarks-list")
 
   if(path.startsWith("/ville/")){
     let trying = null

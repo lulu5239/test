@@ -28,7 +28,8 @@
 
   var addCooldown = e=>{
     let cooldowns = GM_getValue("cooldowns", [])
-    cooldowns.push(e)
+    let index = cooldowns.findIndex(d=>d.type===e.type)
+    if(index===-1){cooldowns.push(e)}else{cooldowns[index] = e}
     GM_setValue("cooldowns", cooldowns)
 
     let LubloxKey = GM_getValue("LubloxKey")

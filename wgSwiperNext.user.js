@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-04
+// @version      2026-08-06
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1586,6 +1586,7 @@
                 if(fa==="fa-gg"){return ["GG", +r.innerText.trim()]}
                 return ["item", r.innerText.trim()]
               }),
+              id: document.querySelector(`#startMission input[name="mission_id"]`).value,
             }
             let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
             if(index===-1){

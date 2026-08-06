@@ -37,7 +37,7 @@
         method: "POST",
         headers: {
           "content-type": "application/json",
-          key: LubloxKey,
+          authorization: LubloxKey,
         },
         body: JSON.stringify(e),
       })

@@ -46,7 +46,7 @@
   }
 
   // Bookmarks in side bar
-  document.querySelector("#main-menu").insertAdjacentHTML("beforeend",
+  document.querySelector("#menu-main").insertAdjacentHTML("beforeend",
     `<h6 class="menu-divider mt-4">Bookmarks</h6>
     <div class="list-group list-custom-small list-menu" id="bookmarks-list">
       <a href="javascript: void 0">

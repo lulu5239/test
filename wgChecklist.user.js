@@ -58,6 +58,7 @@
     }
 
     let startFormHandler = ()=>{
+      let startForm = document.querySelector("#startMission")
       let Myfus = [...startForm.querySelectorAll(".myfu-item.active")]
       let CR = +startForm.querySelector("#myfuMissionChallengeRating").value
       trying = {

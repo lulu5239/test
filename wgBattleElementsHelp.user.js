@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-06-15
+// @version      2026-08-07
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -407,7 +407,7 @@
     if(!args[0].faked){
       lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
       if(fastBattle){
-        for(let action of lastSequenceData){action.d = 0}
+        for(let action of lastSequenceData.sequence){action.d = 0}
       }
     }
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")

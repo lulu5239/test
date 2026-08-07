@@ -45,18 +45,22 @@
     }
   }
 
-  let day; let daily
+  let daily = GM_getValue("daily", {})
+  let tnow = +new Date()
+  let day = (daily.nextDay||0) > tnow ? null : daily.day
   if(!day){
     day = new Intl.DateTimeFormat("en-GB", {
       dateStyle: "short",
-      timeStyle: "short",
+      timeStyle: "medium",
       timeZone: "America/New_York",
-    }).format(new Date()).split(", ")
-    day[0] = day[0].split("/")
-    day = +day[0][0] + +day[0][1]*50 + +day[0][2]*400 + (+day[1].split(":")[0] >= 6 ? 1 : 0)
+    }).format(tnow).split(", ")
+    day[0] = day[0].split("/"); day[1] = day[1].split(":")
+    let nextDay = ((+day[1][0]+18) %24)*3600000 + +day[1][1]*60000 + +day[1][2]*1000 + tnow%1000
+    nextDay = tnow + (24*3600000-nextDay)
+    day = +day[0][0] + +day[0][1]*50 + +day[0][2]*400 + (+day[1][0] >= 6 ? 1 : 0)
     daily = GM_getValue("daily", {})
     if(daily.day < day){
-      GM_setValue("daily", daily = {day})
+      GM_setValue("daily", daily = {day, nextDay})
     }
   }
 

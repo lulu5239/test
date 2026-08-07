@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-06
+// @version      2026-08-07
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -43,6 +43,17 @@
         body: JSON.stringify(e),
       }).catch(e=>showErrroToast(e.body))
     }
+  }
+
+  let day
+  if(!day){
+    day = new Intl.DateTimeFormat("en-GB", {
+      dateStyle: "short",
+      timeStyle: "short",
+      timeZone: "America/New_York",
+    }).format(new Date()).split(", ")
+    day[0] = day[0].split("/")
+    day = +day[0][0] + +day[0][1]*50 + +day[0][2]*400 + (+day[1].split(":")[0] >= 6 ? 1 : 0)
   }
 
   // Bookmarks in side bar

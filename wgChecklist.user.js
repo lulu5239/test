@@ -45,7 +45,7 @@
     }
   }
 
-  let day
+  let day; let daily
   if(!day){
     day = new Intl.DateTimeFormat("en-GB", {
       dateStyle: "short",
@@ -54,6 +54,10 @@
     }).format(new Date()).split(", ")
     day[0] = day[0].split("/")
     day = +day[0][0] + +day[0][1]*50 + +day[0][2]*400 + (+day[1].split(":")[0] >= 6 ? 1 : 0)
+    daily = GM_getValue("daily", {})
+    if(daily.day < day){
+      GM_setValue("daily", daily = {day})
+    }
   }
 
   // Bookmarks in side bar
@@ -103,6 +107,18 @@
         document.querySelector("#startMission")?.addEventListener("submit", startFormHandler)
       }
       return originalDynamicInit(...args)
+    }
+  }
+
+  if(path.startsWith("/quests/")){
+    let form = document.querySelector(".content form")
+    if(form?.action?.endsWith("/battle")){ // Gyms
+      form.addEventListener("submit", ()=>{
+        if(!daily.gyms){daily.gyms = {}}
+        let gym = path.split("/")[2]
+        daily.gyms[gym] = (daily.gyms[gym]||0) +1
+        GM_setValue("daily", daily)
+      })
     }
   }
 })()

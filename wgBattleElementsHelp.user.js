@@ -404,7 +404,12 @@
   let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
-    if(!args[0].faked){lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]}
+    if(!args[0].faked){
+      lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
+      if(fastBattle){
+        for(let action of lastSequenceData){action.d = 0}
+      }
+    }
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap){
       let card = Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)

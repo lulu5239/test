@@ -141,7 +141,7 @@
   if(path==="/battle"){
     for(let button of document.querySelector(".page-content .content .text-center.mb-3").querySelectorAll(".col-6.col-md-4 a")){
       let gym = +button.href.slice(-2)
-      button.childNodes[2].data = ` Gym ${gym-66} (${daily.gyms?.[gym]}/10)`
+      button.childNodes[2].data = ` Gym ${gym-66} (${daily.gyms?.[gym] || 0}/10)`
     }
   }
 

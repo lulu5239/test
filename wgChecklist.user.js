@@ -59,7 +59,7 @@
     nextDay = tnow + (24*3600000-nextDay)
     day = +day[0][0] + +day[0][1]*50 + +day[0][2]*400 + (+day[1][0] >= 6 ? 1 : 0)
     daily = GM_getValue("daily", {})
-    if(daily.day < day){
+    if((daily.day||0) < day){
       GM_setValue("daily", daily = {day, nextDay})
     }
   }

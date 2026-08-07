@@ -119,10 +119,20 @@
     if(form?.action?.endsWith("/battle")){ // Gyms
       form.addEventListener("submit", ()=>{
         if(!daily.gyms){daily.gyms = {}}
-        let gym = path.split("/")[2]
-        daily.gyms[gym] = (daily.gyms[gym]||0) +1
-        GM_setValue("daily", daily)
+        let gym = +path.split("/")[2]
+        GM_setValue("tryingGym", gym)
       })
     }
   }
+  if(path.startsWith("/battle/")){
+    if(document.querySelector("#opponent_data")?.children.length >= 6){
+      let gym = GM_getValue("tryingGym")
+      if(!gym){return}
+      daily.gyms[gym] = (daily.gyms[gym]||0) +1
+      GM_setValue("daily", daily)
+      GM_setValue("tryingGym", null)
+    }
+  }
+
+  // Count card creation remaining
 })()

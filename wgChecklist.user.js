@@ -125,12 +125,17 @@
     }
   }
   if(path.startsWith("/battle/")){
-    if(document.querySelector("#opponent_data")?.children.length >= 6){
-      let gym = GM_getValue("tryingGym")
-      if(!gym){return}
-      daily.gyms[gym] = (daily.gyms[gym]||0) +1
-      GM_setValue("daily", daily)
-      GM_setValue("tryingGym", null)
+    let gym = GM_getValue("tryingGym")
+    if(!gym){return}
+    let originalShowInventory = showInventory
+    showInventory = (...args)=>{
+      if(args[0].output.foes.total >= 6){
+        daily.gyms[gym] = (daily.gyms[gym]||0) +1
+        GM_setValue("daily", daily)
+        GM_setValue("tryingGym", null)
+      }
+      showInventory = originalShowInventory
+      return originalShowInventory(...args)
     }
   }
 

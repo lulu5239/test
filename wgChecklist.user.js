@@ -101,16 +101,23 @@
         flex-grow: 1;
         color: #fff;
       }
+      #checklist {
+        font-size: 120%;
+      }
       #checklist [data-model="row"] {
         padding: 5px;
         display: flex;
         gap: 5px;
+      }
+      #checklist > span {
+        flex-grow: 1;
       }
       #checklist [data-thing="right-side"] {
         text-align: right;
       }
       #checklist [data-model="timer"] {
         min-width: 30px;
+        margin-left: 5px;
       }
       #checklist [data-done="false"] .colorful-background {
         background-color: #a33;

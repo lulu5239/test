@@ -109,7 +109,7 @@
         display: flex;
         gap: 5px;
       }
-      #checklist > span {
+      #checklist > [data-model="row"] > span {
         flex-grow: 1;
       }
       #checklist [data-thing="right-side"] {
@@ -119,10 +119,13 @@
         min-width: 30px;
         margin-left: 5px;
       }
-      #checklist [data-done="false"] .colorful-background {
+      #checklist > [data-done="true"] {
+        opacity: 0.8;
+      }
+      #checklist > [data-done="false"] .colorful-background {
         background-color: #a33;
       }
-      #checklist [data-done="true"] .colorful-background {
+      #checklist > [data-done="true"] .colorful-background {
         background-color: #444;
       }
     </style>

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-07
+// @version      2026-08-08
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -117,7 +117,6 @@
     let form = document.querySelector(".content form")
     if(form?.action?.endsWith("/battle")){ // Gyms
       form.addEventListener("submit", ()=>{
-        if(!daily.gyms){daily.gyms = {}}
         let gym = +path.split("/")[2]
         GM_setValue("tryingGym", gym)
       })
@@ -129,6 +128,7 @@
     let originalShowInventory = showInventory
     showInventory = (...args)=>{
       if(args[0].output.foes.total >= 6){
+        if(!daily.gyms){daily.gyms = {}}
         daily.gyms[gym] = (daily.gyms[gym]||0) +1
         GM_setValue("daily", daily)
         GM_setValue("tryingGym", null)

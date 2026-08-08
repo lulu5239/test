@@ -80,9 +80,9 @@
   if(path==="/home"){
     let card = document.querySelector(`a[href="/questline/limited"]`).closest(".card")
     card.classList.add("checklist-card")
-    card.children[0].dataset.page = "quests"; card.children[0].dataset.visible = true
+    card.children[0].dataset.page = "quests"
     document.insertAdjacentHTML("afterbegin", `
-    <div class="tab-controls tabs-round tab-animated tabs-small tabs-rounded shadow-xl flex-tabs" data-tab-items="2">
+    <div class="tab-controls tab-animated tabs-small shadow-xl flex-tabs" data-tab-items="2">
       <a href="javascript:void 0" data-page="quests">Limited quests</a>
       <a href="javascript:void 0" data-page="checklist">Checklist</a>
     </div>
@@ -116,8 +116,32 @@
         card.children[0].querySelector(`[data-page="${button.dataset.page}"]`).classList.add("bg-red-dark")
       })
     }
+    card.children[0].children[0].click()
 
     // Add things in checklist
+    let cooldowns = GM_getValue("cooldowns", [])
+    let actions = []
+    // Swipe through Just4U encounters
+    if(cooldowns.find(e=>e.type.startsWith("mission.")){
+      let l = cooldowns.filter(e=>e.type.startsWith("mission.") && e.t>tnow)
+      actions.push({
+        name: l.length ? "Waifuville missions" : "Start Waifuville mission",
+        timers: l.map(e=>({ t: e.t, name: e.MyfuName })),
+        done: !!l.length,
+      })
+    }
+    // Gyms
+    if(subscription.current > 0){
+      let max = [0, 1, 5, 10][subscription.current]
+      actions.push({
+        name: "Create cards",
+        progress: daily.createdCards,
+        maxProgress: max,
+        done: daily.createdCards>=max,
+      })
+    }
+
+    // Display all of that
   }
 
   if(path.startsWith("/ville/")){

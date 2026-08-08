@@ -190,15 +190,19 @@
       if(action.timers){
         for(let t of action.timers){
           let e = models.timer.cloneNode(true)
-          e.dataset.countdown = t.t
-          if(t.name){e.dataset["tippy-content"] = t.name}
+          e.dataset.countdown = t.t+""
+          if(t.name){e.setAttribute("data-tippy-content", t.name)}
+          row.append(e)
           hasTimers = true
         }
       }
-      row.dataset.done = action.done
+      row.dataset.done = action.done+""
       checklist.append(row)
     }
-    if(hasTimers){startCountdown()}
+    if(hasTimers){
+      $countdowns = $("[data-countdown]")
+      startCountdown()
+    }
   }
 
   if(path.startsWith("/ville/")){

@@ -182,21 +182,21 @@
       let action = actions[i]
       let row = models.row.cloneNode(true)
       row.querySelector("span").innerText = action.name
-      if(action.progress){
+      if(action.progress>=0){
         let progress = models.progress.cloneNode(true)
         progress.innerText = action.progress + (action.maxProgress ? "/"+action.maxProgress : "")
         row.append(progress)
       }
-      if(action.timers){
+      if(action.timers?.length){
         for(let t of action.timers){
           let e = models.timer.cloneNode(true)
-          e.dataset.countdown = t.t+""
+          e.dataset.countdown = Math.floor(t.t/1000)+""
           if(t.name){e.setAttribute("data-tippy-content", t.name)}
           row.append(e)
-          hasTimers = true
         }
+        hasTimers = true
       }
-      row.dataset.done = action.done+""
+      row.dataset.done = (!!action.done)+""
       checklist.append(row)
     }
     if(hasTimers){

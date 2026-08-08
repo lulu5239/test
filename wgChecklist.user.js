@@ -166,6 +166,17 @@
     let cooldowns = GM_getValue("cooldowns", [])
     let actions = []
     // Swipe through Just4U encounters
+    if(true){
+      let n = document.querySelector(`#menu-main a[href="https://waifugame.com/battle"] span.badge`)?.innerText
+      if(n){
+        actions.push({
+          name: "Battle",
+          progress: +n,
+          done: false,
+          url: "/battle",
+        })
+      }
+    }
     if(cooldowns.find(e=>e.type.startsWith("mission."))){
       let l = cooldowns.filter(e=>e.type.startsWith("mission.") && e.t>tnow)
       actions.push({
@@ -176,14 +187,14 @@
       })
     }
     if(true){
-      let a
-      actions.push(a = {
+      let n = !daily.gyms ? 0 : Object.values(daily.gyms).reduce((p, n)=>p+n, 0)
+      actions.push({
         name: "Farm gyms",
-        progress: !daily.gyms ? 0 : Object.values(daily.gyms).reduce((p, n)=>p+n, 0),
+        progress: n,
         maxProgress: 90,
         url: "/battle",
+        done: n >= 1,
       })
-      a.done = a.progress >= 1
     }
     if(subscription.current > 0){
       let max = [0, 1, 5, 10][subscription.current]

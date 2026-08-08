@@ -77,6 +77,49 @@
   )
   let bookmarks = document.querySelector("#bookmarks-list")
 
+  if(path==="/home"){
+    let card = document.querySelector(`a[href="/questline/limited"]`).closest(".card")
+    card.classList.add("checklist-card")
+    card.children[0].dataset.page = "quests"; card.children[0].dataset.visible = true
+    document.insertAdjacentHTML("afterbegin", `
+    <div class="tab-controls tabs-round tab-animated tabs-small tabs-rounded shadow-xl flex-tabs" data-tab-items="2">
+      <a href="javascript:void 0" data-page="quests">Limited quests</a>
+      <a href="javascript:void 0" data-page="checklist">Checklist</a>
+    </div>
+    <style>
+      .checklist-card div[data-page] {
+        display: none;
+        color: #eee;
+      }
+      .checklist-card div[data-page][data-visible] {
+        display: block;
+      }
+      .flex-tabs {
+        display: flex;
+      }
+      .flex-tabs a {
+        flex-grow: 1;
+        color: #fff;
+      }
+    </style>
+    <div data-page="checklist">
+      The <span>checklist</span>.
+    </div>`)
+    for(let button of card.children[0].children){
+      button.addEventListener("click", ()=>{
+        let previous = card.querySelector("[data-visible]")
+        if(previous){
+          previous.removeAttribute("data-visible")
+          card.children[0].querySelector(`[data-page=${previous.dataset.page}]`).classList.remove("bg-red-dark")
+        }
+        card.querySelector(`div[data-page="${button.dataset.page}"]`).dataset.visible = true
+        card.children[0].querySelector(`[data-page="${button.dataset.page}"]`).classList.add("bg-red-dark")
+      })
+    }
+
+    // Add things in checklist
+  }
+
   if(path.startsWith("/ville/")){
     let trying = null
 

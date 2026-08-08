@@ -101,9 +101,27 @@
         flex-grow: 1;
         color: #fff;
       }
+      #checklist [data-model="row"] {
+        padding: 5px;
+        display: flex;
+        gap: 5px;
+      }
+      #checklist [data-model="timer"] {
+        min-width: 30px;
+      }
+      #checklist [data-done="false"] .colorful-background {
+        background-color: #a33;
+      }
+      #checklist [data-done="false"] .colorful-background {
+        background-color: #444;
+      }
     </style>
-    <div data-page="checklist">
-      The <span>checklist</span>.
+    <div data-page="checklist" id="checklist">
+      <div data-model="row">
+        <span></span>
+        <a class="badge colorful-background font-10" data-model="progress"></a>
+        <a class="badge colorful-background font-10" data-model="timer"></a>
+      </div>
     </div>`)
     for(let button of card.children[0].children){
       button.addEventListener("click", ()=>{
@@ -114,11 +132,22 @@
         }
         card.querySelector(`div[data-page="${button.dataset.page}"]`).dataset.visible = true
         card.children[0].querySelector(`[data-page="${button.dataset.page}"]`).classList.add("bg-red-dark")
+
+        if(button.dataset.page==="checklist" && !daily.seenChecklist){
+          daily.seenChecklist = true
+          GM_setValue("daily", daily)
+        }
       })
     }
-    card.children[0].children[0].click()
+    card.children[0].children[daily.seenChecklist ? 1 : 0].click()
 
-    // Add things in checklist
+    let checklist = card.querySelector("#checklist")
+    let models = {}
+    for(let e of checklist.querySelectorAll("[data-model]")){
+      models[e.dataset.model] = e
+      e.remove()
+    }
+
     let cooldowns = GM_getValue("cooldowns", [])
     let actions = []
     // Swipe through Just4U encounters
@@ -130,7 +159,13 @@
         done: !!l.length,
       })
     }
-    // Gyms
+    if(true){
+      actions.push({
+        name: "Farm gyms",
+        progress: !daily.gyms ? 0 : Object.values(daily.gyms).reduce((p, n)=>p+n, 0),
+        maxProgress: 90,
+      })
+    }
     if(subscription.current > 0){
       let max = [0, 1, 5, 10][subscription.current]
       actions.push({
@@ -141,7 +176,29 @@
       })
     }
 
-    // Display all of that
+    actions = actions.sort((a1, a2)=>+a1.done - +a2.done)
+    let hasTimers
+    for(let i in actions){
+      let action = actions[i]
+      let row = models.row.cloneNode(true)
+      row.querySelector("span").innerText = action.name
+      if(action.progress){
+        let progress = models.progress.cloneNode(true)
+        progress.innerText = action.progress + (action.maxProgress ? "/"+action.maxProgress : "")
+        row.append(progress)
+      }
+      if(action.timers){
+        for(let t of action.timers){
+          let e = models.timer.cloneNode(true)
+          e.dataset.countdown = t.t
+          if(t.name){e.dataset["tippy-content"] = t.name}
+          hasTimers = true
+        }
+      }
+      row.dataset.done = action.done
+      checklist.append(row)
+    }
+    if(hasTimers){startCountdown()}
   }
 
   if(path.startsWith("/ville/")){

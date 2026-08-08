@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-08
+// @version      2026-08-09
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -82,7 +82,7 @@
     card.classList.add("checklist-card")
     card.children[0].dataset.page = "quests"
     card.insertAdjacentHTML("afterbegin", `
-    <div class="tab-controls tab-animated tabs-small shadow-xl flex-tabs" data-tab-items="2">
+    <div class="tabs-small shadow-xl flex-tabs" data-tab-items="2">
       <a href="javascript:void 0" data-page="quests">Limited quests</a>
       <a href="javascript:void 0" data-page="checklist">Checklist</a>
     </div>
@@ -100,6 +100,8 @@
       .flex-tabs a {
         flex-grow: 1;
         color: #fff;
+        font-weight: 600;
+        text-align: center;
       }
       #checklist {
         font-size: 120%;

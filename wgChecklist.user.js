@@ -106,6 +106,9 @@
         display: flex;
         gap: 5px;
       }
+      #checklist [data-thing="right-side"] {
+        text-align: right;
+      }
       #checklist [data-model="timer"] {
         min-width: 30px;
       }
@@ -119,8 +122,10 @@
     <div data-page="checklist" id="checklist">
       <div data-model="row">
         <span></span>
-        <a class="badge colorful-background" data-model="progress"></a>
-        <a class="badge colorful-background" data-model="timer"></a>
+        <div data-thing="right-side">
+          <a class="badge colorful-background" data-model="progress"></a>
+          <a class="badge colorful-background" data-model="timer"></a>
+        </div>
       </div>
     </div>`)
     for(let button of card.children[0].children){
@@ -156,15 +161,19 @@
       actions.push({
         name: l.length ? "Waifuville missions" : "Start Waifuville mission",
         timers: l.map(e=>({ t: e.t, name: e.MyfuName })),
-        done: !!l.length,
+        done: l.length > 0,
+        url: "/ville",
       })
     }
     if(true){
-      actions.push({
+      let a
+      actions.push(a = {
         name: "Farm gyms",
         progress: !daily.gyms ? 0 : Object.values(daily.gyms).reduce((p, n)=>p+n, 0),
         maxProgress: 90,
+        url: "/battle",
       })
+      a.done = a.progress >= 1
     }
     if(subscription.current > 0){
       let max = [0, 1, 5, 10][subscription.current]
@@ -173,6 +182,7 @@
         progress: daily.createdCards,
         maxProgress: max,
         done: daily.createdCards>=max,
+        url: "/cards/new",
       })
     }
 
@@ -181,22 +191,23 @@
     for(let i in actions){
       let action = actions[i]
       let row = models.row.cloneNode(true)
-      row.querySelector("span").innerText = action.name
+      row.children[0].innerText = action.name
       if(action.progress>=0){
         let progress = models.progress.cloneNode(true)
         progress.innerText = action.progress + (action.maxProgress ? "/"+action.maxProgress : "")
-        row.append(progress)
+        row.children[1].append(progress)
       }
       if(action.timers?.length){
         for(let t of action.timers){
           let e = models.timer.cloneNode(true)
           e.dataset.countdown = Math.floor(t.t/1000)+""
           if(t.name){e.setAttribute("data-tippy-content", t.name)}
-          row.append(e)
+          row.children[1].append(e)
         }
         hasTimers = true
       }
       row.dataset.done = (!!action.done)+""
+      if(action.url){row.href = action.url} // Probably won't work
       checklist.append(row)
     }
     if(hasTimers){

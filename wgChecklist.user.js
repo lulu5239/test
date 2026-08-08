@@ -131,7 +131,7 @@
     </style>
     <div data-page="checklist" id="checklist">
       <div data-model="row">
-        <span></span>
+        <span><a></a></span>
         <div data-thing="right-side">
           <a class="badge colorful-background" data-model="progress"></a>
           <a class="badge colorful-background" data-model="timer"></a>
@@ -201,7 +201,7 @@
     for(let i in actions){
       let action = actions[i]
       let row = models.row.cloneNode(true)
-      row.children[0].innerText = action.name
+      row.children[0].children[0].innerText = action.name
       if(action.progress>=0){
         let progress = models.progress.cloneNode(true)
         progress.innerText = action.progress + (action.maxProgress ? "/"+action.maxProgress : "")
@@ -217,7 +217,7 @@
         hasTimers = true
       }
       row.dataset.done = (!!action.done)+""
-      if(action.url){row.href = action.url} // Probably won't work
+      if(action.url){row.children[0].children[0].href = action.url} // Probably won't work
       checklist.append(row)
     }
     if(hasTimers){

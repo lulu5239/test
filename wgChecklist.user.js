@@ -46,6 +46,8 @@
   }
 
   let daily = GM_getValue("daily", {})
+  let subscription = GM_getValue("subscription", {current: 0})
+  
   let tnow = +new Date()
   let day = tnow >= (daily.nextDay||0) ? null : daily.day
   if(!day){
@@ -144,5 +146,18 @@
     }
   }
 
-  // Count card creation remaining
+  if(path==="/profile"){
+    let e = document.querySelector(".page-content center strong span")
+    subscription.current = !e ? 0 : +e.innerText.slice(-1)
+    GM_setValue("subscription", subscription)
+  }
+  if(path==="/cards/new"){
+    let e = document.querySelector(".page-content center span")
+    daily.createdCards = e ? +e.innerText : 0
+    GM_setValue("daily", daily)
+
+    e = +document.querySelector(".page-content center span:nth-child(2)")?.innerText || 0
+    subscription.current = [0, 1, 5, 10].findIndex(n=>n===e)
+    GM_setValue("subscription", subscription)
+  }
 })()

@@ -81,7 +81,7 @@
     let card = document.querySelector(`a[href="/questline/limited"]`).closest(".card")
     card.classList.add("checklist-card")
     card.children[0].dataset.page = "quests"
-    document.insertAdjacentHTML("afterbegin", `
+    card.insertAdjacentHTML("afterbegin", `
     <div class="tab-controls tab-animated tabs-small shadow-xl flex-tabs" data-tab-items="2">
       <a href="javascript:void 0" data-page="quests">Limited quests</a>
       <a href="javascript:void 0" data-page="checklist">Checklist</a>
@@ -122,7 +122,7 @@
     let cooldowns = GM_getValue("cooldowns", [])
     let actions = []
     // Swipe through Just4U encounters
-    if(cooldowns.find(e=>e.type.startsWith("mission.")){
+    if(cooldowns.find(e=>e.type.startsWith("mission."))){
       let l = cooldowns.filter(e=>e.type.startsWith("mission.") && e.t>tnow)
       actions.push({
         name: l.length ? "Waifuville missions" : "Start Waifuville mission",

@@ -128,6 +128,9 @@
       #checklist > [data-done="true"] .colorful-background {
         background-color: #444;
       }
+      .bg-red-darker {
+        background-color: #901010;
+      }
     </style>
     <div data-page="checklist" id="checklist">
       <div data-model="row">
@@ -143,10 +146,10 @@
         let previous = card.querySelector("[data-visible]")
         if(previous){
           previous.removeAttribute("data-visible")
-          card.children[0].querySelector(`[data-page=${previous.dataset.page}]`).classList.remove("bg-red-dark")
+          card.children[0].querySelector(`[data-page=${previous.dataset.page}]`).classList.remove("bg-red-darker")
         }
         card.querySelector(`div[data-page="${button.dataset.page}"]`).dataset.visible = true
-        card.children[0].querySelector(`[data-page="${button.dataset.page}"]`).classList.add("bg-red-dark")
+        card.children[0].querySelector(`[data-page="${button.dataset.page}"]`).classList.add("bg-red-darker")
 
         if(button.dataset.page==="checklist" && !daily.seenChecklist){
           daily.seenChecklist = true

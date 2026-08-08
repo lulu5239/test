@@ -112,15 +112,15 @@
       #checklist [data-done="false"] .colorful-background {
         background-color: #a33;
       }
-      #checklist [data-done="false"] .colorful-background {
+      #checklist [data-done="true"] .colorful-background {
         background-color: #444;
       }
     </style>
     <div data-page="checklist" id="checklist">
       <div data-model="row">
         <span></span>
-        <a class="badge colorful-background font-10" data-model="progress"></a>
-        <a class="badge colorful-background font-10" data-model="timer"></a>
+        <a class="badge colorful-background" data-model="progress"></a>
+        <a class="badge colorful-background" data-model="timer"></a>
       </div>
     </div>`)
     for(let button of card.children[0].children){
@@ -202,6 +202,7 @@
     if(hasTimers){
       $countdowns = $("[data-countdown]")
       startCountdown()
+      tippy("[data-tippy-content]")
     }
   }
 

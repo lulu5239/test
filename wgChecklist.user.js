@@ -102,6 +102,7 @@
         color: #fff;
         font-weight: 600;
         text-align: center;
+        font-size: 110%;
       }
       #checklist {
         font-size: 120%;

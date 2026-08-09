@@ -124,7 +124,7 @@
         text-align: right;
       }
       #checklist [data-model="timer"] {
-        min-width: 30px;
+        min-width: 50px;
         margin-left: 5px;
       }
       #checklist > [data-done="true"] {
@@ -145,7 +145,7 @@
         <span><a></a></span>
         <div data-thing="right-side">
           <a class="badge colorful-background" data-model="progress"></a>
-          <a class="badge colorful-background" data-model="timer"></a>
+          <a class="badge colorful-background" data-model="timer" data-countdownprecision="2"></a>
         </div>
       </div>
     </div>`)

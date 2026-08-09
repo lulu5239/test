@@ -61,8 +61,13 @@
     nextDay = tnow + (24*3600000-nextDay)
     day = +day[0][0] + +day[0][1]*50 + +day[0][2]*400 + (+day[1][0] >= 6 ? 1 : 0)
     if((daily.day||0) < day){
-      GM_setValue("daily", daily = {day, nextDay})
+      GM_setValue("daily", daily = { day, nextDay })
     }
+  }
+  let group6h = tnow >= (daily.group6h?.next||0) ? null : daily.group6h.n
+  if(!group6h){
+    let n = Math.floor((tnow - (daily.nextDay - 24*3600000))/(6*3600000))
+    group6h = { n, next: daily.nextDay - (3-n)*6*3600000 }
   }
 
   // Bookmarks in side bar
@@ -171,7 +176,18 @@
 
     let cooldowns = GM_getValue("cooldowns", [])
     let actions = []
-    // Swipe through Just4U encounters
+    if(true){
+      let n = +document.querySelector(`#menu-main a[href="https://waifugame.com/swiper"] span.badge`)?.innerText
+      if(!(n >= group6h.lowestEncountersCount)){
+        group6h.lowestEncountersCount = n
+      }
+      actions.push({
+        name: "Swipe",
+        progress: group6h.lowestEncountersCount,
+        done: group6h.lowestEncountersCount < 10,
+        url: "/swiper",
+      })
+    }
     if(true){
       let n = document.querySelector(`#menu-main a[href="https://waifugame.com/battle"] span.badge`)?.innerText
       if(n){

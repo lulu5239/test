@@ -342,6 +342,7 @@
     daily.createdCards = e ? +e.innerText : 0
     GM_setValue("daily", daily)
 
+    if(document.querySelector(".alert.alert-danger.mx-3:has([data-countdown])")){return}
     e = +document.querySelector(".page-content center span:nth-child(2)")?.innerText || 0
     subscription.current = [0, 1, 5, 10].findIndex(n=>n===e)
     GM_setValue("subscription", subscription)

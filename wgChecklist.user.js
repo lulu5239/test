@@ -64,7 +64,7 @@
       GM_setValue("daily", daily = { day, nextDay })
     }
   }
-  let group6h = tnow >= (daily.group6h?.next||0) ? null : daily.group6h.n
+  let group6h = tnow >= (daily.group6h?.next||0) ? null : daily.group6h
   if(!group6h){
     let n = Math.floor((tnow - (daily.nextDay - 24*3600000))/(6*3600000))
     group6h = daily.group6h = { n, next: daily.nextDay - (3-n)*6*3600000 }

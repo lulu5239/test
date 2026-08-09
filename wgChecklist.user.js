@@ -206,7 +206,7 @@
       let max = [0, 1, 5, 10][subscription.current]
       actions.push({
         name: "Create cards",
-        progress: daily.createdCards,
+        progress: daily.createdCards || 0,
         maxProgress: max,
         done: daily.createdCards>=max,
         url: "/cards/new",
@@ -219,7 +219,7 @@
       let action = actions[i]
       let row = models.row.cloneNode(true)
       row.children[0].children[0].innerText = action.name
-      if(action.progress>=0){
+      if(action.progress >= 0){
         let progress = models.progress.cloneNode(true)
         progress.innerText = action.progress + (action.maxProgress ? "/"+action.maxProgress : "")
         row.children[1].append(progress)
@@ -314,9 +314,7 @@
   }
 
   if(path==="/profile"){
-    let e = document.querySelector(".page-content center strong span")
-    subscription.current = !e ? 0 : +e.innerText.slice(-1)
-    GM_setValue("subscription", subscription)
+    // GM_setValue("subscription", subscription)
   }
   if(path==="/cards/new"){
     let e = document.querySelector(".page-content center span")

@@ -262,6 +262,7 @@
       startCountdown()
       tippy("[data-tippy-content]")
     }
+    GM_setValue("daily", daily)
   }
 
   if(path.startsWith("/ville/")){

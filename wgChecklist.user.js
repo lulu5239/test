@@ -177,7 +177,7 @@
     let cooldowns = GM_getValue("cooldowns", [])
     let actions = []
     if(true){
-      let n = +document.querySelector(`#menu-main a[href="https://waifugame.com/swiper"] span.badge`)?.innerText
+      let n = +document.querySelector(`#menu-main a[href="https://waifugame.com/swiper"] span.badge`)?.innerText || 0
       if(!(n >= group6h.lowestEncountersCount)){
         group6h.lowestEncountersCount = n
       }

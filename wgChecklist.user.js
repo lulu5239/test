@@ -185,6 +185,10 @@
         name: "Swipe",
         progress: group6h.lowestEncountersCount,
         done: group6h.lowestEncountersCount < 10,
+        timers: [{
+          t: group6h.next,
+          name: "Next Just4U encounters",
+        }],
         url: "/swiper",
       })
     }

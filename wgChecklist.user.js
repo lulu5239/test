@@ -342,6 +342,7 @@
     let e = document.querySelector(".page-content center span")
     daily.createdCards = finished ? +finished.innerText.match(/\((.*?)\)/g)[0].slice(1, -1) : e ? +e.innerText : 0
     GM_setValue("daily", daily)
+    if(finished){return}
 
     e = +document.querySelector(".page-content center span:nth-child(2)")?.innerText || 0
     subscription.current = [0, 1, 5, 10].findIndex(n=>n===e)

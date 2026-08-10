@@ -71,16 +71,18 @@
   }
 
   // Bookmarks in side bar
-  document.querySelector("#menu-main").insertAdjacentHTML("beforeend",
-    `<h6 class="menu-divider mt-4">Bookmarks</h6>
-    <div class="list-group list-custom-small list-menu" id="bookmarks-list">
-      <a href="javascript: void 0">
-        <i class="fa fa-bookmark color-white" style="background: linear-gradient(20deg, #2a2, #397)"></i>
-        <span>Bookmark</span>
-      </a>
-    </div>`
-  )
-  let bookmarks = document.querySelector("#bookmarks-list")
+  if(true){
+    document.querySelector("#menu-main").insertAdjacentHTML("beforeend",
+      `<h6 class="menu-divider mt-4">Bookmarks</h6>
+      <div class="list-group list-custom-small list-menu" id="bookmarks-list">
+        <a href="javascript: void 0">
+          <i class="fa fa-bookmark color-white" style="background: linear-gradient(20deg, #2a2, #397)"></i>
+          <span>Bookmark</span>
+        </a>
+      </div>`
+    )
+    let bookmarks = document.querySelector("#bookmarks-list")
+  }
 
   if(path==="/home"){
     let card = document.querySelector(`a[href="/questline/limited"]`).closest(".card")
@@ -146,6 +148,7 @@
         <div data-thing="right-side">
           <a class="badge colorful-background" data-model="progress"></a>
           <a class="badge colorful-background" data-model="timer" data-countdownprecision="2"></a>
+          <i class="fa fa-check" data-model="checkmark"></i>
         </div>
       </div>
     </div>`)
@@ -261,7 +264,11 @@
         hasTimers = true
       }
       row.dataset.done = (!!action.done)+""
-      if(action.url){row.children[0].children[0].href = action.url} // Probably won't work
+      if(action.url){row.children[0].children[0].href = action.url}
+      if(action.done && [...row.children[1].length]===0){
+        let e = models.checkmark.cloneNode(true)
+        row.children[1].append(e)
+      }
       checklist.append(row)
     }
     if(hasTimers){

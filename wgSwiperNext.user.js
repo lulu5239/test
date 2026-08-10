@@ -1709,11 +1709,14 @@
     let rows = [...table.querySelector("tbody").children].filter(e=>!e.children[2].children[0].classList.contains("buyBtn"))
     let reBuyList = document.querySelector("#reBuyList")
     let reBuyItem = reBuyList.children[0]; reBuyItem.remove()
+    let tooLate
     let onclick = ev=>{
+      if(tooLate){return showErrorToast("Too late!")}
       let n = Math.floor(+prompt("How many? (Maximum 10.)"))
       if(!(n >= 0 && n <= 10)){return showErrorToast("Not valid number.")}
       let item = JSON.parse(ev.target.dataset.item)
       let e = reBuyList.querySelector(`[data-item="${item.id}"]`) || reBuyItem.cloneNode(true)
+      ev.target.innerHTML = "Buy again" + (n>0 ? ` <b>x${n}</b>` : "")
       if(n===0){
         e.remove()
       return}
@@ -1733,7 +1736,6 @@
     }
 
     setTimeout(async ()=>{
-      let tooLate
       for(let e of toReBuy){
         if(tooLate){
           e.dataset.status = "late"

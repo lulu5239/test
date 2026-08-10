@@ -1678,15 +1678,47 @@
   }
 
   if(path==="/trader"){
-    let nextDay = +document.querySelector(`.page-content .card ul [data-countdown]`).dataset.countdown
-    if(false && nextDay*1000 - +new Date() > 300000){return}
-    let rows = [...document.querySelector(".page-content .content table:not(.mb-0) tbody").children].filter(e=>!e.children[2].children[0].classList.contains("buyBtn"))
-    let toReBuy = []
+    let nextDay = +document.querySelector(`.page-content .card ul [data-countdown]`).dataset.countdown *1000
+    let todayTrader = GM_getValue("todayTrader", {reset: 0})
+    let table = document.querySelector(".page-content .content table:not(.mb-0) tbody")
+    if(todayTrader.reset !== nextDay){
+      GM_setValue("todayTrader", todayTrader = {
+        reset: nextDay,
+        items: [...table.children].map(e=>e.children[2].children[0]).filter(e=>e.dataset.item).map(e=>JSON.stringify(e.dataset.item)),
+      })
+    }
+    if(false && nextDay - +new Date() > 300000){return}
+    table.insertAdjacentHTML("afterend", `<div class="card" style="display: none; padding: 10px; text-align: center"><span>Items to buy again:<span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
+    +`<style>
+      #reBuyItem > span {
+        background-color: #444;
+        corner-radius: 2px;
+        padding: 3px;
+        color: #fff;
+      }
+    </style>`)
+    let rows = [...table.querySelector("tbody").children].filter(e=>!e.children[2].children[0].classList.contains("buyBtn"))
+    let reBuyList = document.querySelector("#reBuyList")
+    let reBuyItem = reBuyList.children[0]; reBuyItem.remove()
     let onclick = ev=>{
-      // Add to list
+      let n = Math.floor(+prompt("How many? (Maximum 10.)"))
+      if(!(n >= 0 && n <= 10)){return showErrorToast("Not valid number.")}
+      let item = JSON.parse(ev.target.dataset.item)
+      let e = reBuyList.querySelector(`[data-item="${item.id}"]`) || reBuyItem.cloneNode(true)
+      if(n===0){
+        e.remove()
+      return}
+      e.dataset.item = item.id
+      e.querySelector("b").innerText = n+"x"
+      e.querySelector("a").innerText = item.name
+      if(!e.parentElement){reBuyList.append(e)}
+      reBuyList.parentElement.style.display = null
     }
     for(let row of rows){
-      row.children[2].innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-secondary">Buy again</button>`
+      let item = todayTrader.items.find(item=>"https://waifugame.com/"+item.spritesheet===row.children[0].children[0].src)
+      if(!item){continue}
+      row.children[2].innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-warning">Buy again</button>`
+      row.children[2].children[0].dataset.item = JSON.stringify(item)
       row.children[2].children[0].addEventListener("click", onclick)
     }
 

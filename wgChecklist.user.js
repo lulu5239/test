@@ -179,7 +179,7 @@
     if(true){
       actions.push({
         name: "Visit trader",
-        done: !daily.visitedTrader,
+        done: !!daily.visitedTrader,
         url: "/trader",
       })
     }

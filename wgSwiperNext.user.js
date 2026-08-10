@@ -1680,15 +1680,15 @@
   if(path==="/trader"){
     let nextDay = +document.querySelector(`.page-content .card ul [data-countdown]`).dataset.countdown *1000
     let todayTrader = GM_getValue("todayTrader", {reset: 0})
-    let table = document.querySelector(".page-content .content table:not(.mb-0) tbody")
+    let table = document.querySelector(".page-content .content table:not(.mb-0)")
     if(todayTrader.reset !== nextDay){
       GM_setValue("todayTrader", todayTrader = {
         reset: nextDay,
-        items: [...table.children].map(e=>e.children[2].children[0]).filter(e=>e.dataset.item).map(e=>JSON.stringify(e.dataset.item)),
+        items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0]).filter(e=>e.dataset.item).map(e=>JSON.parse(e.dataset.item)),
       })
     }
     if(false && nextDay - +new Date() > 300000){return}
-    table.insertAdjacentHTML("afterend", `<div class="card" style="display: none; padding: 10px; text-align: center"><span>Items to buy again:<span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
+    table.insertAdjacentHTML("afterend", `<div class="card" style="display: none; padding: 10px; text-align: center"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
     +`<style>
       #reBuyItem > span {
         background-color: #444;

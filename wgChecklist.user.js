@@ -76,12 +76,51 @@
       `<h6 class="menu-divider mt-4">Bookmarks</h6>
       <div class="list-group list-custom-small list-menu" id="bookmarks-list">
         <a href="javascript: void 0">
-          <i class="fa fa-bookmark color-white" style="background: linear-gradient(20deg, #2a2, #397)"></i>
+          <i class="fa fa-bookmark color-white" style="background: linear-gradient(20deg, #333, #777)"></i>
           <span>Bookmark</span>
+          <i class="fa fa-angle-right"></i>
         </a>
       </div>`
     )
-    let bookmarks = document.querySelector("#bookmarks-list")
+    let list = document.querySelector("#bookmarks-list")
+    let bookmarks = GM_getValue("bookmarks", [])
+    let buttonNew = list.children[0]
+    let buttonModel = buttonNew.cloneNode(true)
+    for(let bookmark of bookmarks){
+      let e = buttonModel.cloneNode(true)
+      e.children[1].innerText = bookmark.name
+      e.href = bookmark.url
+      list.append(e)
+    }
+    list.append(buttonNew)
+    buttonNew.children[2].remove()
+    let isBookmarked; let here = path + document.location.search
+    let updateButtonNew = ()=>{
+      isBookmarked = bookmarks.find(b=>b.url === here)
+      buttonNew.children[1].innerText = isBookmarked ? "Remove bookmark" : "Bookmark"
+      buttonNew.children[0].background = isBookmarked ? "linear-gradient(20deg, #a22, #937)" : "linear-gradient(20deg, #2a2, #397)"
+    }
+    buttonNew.addEventListener("click", ev=>{
+      if(isBookmarked){
+        let e = list.querySelector(`[href="${here}"]`)
+        if(e){e.remove()}
+        let index = bookmarks.findIndex(b=>b.url === here)
+        if(index >= 0){bookmarks.splice(index, 1)}
+      }else{
+        let name = prompt("Bookmark name:")
+        if(!name){return}
+        bookmarks.push({
+          name, url: here,
+        })
+        let e = buttonModel.cloneNode(true)
+        e.children[1].innerText = name
+        e.href = here
+        list.append(e)
+        list.append(buttonNew)
+      }
+      GM_setValue("bookmarks", bookmarks)
+      updateButtonNew()
+    })
   }
 
   if(path==="/home"){

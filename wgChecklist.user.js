@@ -177,6 +177,13 @@
     let cooldowns = GM_getValue("cooldowns", [])
     let actions = []
     if(true){
+      actions.push({
+        name: "Visit trader",
+        done: !daily.visitedTrader,
+        url: "/trader",
+      })
+    }
+    if(true){
       let n = +document.querySelector(`#menu-main a[href="https://waifugame.com/swiper"] span.badge`)?.innerText || 0
       if(!(n >= group6h.lowestEncountersCount)){
         group6h.lowestEncountersCount = n
@@ -347,5 +354,12 @@
     e = +document.querySelector(".page-content center span:nth-child(2)")?.innerText || 0
     subscription.current = [0, 1, 5, 10].findIndex(n=>n===e)
     GM_setValue("subscription", subscription)
+  }
+
+  if(path==="/trader"){
+    if(!daily.visitedTrader){
+      daily.visitedTrader = true
+      GM_setValue("daily", daily)
+    }
   }
 })()

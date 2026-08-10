@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-06
+// @version      2026-08-10
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1037,9 +1037,9 @@
     document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
       `<div id="swiperNextSettings" class="card card-style" style="padding:3px">
         <div class="tab-controls tabs-round tab-animated tabs-small tabs-rounded shadow-xl flex-tabs" data-tab-items="3">
-          <a href="#" data-page="visibility">Visibility</a>
-          <a href="#" data-page="keybinds">Keybinds</a>
-          <a href="#" data-page="recommendations">Recommendations</a>
+          <a href="javascript:void 0" data-page="visibility">Visibility</a>
+          <a href="javascript:void 0" data-page="keybinds">Keybinds</a>
+          <a href="javascript:void 0" data-page="recommendations">Recommendations</a>
         </div>
         <div data-page="visibility">
           For the destination buttons:<br>
@@ -1675,5 +1675,25 @@
         }
       }
     })
+  }
+
+  if(path==="/trader"){
+    let nextDay = +document.querySelector(`.page-content .card ul [data-countdown]`).dataset.countdown
+    if(false && nextDay*1000 - +new Date() > 300000){return}
+    let rows = [...document.querySelector(".page-content .content table:not(.mb-0) tbody").children].filter(e=>!e.children[2].children[0].classList.contains("buyBtn"))
+    let toReBuy = []
+    let onclick = ev=>{
+      // Add to list
+    }
+    for(let row of rows){
+      row.children[2].innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-secondary">Buy again</button>`
+      row.children[2].children[0].addEventListener("click", onclick)
+    }
+
+    setTimeout(async ()=>{
+      for(let item of toReBuy){
+        // Re-buy item
+      }
+    }, nextDay - +new Date())
   }
 })();

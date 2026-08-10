@@ -1690,11 +1690,20 @@
     if(false && nextDay - +new Date() > 300000){return}
     table.insertAdjacentHTML("afterend", `<div class="card" style="display: none; padding: 10px; text-align: center"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
     +`<style>
-      #reBuyItem > span {
+      #reBuyList > span {
         background-color: #444;
         corner-radius: 2px;
         padding: 3px;
         color: #fff;
+      }
+      #reBuyList > span[data-status="requesting"] {
+        background-color: #663;
+      }
+      #reBuyList > span[data-status="done"] {
+        background-color: #1a1;
+      }
+      #reBuyList > span[data-status="late"] {
+        background-color: #a11;
       }
     </style>`)
     let rows = [...table.querySelector("tbody").children].filter(e=>!e.children[2].children[0].classList.contains("buyBtn"))
@@ -1709,6 +1718,7 @@
         e.remove()
       return}
       e.dataset.item = item.id
+      e.dataset.count = n+""
       e.querySelector("b").innerText = n+"x"
       e.querySelector("a").innerText = item.name
       if(!e.parentElement){reBuyList.append(e)}
@@ -1723,8 +1733,29 @@
     }
 
     setTimeout(async ()=>{
-      for(let item of toReBuy){
-        // Re-buy item
+      let tooLate
+      for(let e of toReBuy){
+        if(tooLate){
+          e.dataset.status = "late"
+        continue}
+        e.dataset.status = "requesting"
+        let p = await fetch("/buy", {
+          method: "POST",
+          body: JSON.stringify({
+            _token: token,
+            buyItemID: +e.dataset.item,
+            buyItemCount: +e.dataset.count,
+          }),
+          headers: {
+            "content-type": "application/json",
+             accept: "application/json",
+          },
+        })
+        if(firstData.status >= 400 || firstData.headers.get("content-type")==="application/json"){
+          tooLate = true
+          e.dataset.status = "late"
+        continue}
+        e.dataset.status = "done"
       }
     }, nextDay - +new Date())
   }

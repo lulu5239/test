@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-09
+// @version      2026-08-10
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -190,7 +190,7 @@
       }
       actions.push({
         name: "Swipe",
-        progress: group6h.lowestEncountersCount,
+        progress: Math.min(group6h.lowestEncountersCount, [75, 100, 125, 150][subscription.current || 0]),
         done: group6h.lowestEncountersCount < 10,
         timers: [{
           t: group6h.next,

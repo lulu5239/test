@@ -98,7 +98,7 @@
     let updateButtonNew = ()=>{
       isBookmarked = bookmarks.find(b=>b.url === here)
       buttonNew.children[1].innerText = isBookmarked ? "Remove bookmark" : "Bookmark"
-      buttonNew.children[0].background = isBookmarked ? "linear-gradient(20deg, #a22, #937)" : "linear-gradient(20deg, #2a2, #397)"
+      buttonNew.children[0].style.background = isBookmarked ? "linear-gradient(20deg, #a22, #937)" : "linear-gradient(20deg, #2a2, #397)"
     }
     buttonNew.addEventListener("click", ev=>{
       if(isBookmarked){
@@ -304,7 +304,7 @@
       }
       row.dataset.done = (!!action.done)+""
       if(action.url){row.children[0].children[0].href = action.url}
-      if(action.done && [...row.children[1].length]===0){
+      if(action.done && row.children[1].length===0){
         let e = models.checkmark.cloneNode(true)
         row.children[1].append(e)
       }

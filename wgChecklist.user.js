@@ -149,7 +149,7 @@
         display: none;
         color: #eee;
       }
-      .checklist-card div[data-page][data-visible], .checklist-card div[data-page="settings"] div[data-settings] [data-visible] {
+      .checklist-card div[data-page][data-visible], .checklist-card div[data-page="settings"] div[data-settings][data-visible] {
         display: block;
       }
       .flex-tabs {
@@ -217,7 +217,7 @@
         <option value="gyms">Gyms</option>
         <option value="cards">Card creation</option>
       </select>
-      <div data-settings="all">
+      <div data-settings="all" data-visible="true">
         Checklist position: in limited quests card <i>(currently not editable)</i>
         <br>Lublox key thing : <input data-setting="LubloxKey" /> <a href="https://lublox.xyz/web#wg/cooldowns" target="_blank">(learn more)</a>
       </div>
@@ -378,7 +378,7 @@
         GM_setValue("LubloxKey", ev.target.value)
       return}
 
-      if(ev.target.tagName==="select" && ev.target.max > 1){
+      if(ev.target.tagName==="SELECT" && ev.target.max > 1){
         checklistSettings[ev.target.dataset.setting] = [...ev.target.options].filter(o=>o.selected).map(o=>o.value)
       }else{
         checklistSettings[ev.target.dataset.setting] = ev.target.value

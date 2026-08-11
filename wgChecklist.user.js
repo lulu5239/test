@@ -233,7 +233,7 @@
     </div>`)
     for(let button of card.children[0].children){
       button.addEventListener("click", ()=>{
-        let previous = card.children[0].querySelector("[data-visible]")
+        let previous = card.querySelector(":scope > [data-visible]")
         if(previous){
           previous.removeAttribute("data-visible")
           card.children[0].querySelector(`[data-page=${previous.dataset.page}]`).classList.remove("bg-red-darker")
@@ -318,7 +318,7 @@
         progress: daily.createdCards || 0,
         maxProgress: max,
         done: daily.createdCards>=max,
-        url: "/cards/new",
+        url: "/cards/new" + (checklistSettings.cardsDefaultTags ? "?search="+encodeURIComponent(checklistSettings.cardsDefaultTags) : ""),
       })
     }
 

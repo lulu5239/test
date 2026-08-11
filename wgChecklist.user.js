@@ -128,7 +128,7 @@
     document.querySelector("a.navbar-brand.brand-logo-mini").addEventListener("click", ev=>{
       ev.preventDefault()
       let nav = document.querySelector("#sidebar")
-      nav[nav.classList.contains("active") ? "remove" : "add"]("active")
+      nav.classList[nav.classList.contains("active") ? "remove" : "add"]("active")
     })
   }
 

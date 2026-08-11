@@ -196,7 +196,9 @@
         text-align: center;
       }
       [data-model="settingsButton"] a {
-        padding: 5px;
+        display: inline-block;
+        padding: 10px;
+        color: #fff;
       }
     </style>
     <div data-page="checklist">
@@ -208,7 +210,7 @@
           <i class="fa fa-check" data-model="checkmark"></i>
         </div>
       </div>
-      <div data-model="settingsButton"><a href="javascript:void 0">Settings</a></div>
+      <div data-model="settingsButton"><a href="javascript:void 0"><i class="fa fa-wrench"></i>Settings</a></div>
     </div>
     <div data-page="settings">
       <select class="form-control form-control-lg">
@@ -225,7 +227,18 @@
         Consider <input type="number" min="0" max="4" data-setting="WaifuvilleMissionsGoal" value="4" /> enough missions
       </div>
       <div data-settings="gyms">
-        Consider done after farming gyms <input type="number" min="0" max="90" data-setting="gymsGoal" value="90" /> times or after finishing to farm the gyms <i>future select</i>
+        Consider done after farming gyms <input type="number" min="0" max="90" data-setting="gymsGoal" value="90" /> times or after finishing to farm 10 times the gyms:
+        <select data-setting="gymsListGoal" min="0" max="9">
+          <option value="67">Gym 1 (Harmony Haven)</option>
+          <option value="68">Gym 2 (Inferno Forge)</option>
+          <option value="69">Gym 3 (Aqua Tempest)</option>
+          <option value="70">Gym 4 (Toxic Swamp)</option>
+          <option value="71">Gym 5 (Terracotta Sanctuary)</option>
+          <option value="72">Gym 6 (Electric Bloodshed Arena)</option>
+          <option value="73">Gym 7 (Frozen Melody)</option>
+          <option value="74">Gym 8 (Techno Eclipse Chamber)</option>
+          <option value="75">Gym 9 (Luminary Zenith)</option>
+        </select>
       </div>
       <div data-settings="cards">
         Default tag(s) to search when clicking the link: <input data-setting="cardsDefaultTags" />
@@ -308,7 +321,7 @@
         progress: n,
         maxProgress: 90,
         url: "/battle",
-        done: n >= (checklistSettings.gymsGoal ?? 90),
+        done: n >= (checklistSettings.gymsGoal ?? 90) && !checklistSettings.gymsListGoal?.find(g=>!daily.gyms?.[g] || daily.gyms[g]<10),
       })
     }
     if(subscription.current > 0){
@@ -398,7 +411,7 @@
           if(o){o.selected = true}
         }
       }else{
-        e.value = value
+        e.value = e.type==="number" ? +value : value
       }
     }
   }

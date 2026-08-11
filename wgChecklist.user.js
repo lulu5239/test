@@ -297,7 +297,7 @@
       actions.push({
         name: l.length ? "Waifuville missions" : "Start Waifuville mission",
         timers: l.map(e=>({ t: e.t, name: e.MyfuName })),
-        done: l.length >= (settingsChecklist.WaifuvilleMissionsGoal ?? 4),
+        done: l.length >= (checklistSettings.WaifuvilleMissionsGoal ?? 4),
         url: "/ville",
       })
     }
@@ -308,7 +308,7 @@
         progress: n,
         maxProgress: 90,
         url: "/battle",
-        done: n >= (settingsChecklist.gymsGoal ?? 90),
+        done: n >= (checklistSettings.gymsGoal ?? 90),
       })
     }
     if(subscription.current > 0){

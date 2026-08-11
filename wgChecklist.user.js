@@ -210,7 +210,7 @@
           <i class="fa fa-check" data-model="checkmark"></i>
         </div>
       </div>
-      <div data-model="settingsButton"><a href="javascript:void 0"><i class="fa fa-wrench"></i>Settings</a></div>
+      <div data-model="settingsButton"><a href="javascript:void 0"><i class="fa fa-wrench"></i> Settings</a></div>
     </div>
     <div data-page="settings">
       <select class="form-control form-control-lg">
@@ -228,7 +228,7 @@
       </div>
       <div data-settings="gyms">
         Consider done after farming gyms <input type="number" min="0" max="90" data-setting="gymsGoal" value="90" /> times or after finishing to farm 10 times the gyms:
-        <select data-setting="gymsListGoal" min="0" max="9">
+        <select data-setting="gymsListGoal" multiple="true" min="0" max="9">
           <option value="67">Gym 1 (Harmony Haven)</option>
           <option value="68">Gym 2 (Inferno Forge)</option>
           <option value="69">Gym 3 (Aqua Tempest)</option>
@@ -391,7 +391,7 @@
         GM_setValue("LubloxKey", ev.target.value)
       return}
 
-      if(ev.target.tagName==="SELECT" && ev.target.max > 1){
+      if(ev.target.tagName==="SELECT" && ev.target.getAttribute("multiple")){
         checklistSettings[ev.target.dataset.setting] = [...ev.target.options].filter(o=>o.selected).map(o=>o.value)
       }else{
         checklistSettings[ev.target.dataset.setting] = ev.target.value
@@ -405,7 +405,7 @@
       continue}
       let value = checklistSettings[e.dataset.setting]
       if(!value){continue}
-      if(e.tagName==="SELECT" && e.max > 1 && value instanceof Array){
+      if(e.tagName==="SELECT" && e.getAttribute("multiple") && value instanceof Array){
         for(let option of value){
           let o = e.target.options.find(o=>o.value === option)
           if(o){o.selected = true}

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-10
+// @version      2026-08-11
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -24,7 +24,7 @@
     path = path.slice(0, -1)
   }
 
-  if(typeof(startCountdown)==="undefined"){return} // Requires normal pages
+  let isOldStyle = typeof(startCountdown)==="undefined" && document.querySelector("#sidebar.sidebar-offcanvas")
 
   var addCooldown = e=>{
     let cooldowns = GM_getValue("cooldowns", [])
@@ -72,12 +72,12 @@
 
   // Bookmarks in side bar
   if(true){
-    document.querySelector("#menu-main").insertAdjacentHTML("beforeend",
+    document.querySelector(isOldStyle ? "#sidebar" : "#menu-main").insertAdjacentHTML("beforeend",
       `<h6 class="menu-divider mt-4">Bookmarks</h6>
-      <div class="list-group list-custom-small list-menu" id="bookmarks-list">
+      <div class="list-group list-custom-small list-menu nav-link nav-item" id="bookmarks-list">
         <a href="javascript: void 0">
-          <i class="fa fa-bookmark color-white" style="background: linear-gradient(20deg, #333, #777)"></i>
-          <span>Bookmark</span>
+          <i class="fa fa-bookmark color-white menu-icon" style="background: linear-gradient(20deg, #333, #777)"></i>
+          <span class="menu-title">Bookmark</span>
           <i class="fa fa-angle-right"></i>
         </a>
       </div>`
@@ -121,6 +121,14 @@
       }
       GM_setValue("bookmarks", bookmarks)
       updateButtonNew()
+    })
+  }
+
+  if(isOldStyle){
+    document.querySelector("a.navbar-brand.brand-logo-mini").addEventListener("click", ev=>{
+      ev.preventDefault()
+      let nav = document.querySelector("#sidebar")
+      nav[nav.classList.contains("active") ? "remove" : "add"]("active")
     })
   }
 

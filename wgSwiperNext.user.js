@@ -1687,7 +1687,7 @@
         items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0]).filter(e=>e.dataset.item).map(e=>JSON.parse(e.dataset.item)),
       })
     }
-    if(false && nextDay - +new Date() > 300000){return}
+    if(nextDay - +new Date() > 300000){return}
     table.insertAdjacentHTML("afterend", `<div class="card" style="display: none; padding: 10px; text-align: center"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
     +`<style>
       #reBuyList > span {

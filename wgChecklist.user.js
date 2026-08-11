@@ -133,6 +133,8 @@
   }
 
   if(path==="/home"){
+    let checklistSettings = GM_getValue("checklistSettings", {})
+    
     let card = document.querySelector(`a[href="/questline/limited"]`).closest(".card")
     card.classList.add("checklist-card")
     card.children[0].dataset.page = "quests"
@@ -140,13 +142,14 @@
     <div class="tabs-small shadow-xl flex-tabs" data-tab-items="2">
       <a href="javascript:void 0" data-page="quests">Limited quests</a>
       <a href="javascript:void 0" data-page="checklist">Checklist</a>
+      <a href="javascript:void 0" data-page="settings" style="display: none">Settings</a>
     </div>
     <style>
-      .checklist-card div[data-page] {
+      .checklist-card div[data-page], .checklist-card div[data-page="settings"] div[data-settings] {
         display: none;
         color: #eee;
       }
-      .checklist-card div[data-page][data-visible] {
+      .checklist-card div[data-page][data-visible], .checklist-card div[data-page="settings"] div[data-settings] [data-visible] {
         display: block;
       }
       .flex-tabs {
@@ -189,8 +192,14 @@
       .bg-red-darker {
         background-color: #901010;
       }
+      [data-model="settingsButton"] {
+        text-align: center;
+      }
+      [data-model="settingsButton"] a {
+        padding: 5px;
+      }
     </style>
-    <div data-page="checklist" id="checklist">
+    <div data-page="checklist">
       <div data-model="row">
         <span><a></a></span>
         <div data-thing="right-side">
@@ -198,6 +207,28 @@
           <a class="badge colorful-background" data-model="timer" data-countdownprecision="2"></a>
           <i class="fa fa-check" data-model="checkmark"></i>
         </div>
+      </div>
+      <div data-model="settingsButton"><a href="javascript:void 0">Settings</a></div>
+    </div>
+    <div data-page="settings">
+      <select class="form-control form-control-lg">
+        <option value="all" selected>General settings</option>
+        <option value="Waifuville">Waifuville</option>
+        <option value="gyms">Gyms</option>
+        <option value="cards">Card creation</option>
+      </select>
+      <div data-settings="all">
+        Checklist position: in limited quests card <i>(currently not editable)</i>
+        <br>Lublox key thing : <input data-setting="LubloxKey" /> <a href="https://lublox.xyz/web#wg/cooldowns" target="_blank">(learn more)</a>
+      </div>
+      <div data-settings="Waifuville">
+        Consider <input type="number" min="0" max="4" data-setting="WaifuvilleMissionsGoal" value="4" /> enough missions
+      </div>
+      <div data-settings="gyms">
+        Consider done after farming gyms <input type="number" min="0" max="90" data-setting="gymsGoal" value="90" /> times or after finishing to farm the gyms <i>future select</i>
+      </div>
+      <div data-settings="cards">
+        Default tag(s) to search when clicking the link: <input data-setting="cardsDefaultTags" />
       </div>
     </div>`)
     for(let button of card.children[0].children){
@@ -218,9 +249,9 @@
     }
     card.children[0].children[daily.seenChecklist ? 1 : 0].click()
 
-    let checklist = card.querySelector("#checklist")
+    let checklist = card.querySelector(`[data-page="checklist"]`)
     let models = {}
-    for(let e of checklist.querySelectorAll("[data-model]")){
+    for(let e of card.querySelectorAll("[data-model]")){
       models[e.dataset.model] = e
       e.remove()
     }
@@ -325,6 +356,37 @@
       tippy("[data-tippy-content]")
     }
     GM_setValue("daily", daily)
+    
+    checklist.append(models.settingsButton)
+    models.settingsButton.addEventListener("click", ev=>{
+      card.querySelector(`[data-page="settings"]`).click()
+    })
+    let settingsPage = card.querySelector(`div[data-page="settings]`)
+    settingsPage.addEventListener("change", ev=>{
+      if(ev.target.parentElement === settingsPage){
+        let previous = settingsPage.querySelector(`[data-page="settings"] [data-visible]`)
+        if(previous){
+          previous.removeAttribute("data-visible")
+        }
+        settingsPage.querySelector(`div[data-settings="${ev.target.value}"]`).dataset.visible = true
+      return}
+
+      if(!ev.target.dataset.setting){return}
+
+      if(ev.target.dataset.setting === "LubloxKey"){
+        // Check maybe
+        GM_setValue("LubloxKey", ev.target.value)
+      return}
+
+      if(ev.target.tagName==="select" && ev.target.max > 1){
+        checklistSettings[ev.target.dataset.setting] = null
+      }else{
+        checklistSettings[ev.target.dataset.setting] = ev.target.value
+      }
+      GM_setValue("checklistSettings", checklistSettings)
+    })
+
+    // Put values into settings elements
   }
 
   if(path.startsWith("/ville/")){

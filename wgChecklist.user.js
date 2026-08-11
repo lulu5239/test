@@ -297,7 +297,7 @@
       actions.push({
         name: l.length ? "Waifuville missions" : "Start Waifuville mission",
         timers: l.map(e=>({ t: e.t, name: e.MyfuName })),
-        done: l.length > 0,
+        done: l.length >= (settingsChecklist.WaifuvilleMissionsGoal ?? 4),
         url: "/ville",
       })
     }
@@ -308,7 +308,7 @@
         progress: n,
         maxProgress: 90,
         url: "/battle",
-        done: n >= 1,
+        done: n >= (settingsChecklist.gymsGoal ?? 90),
       })
     }
     if(subscription.current > 0){
@@ -361,10 +361,10 @@
     models.settingsButton.addEventListener("click", ev=>{
       card.querySelector(`[data-page="settings"]`).click()
     })
-    let settingsPage = card.querySelector(`div[data-page="settings]`)
+    let settingsPage = card.querySelector(`div[data-page="settings"]`)
     settingsPage.addEventListener("change", ev=>{
       if(ev.target.parentElement === settingsPage){
-        let previous = settingsPage.querySelector(`[data-page="settings"] [data-visible]`)
+        let previous = settingsPage.querySelector(`[data-visible]`)
         if(previous){
           previous.removeAttribute("data-visible")
         }
@@ -379,14 +379,28 @@
       return}
 
       if(ev.target.tagName==="select" && ev.target.max > 1){
-        checklistSettings[ev.target.dataset.setting] = null
+        checklistSettings[ev.target.dataset.setting] = [...ev.target.options].filter(o=>o.selected).map(o=>o.value)
       }else{
         checklistSettings[ev.target.dataset.setting] = ev.target.value
       }
       GM_setValue("checklistSettings", checklistSettings)
     })
 
-    // Put values into settings elements
+    for(let e of settingsPage.querySelectorAll("[data-setting]")){
+      if(e.dataset.setting === "LubloxKey"){
+        e.value = GM_getValue("LubloxKey", "")
+      continue}
+      let value = checklistSettings[e.dataset.setting]
+      if(!value){continue}
+      if(e.target.tagName==="select" && e.target.max > 1 && value instanceof Array){
+        for(let option of value){
+          let o = e.target.options.find(o=>o.value === option)
+          if(o){o.selected = true}
+        }
+      }else{
+        e.value = value
+      }
+    }
   }
 
   if(path.startsWith("/ville/")){

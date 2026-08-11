@@ -73,12 +73,12 @@
   // Bookmarks in side bar
   if(true){
     document.querySelector(isOldStyle ? "#sidebar" : "#menu-main").insertAdjacentHTML("beforeend",
-      `<h6 class="menu-divider mt-4">Bookmarks</h6>
+      `<h6 class="menu-divider mt-4"${isOldStyle ? ' style="padding-left: 5px; color: #fff; font-weight: 700;"' : ''}>Bookmarks</h6>
       <div class="list-group list-custom-small list-menu nav-link nav-item" id="bookmarks-list">
-        <a href="javascript: void 0">
+        <a href="javascript: void 0" class="nav-link">
           <i class="fa fa-bookmark color-white menu-icon" style="background: linear-gradient(20deg, #333, #777)"></i>
           <span class="menu-title">Bookmark</span>
-          <i class="fa fa-angle-right"></i>
+          <i class="fa fa-angle-right"${isOldStyle ? ' style="float: right;"' : ''}></i>
         </a>
       </div>`
     )

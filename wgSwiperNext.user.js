@@ -1681,10 +1681,10 @@
     let nextDay = +document.querySelector(`.page-content .card ul [data-countdown]`).dataset.countdown *1000
     let todayTrader = GM_getValue("todayTrader", {reset: 0})
     let table = document.querySelector(".page-content .content table:not(.mb-0)")
-    if(todayTrader.reset !== nextDay){
+    if(true){
       GM_setValue("todayTrader", todayTrader = {
         reset: nextDay,
-        items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0]).filter(e=>e.dataset.item).map(e=>JSON.parse(e.dataset.item)),
+        items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0].dataset.item ? JSON.parse(e.children[2].children[0].dataset.item) : todayTrader.items?.find(item=>item.spritesheet === e.children[0].children[0].src.slice(21))),
       })
     }
     if(nextDay - +new Date() > 300000){return}
@@ -1728,7 +1728,7 @@
       reBuyList.parentElement.style.display = null
     }
     for(let row of rows){
-      let item = todayTrader.items.find(item=>"https://waifugame.com/"+item.spritesheet===row.children[0].children[0].src)
+      let item = todayTrader.items.find(item=>item.spritesheet===row.children[0].children[0].src.slice(21))
       if(!item){continue}
       row.children[2].innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-warning">Buy again</button>`
       row.children[2].children[0].dataset.item = JSON.stringify(item)
@@ -1736,7 +1736,7 @@
     }
 
     setTimeout(async ()=>{
-      for(let e of toReBuy){
+      for(let e of reBuyList.chilren){
         if(tooLate){
           e.dataset.status = "late"
         continue}

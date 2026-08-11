@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-10
+// @version      2026-08-11
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1684,7 +1684,7 @@
     if(true){
       GM_setValue("todayTrader", todayTrader = {
         reset: nextDay,
-        items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0].dataset.item ? JSON.parse(e.children[2].children[0].dataset.item) : todayTrader.items?.find(item=>item.spritesheet === e.children[0].children[0].src.slice(21))),
+        items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0].dataset.item ? JSON.parse(e.children[2].children[0].dataset.item) : todayTrader.items?.find(item=>item?.spritesheet === e.children[0].children[0].src.slice(22))).filter(Boolean),
       })
     }
     if(nextDay - +new Date() > 300000){return}
@@ -1728,7 +1728,7 @@
       reBuyList.parentElement.style.display = null
     }
     for(let row of rows){
-      let item = todayTrader.items.find(item=>item.spritesheet===row.children[0].children[0].src.slice(21))
+      let item = todayTrader.items.find(item=>item.spritesheet===row.children[0].children[0].src.slice(22))
       if(!item){continue}
       row.children[2].innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-warning">Buy again</button>`
       row.children[2].children[0].dataset.item = JSON.stringify(item)

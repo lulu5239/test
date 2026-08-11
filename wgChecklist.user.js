@@ -249,7 +249,7 @@
     }
     card.children[0].children[daily.seenChecklist ? 1 : 0].click()
 
-    let checklist = card.querySelector(`[data-page="checklist"]`)
+    let checklist = card.querySelector(`div[data-page="checklist"]`)
     let models = {}
     for(let e of card.querySelectorAll("[data-model]")){
       models[e.dataset.model] = e

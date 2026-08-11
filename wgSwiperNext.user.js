@@ -24,6 +24,8 @@
     path = path.slice(0, -1)
   }
 
+  if(typeof(startCountdown)==="undefined"){return}
+
   var colors = {
     selected: "7fa",
     selectedNotNow: "69b",

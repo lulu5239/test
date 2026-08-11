@@ -233,7 +233,7 @@
     </div>`)
     for(let button of card.children[0].children){
       button.addEventListener("click", ()=>{
-        let previous = card.querySelector("[data-visible]")
+        let previous = card.children[0].querySelector("[data-visible]")
         if(previous){
           previous.removeAttribute("data-visible")
           card.children[0].querySelector(`[data-page=${previous.dataset.page}]`).classList.remove("bg-red-darker")
@@ -392,7 +392,7 @@
       continue}
       let value = checklistSettings[e.dataset.setting]
       if(!value){continue}
-      if(e.target.tagName==="select" && e.target.max > 1 && value instanceof Array){
+      if(e.tagName==="SELECT" && e.max > 1 && value instanceof Array){
         for(let option of value){
           let o = e.target.options.find(o=>o.value === option)
           if(o){o.selected = true}

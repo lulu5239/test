@@ -244,6 +244,8 @@
         Default tag(s) to search when clicking the link: <input data-setting="cardsDefaultTags" />
       </div>
     </div>`)
+    // Choose when to directly show checklist
+    // Choose actions to not care about
     for(let button of card.children[0].children){
       button.addEventListener("click", ()=>{
         let previous = card.querySelector(":scope > [data-visible]")

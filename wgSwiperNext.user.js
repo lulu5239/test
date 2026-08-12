@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-11
+// @version      2026-08-12
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1697,6 +1697,8 @@
         corner-radius: 2px;
         padding: 3px;
         color: #fff;
+        margin-left: 2px;
+        margin-right: 2px;
       }
       #reBuyList > span[data-status="requesting"] {
         background-color: #663;
@@ -1738,12 +1740,12 @@
     }
 
     setTimeout(async ()=>{
-      for(let e of reBuyList.chilren){
+      for(let e of reBuyList.children){
         if(tooLate){
           e.dataset.status = "late"
         continue}
         e.dataset.status = "requesting"
-        let p = await fetch("/buy", {
+        let firstData = await fetch("/buy", {
           method: "POST",
           body: JSON.stringify({
             _token: token,

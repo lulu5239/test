@@ -307,6 +307,7 @@
         })
       }
     }
+    // Vote
     if(cooldowns.find(e=>e.type.startsWith("mission."))){
       let l = cooldowns.filter(e=>e.type.startsWith("mission.") && e.t>tnow)
       actions.push({
@@ -316,6 +317,7 @@
         url: "/ville",
       })
     }
+    // Complete daily quest
     if(true){
       let n = !daily.gyms ? 0 : Object.values(daily.gyms).reduce((p, n)=>p+n, 0)
       actions.push({

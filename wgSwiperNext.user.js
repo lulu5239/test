@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-04
+// @version      2026-08-12
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -23,6 +23,8 @@
   if(path.endsWith("/")){
     path = path.slice(0, -1)
   }
+
+  if(typeof(startCountdown)==="undefined"){return}
 
   var colors = {
     selected: "7fa",
@@ -1037,9 +1039,9 @@
     document.querySelector("#noCardLeft").insertAdjacentHTML("afterend",
       `<div id="swiperNextSettings" class="card card-style" style="padding:3px">
         <div class="tab-controls tabs-round tab-animated tabs-small tabs-rounded shadow-xl flex-tabs" data-tab-items="3">
-          <a href="#" data-page="visibility">Visibility</a>
-          <a href="#" data-page="keybinds">Keybinds</a>
-          <a href="#" data-page="recommendations">Recommendations</a>
+          <a href="javascript:void 0" data-page="visibility">Visibility</a>
+          <a href="javascript:void 0" data-page="keybinds">Keybinds</a>
+          <a href="javascript:void 0" data-page="recommendations">Recommendations</a>
         </div>
         <div data-page="visibility">
           For the destination buttons:<br>
@@ -1586,6 +1588,7 @@
                 if(fa==="fa-gg"){return ["GG", +r.innerText.trim()]}
                 return ["item", r.innerText.trim()]
               }),
+              id: document.querySelector(`#startMission input[name="mission_id"]`).value,
             }
             let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
             if(index===-1){
@@ -1674,5 +1677,92 @@
         }
       }
     })
+  }
+
+  if(path==="/trader"){
+    let nextDay = +document.querySelector(`.page-content .card ul [data-countdown]`).dataset.countdown *1000
+    let todayTrader = GM_getValue("todayTrader", {reset: 0})
+    let table = document.querySelector(".page-content .content table:not(.mb-0)")
+    if(true){
+      GM_setValue("todayTrader", todayTrader = {
+        reset: nextDay,
+        items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0].dataset.item ? JSON.parse(e.children[2].children[0].dataset.item) : todayTrader.items?.find(item=>item?.spritesheet === e.children[0].children[0].src.slice(22))).filter(Boolean),
+      })
+    }
+    if(nextDay - +new Date() > 300000){return}
+    table.insertAdjacentHTML("afterend", `<div class="card" style="display: none; padding: 10px; text-align: center"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
+    +`<style>
+      #reBuyList > span {
+        background-color: #444;
+        corner-radius: 2px;
+        padding: 3px;
+        color: #fff;
+        margin-left: 2px;
+        margin-right: 2px;
+      }
+      #reBuyList > span[data-status="requesting"] {
+        background-color: #663;
+      }
+      #reBuyList > span[data-status="done"] {
+        background-color: #1a1;
+      }
+      #reBuyList > span[data-status="late"] {
+        background-color: #a11;
+      }
+    </style>`)
+    let rows = [...table.querySelector("tbody").children].filter(e=>!e.children[2].children[0].classList.contains("buyBtn"))
+    let reBuyList = document.querySelector("#reBuyList")
+    let reBuyItem = reBuyList.children[0]; reBuyItem.remove()
+    let tooLate
+    let onclick = ev=>{
+      if(tooLate){return showErrorToast("Too late!")}
+      let n = Math.floor(+prompt("How many? (Maximum 10.)"))
+      if(!(n >= 0 && n <= 10)){return showErrorToast("Not valid number.")}
+      let item = JSON.parse(ev.target.dataset.item)
+      let e = reBuyList.querySelector(`[data-item="${item.id}"]`) || reBuyItem.cloneNode(true)
+      ev.target.innerHTML = "Buy again" + (n>0 ? ` <b>x${n}</b>` : "")
+      if(n===0){
+        e.remove()
+      return}
+      e.dataset.item = item.id
+      e.dataset.count = n+""
+      e.querySelector("b").innerText = n+"x"
+      e.querySelector("a").innerText = item.name
+      if(!e.parentElement){reBuyList.append(e)}
+      reBuyList.parentElement.style.display = null
+    }
+    for(let row of rows){
+      let item = todayTrader.items.find(item=>item.spritesheet===row.children[0].children[0].src.slice(22))
+      if(!item){continue}
+      row.children[2].innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-warning">Buy again</button>`
+      row.children[2].children[0].dataset.item = JSON.stringify(item)
+      row.children[2].children[0].addEventListener("click", onclick)
+    }
+
+    setTimeout(async ()=>{
+      for(let e of reBuyList.children){
+        if(tooLate){
+          e.dataset.status = "late"
+        continue}
+        e.dataset.status = "requesting"
+        let firstData = await fetch("/buy", {
+          method: "POST",
+          body: JSON.stringify({
+            _token: token,
+            buyItemID: +e.dataset.item,
+            buyItemCount: +e.dataset.count,
+          }),
+          headers: {
+            "content-type": "application/json",
+             accept: "application/json",
+          },
+        })
+        if(firstData.status >= 400 || firstData.headers.get("content-type")==="application/json"){
+          tooLate = true
+          e.dataset.status = "late"
+        continue}
+        e.dataset.status = "done"
+      }
+    }, nextDay - +new Date())
   }
 })();

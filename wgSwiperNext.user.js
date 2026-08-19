@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-12
+// @version      2026-08-19
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1491,7 +1491,7 @@
     }
   }
 
-  if(path.startsWith("/ville/") && settings.rerollWaifuvilleMissions){
+  if(path.startsWith("/ville/") && +path.split("/").slice(-1)[0] && settings.rerollWaifuvilleMissions){
     let openBuildingMenu = building=>deployMenu('BuildingMenu', {
       i: building.i,
       j: building.j,
@@ -1531,6 +1531,13 @@
         }),
       }).catch(console.warn);
       if(!r){return showErrorToast("Error unassigning Myfu...")}
+      if(r.status >= 400){
+        try{
+          showErrorToast((await r.json()).message)
+        }catch(e){
+          showErrorToast("Couldn't unassign Myfu.")
+        }
+      return}
 
       await new Promise(ok=>setTimeout(ok, 1000))
       r = await fetch('https://waifugame.com/ville/' + ville_id, {

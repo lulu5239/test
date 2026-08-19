@@ -1686,8 +1686,15 @@
         if(e.reward){
           let buy = row.querySelector(".buybtn")
           if(buy){buy.style.backgroundColor = "#161"}
-          row.querySelector(".col-10 .row .col-6").insertAdjacentHTML("beforeend", `<b>Earn <span class="rafflereward"></span> by winning this raffle!</b>`)
+          row.querySelector(".col-10 .row .col-6").insertAdjacentHTML("beforeend", `<b>Earn <span class="rafflereward"></span> ${e.sourceName ? '<i class="rafflesource">from <a></a></i> ' : ""}by winning this raffle!</b>`)
           row.querySelector("span.rafflereward").innerText = e.reward // Not parsing as HTML
+          if(e.sourceName){
+            let a = row.querySelector("i.rafflesource a")
+            a.innerText = e.sourceName
+            if(e.sourcePlayerID){
+              a.setAttribute("href", "/profile/"+e.sourcePlayerID)
+            }
+          }
         }
       }
     })

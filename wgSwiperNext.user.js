@@ -1095,6 +1095,13 @@
             ...[0, 1, 2, 5, 11, 21, 25].map(option=>({value: ""+option, name: ""+option}))
           ])} useless gym messages<br>
           ${settingCheckbox("cardCreatorPageInput", "Add box to choose images page on card creator page")}<br>
+          ${settingCheckbox("alwaysTraderBuyAgain", "Always show buttons to buy again items from trader")} <i>(else they are only shown 5 minutes before restock)</i><br>
+          Delay the level up dialog by ${settingSelect("levelUpDialogDelay", [
+            {value: "", name: "nothing extra"},
+            {value: "500", name: "500ms"},
+            {value: "1000", name: "1s"},
+            {value: "2000", name: "2s"},
+          ])} <i>(it won't appear if you used another XP item during the delay)</i><br>
           <br>
           ${settingCheckbox("highlightRewardingRaffles", "Highlight rewarding raffles")} <i>(this uses Lulu5239's website)</i>
         </div>
@@ -1696,7 +1703,7 @@
         items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0].dataset.item ? JSON.parse(e.children[2].children[0].dataset.item) : todayTrader.items?.find(item=>item?.spritesheet === e.children[0].children[0].src.slice(22))).filter(Boolean),
       })
     }
-    if(nextDay - +new Date() > 300000){return}
+    if(!settings.alwaydTraderBuyAgain && nextDay - +new Date() > 300000){return}
     table.insertAdjacentHTML("afterend", `<div class="card" style="display: none; padding: 10px; text-align: center"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
     +`<style>
       #reBuyList > span {
@@ -1723,9 +1730,9 @@
     let tooLate
     let onclick = ev=>{
       if(tooLate){return showErrorToast("Too late!")}
-      let n = Math.floor(+prompt("How many? (Maximum 10.)"))
-      if(!(n >= 0 && n <= 10)){return showErrorToast("Not valid number.")}
       let item = JSON.parse(ev.target.dataset.item)
+      let n = Math.floor(+prompt(`How many? At ${item.value} GG each. (Maximum 10.)`))
+      if(!(n >= 0 && n <= 10)){return showErrorToast("Not valid number.")}
       let e = reBuyList.querySelector(`[data-item="${item.id}"]`) || reBuyItem.cloneNode(true)
       ev.target.innerHTML = "Buy again" + (n>0 ? ` <b>x${n}</b>` : "")
       if(n===0){

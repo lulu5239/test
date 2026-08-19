@@ -260,7 +260,7 @@
     let originalShowLevelUpDialog = showLevelUpDialog
     let show = ()=>{
       for(let side of ["Stats", "SPECIAL"]){
-        for(let p in storage[1].newStats){
+        for(let p in storage[1]["new"+side]){
           storage[1][side.toLowerCase()+"Changed"][p] = storage[1]["new"+side][p] - storage[1]["old"+side][p]
         }
       }

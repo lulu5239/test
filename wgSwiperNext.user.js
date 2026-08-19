@@ -63,6 +63,43 @@
   showCardInfoMenuLookup = id=>{
     fetchCardData(id, true).then(showCardInfoMenu)
   }
+
+  let resetLevelUpDialogTimeout
+  if(+settings.levelUpDialogDelay >= 0){
+    let storage; let timeout
+    let originalShowLevelUpDialog = showLevelUpDialog
+    let show = ()=>{
+      for(let side of ["Stats", "SPECIAL"]){
+        for(let p in storage[1]["new"+side]){
+          storage[1][side.toLowerCase()+"Changed"][p] = storage[1]["new"+side][p] - storage[1]["old"+side][p]
+        }
+      }
+      originalShowLevelUpDialog(...storage)
+      storage = undefined
+    }
+    resetLevelUpDialogTimeout = ()=>{
+      if(timeout){clearTimeout(timeout); timeout = undefined}
+      if(!storage){return}
+      timeout = setTimeout(show, +settings.levelUpDialogDelay)
+    }
+    showLevelUpDialog = (...a)=>{
+      if(!storage){
+        storage = a
+      }else if(a[0]!==storage[0]){
+        show()
+        storage = a
+      }else{
+        for(let p of ["currentXP", "level", "hpAbs", "xpAbs", "relativeHP", "relativeXP", "xpToNext", "newSPECIAL", "newStats"]){
+          storage[1][p] = a[1][p]
+        }
+        for(let p of ["levelsChanged", "xpChange"]){
+          storage[1][p] += a[1][p]
+        }
+      }
+      resetLevelUpDialogTimeout()
+    }
+  }
+  
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     let rerolled = false
@@ -156,6 +193,7 @@
       clicked = true
       if(ratelimited){await ratelimited}
       if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
+      if(resetLevelUpDialogTimeout){resetLevelUpDialogTimeout()}
 
       if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
         clicked = false
@@ -253,37 +291,6 @@
     thing.removeAttribute("id")
     p.id = "waifuFeed"
     return r
-  }
-
-  if(+settings.levelUpDialogDelay >= 0){
-    let storage; let timeout
-    let originalShowLevelUpDialog = showLevelUpDialog
-    let show = ()=>{
-      for(let side of ["Stats", "SPECIAL"]){
-        for(let p in storage[1]["new"+side]){
-          storage[1][side.toLowerCase()+"Changed"][p] = storage[1]["new"+side][p] - storage[1]["old"+side][p]
-        }
-      }
-      originalShowLevelUpDialog(...storage)
-      storage = undefined
-    }
-    showLevelUpDialog = (...a)=>{
-      if(!storage){
-        storage = a
-      }else if(a[0]!==storage[0]){
-        show()
-        storage = a
-      }else{
-        for(let p of ["currentXP", "level", "hpAbs", "xpAbs", "relativeHP", "relativeXP", "xpToNext", "newSPECIAL", "newStats"]){
-          storage[1][p] = a[1][p]
-        }
-        for(let p of ["levelsChanged", "xpChange"]){
-          storage[1][p] += a[1][p]
-        }
-      }
-      if(timeout){clearTimeout(timeout)}
-      timeout = setTimeout(show, +settings.levelUpDialogDelay)
-    }
   }
 
   navigator.serviceWorker.originalRegister = navigator.serviceWorker.register

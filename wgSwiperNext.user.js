@@ -256,7 +256,7 @@
   }
 
   if(+settings.levelUpDialogDelay >= 0){
-    let storage = []; let timeout
+    let storage; let timeout
     let originalShowLevelUpDialog = showLevelUpDialog
     let show = ()=>{
       for(let side of ["Stats", "SPECIAL"]){

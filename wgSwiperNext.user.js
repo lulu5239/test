@@ -548,6 +548,7 @@
           <div style="position: relative; width: 50%; height: 3px; background-color: #f86; bottom: 0px; left: 0px"></div>
         </div>`)
       let levelIndicator = document.querySelector("#levelIndicator")
+      let previousLowest
       gainXP = async (xp, name)=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
         let receiving = (name ? levelingUp.filter(am=>am.name===name) : levelingUp)
@@ -573,7 +574,10 @@
           levelIndicator.querySelector("span").innerText = "Wasting XP"
           levelIndicator.querySelector("div").style.width = "100%"
           levelIndicator.querySelector("div").style.backgroundColor = "#f00"
-        return}
+        return}else if(lowest.id !== previousLowest){
+          previousLowest = lowest.id
+          levelIndicator.querySelector("div").style.backgroundColor = "#f86"
+        }
         let level = Math.floor(Math.pow(lowest.xp, 1/3))
         let levelXP = Math.pow(level, 3)
         levelIndicator.querySelector("span").innerText = "Level "+level

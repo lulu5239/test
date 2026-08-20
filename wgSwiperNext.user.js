@@ -74,13 +74,14 @@
           storage[1][side.toLowerCase()+"Changed"][p] = storage[1]["new"+side][p] - storage[1]["old"+side][p]
         }
       }
+      storage[1].levelsChanged = storage[1].level - storage[1].oldLevel
       originalShowLevelUpDialog(...storage)
       storage = undefined
     }
     resetLevelUpDialogTimeout = ()=>{
       if(timeout){clearTimeout(timeout); timeout = undefined}
       if(!storage){return}
-      timeout = setTimeout(show, +settings.levelUpDialogDelay)
+      timeout = setTimeout(show, storage[1].level >= 120 ? 100 : +settings.levelUpDialogDelay)
     }
     showLevelUpDialog = (...a)=>{
       if(!storage){
@@ -244,6 +245,10 @@
         selectedAnimu.hpText = r.hpAbs
         selectedAnimu.xpText = r.xpAbs
         selectedAnimu.level = r.level
+        if(settings.levelUpDialogDelay>0 && r.levelChanged > 1){
+          showLevelUpDialog(selectedAnimu.name, r)
+          r.levelsChanged = 0
+        }
       }
       return giveItemHandler(r)
     }
@@ -1138,11 +1143,14 @@
           ])} useless gym messages<br>
           ${settingCheckbox("cardCreatorPageInput", "Add box to choose images page on card creator page")}<br>
           ${settingCheckbox("alwaysTraderBuyAgain", "Always show buttons to buy again items from trader")} <i>(else they are only shown 5 minutes before restock)</i><br>
-          Delay the level up dialog by ${settingSelect("levelUpDialogDelay", [
-            {value: "", name: "nothing extra"},
+          Overtide the delay for the level up dialog to appear to ${settingSelect("levelUpDialogDelay", [
+            {value: "", name: "none"},
             {value: "500", name: "500ms"},
             {value: "1000", name: "1s"},
+            {value: "1500", name: "1.5s (default)"},
             {value: "2000", name: "2s"},
+            {value: "2500", name: "2.5s"},
+            {value: "3000", name: "3s"},
           ])} <i>(it won't appear if you used another XP item during the delay)</i><br>
           <br>
           ${settingCheckbox("highlightRewardingRaffles", "Highlight rewarding raffles")} <i>(this uses Lulu5239's website)</i>

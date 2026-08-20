@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-12
+// @version      2026-08-20
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -63,6 +63,44 @@
   showCardInfoMenuLookup = id=>{
     fetchCardData(id, true).then(showCardInfoMenu)
   }
+
+  let resetLevelUpDialogTimeout
+  if(+settings.levelUpDialogDelay >= 0){
+    let storage; let timeout
+    let originalShowLevelUpDialog = showLevelUpDialog
+    let show = ()=>{
+      for(let side of ["Stats", "SPECIAL"]){
+        for(let p in storage[1]["new"+side]){
+          storage[1][side.toLowerCase()+"Changed"][p] = storage[1]["new"+side][p] - storage[1]["old"+side][p]
+        }
+      }
+      storage[1].levelsChanged = storage[1].level - storage[1].oldLevel
+      originalShowLevelUpDialog(...storage)
+      storage = undefined
+    }
+    resetLevelUpDialogTimeout = ()=>{
+      if(timeout){clearTimeout(timeout); timeout = undefined}
+      if(!storage){return}
+      timeout = setTimeout(show, storage[1].level >= 120 ? 100 : +settings.levelUpDialogDelay)
+    }
+    showLevelUpDialog = (...a)=>{
+      if(!storage){
+        storage = a
+      }else if(a[0]!==storage[0]){
+        show()
+        storage = a
+      }else{
+        for(let p of ["currentXP", "level", "hpAbs", "xpAbs", "relativeHP", "relativeXP", "xpToNext", "newSPECIAL", "newStats"]){
+          storage[1][p] = a[1][p]
+        }
+        for(let p of ["levelsChanged", "xpChange"]){
+          storage[1][p] += a[1][p]
+        }
+      }
+      resetLevelUpDialogTimeout()
+    }
+  }
+  
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     let rerolled = false
@@ -156,6 +194,7 @@
       clicked = true
       if(ratelimited){await ratelimited}
       if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
+      if(resetLevelUpDialogTimeout){resetLevelUpDialogTimeout()}
 
       if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
         clicked = false
@@ -206,6 +245,10 @@
         selectedAnimu.hpText = r.hpAbs
         selectedAnimu.xpText = r.xpAbs
         selectedAnimu.level = r.level
+        if(settings.levelUpDialogDelay>0 && r.levelsChanged > 0){
+          showLevelUpDialog(selectedAnimu.name, r)
+          r.levelsChanged = 0
+        }
       }
       return giveItemHandler(r)
     }
@@ -510,6 +553,7 @@
           <div style="position: relative; width: 50%; height: 3px; background-color: #f86; bottom: 0px; left: 0px"></div>
         </div>`)
       let levelIndicator = document.querySelector("#levelIndicator")
+      let previousLowest
       gainXP = async (xp, name)=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
         let receiving = (name ? levelingUp.filter(am=>am.name===name) : levelingUp)
@@ -535,7 +579,10 @@
           levelIndicator.querySelector("span").innerText = "Wasting XP"
           levelIndicator.querySelector("div").style.width = "100%"
           levelIndicator.querySelector("div").style.backgroundColor = "#f00"
-        return}
+        return}else if(lowest.id !== previousLowest){
+          previousLowest = lowest.id
+          levelIndicator.querySelector("div").style.backgroundColor = "#f86"
+        }
         let level = Math.floor(Math.pow(lowest.xp, 1/3))
         let levelXP = Math.pow(level, 3)
         levelIndicator.querySelector("span").innerText = "Level "+level
@@ -1095,6 +1142,16 @@
             ...[0, 1, 2, 5, 11, 21, 25].map(option=>({value: ""+option, name: ""+option}))
           ])} useless gym messages<br>
           ${settingCheckbox("cardCreatorPageInput", "Add box to choose images page on card creator page")}<br>
+          ${settingCheckbox("alwaysTraderBuyAgain", "Always show buttons to buy again items from trader")} <i>(else they are only shown 5 minutes before restock)</i><br>
+          Overtide the delay for the level up dialog to appear to ${settingSelect("levelUpDialogDelay", [
+            {value: "", name: "none"},
+            {value: "500", name: "500ms"},
+            {value: "1000", name: "1s"},
+            {value: "1500", name: "1.5s (default)"},
+            {value: "2000", name: "2s"},
+            {value: "2500", name: "2.5s"},
+            {value: "3000", name: "3s"},
+          ])} <i>(it won't appear if you used another XP item during the delay)</i><br>
           <br>
           ${settingCheckbox("highlightRewardingRaffles", "Highlight rewarding raffles")} <i>(this uses Lulu5239's website)</i>
         </div>
@@ -1491,7 +1548,7 @@
     }
   }
 
-  if(path.startsWith("/ville/") && settings.rerollWaifuvilleMissions){
+  if(path.startsWith("/ville/") && +path.split("/").slice(-1)[0] && settings.rerollWaifuvilleMissions){
     let openBuildingMenu = building=>deployMenu('BuildingMenu', {
       i: building.i,
       j: building.j,
@@ -1531,6 +1588,13 @@
         }),
       }).catch(console.warn);
       if(!r){return showErrorToast("Error unassigning Myfu...")}
+      if(r.status >= 400){
+        try{
+          showErrorToast((await r.json()).message)
+        }catch(e){
+          showErrorToast("Couldn't unassign Myfu.")
+        }
+      return}
 
       await new Promise(ok=>setTimeout(ok, 1000))
       r = await fetch('https://waifugame.com/ville/' + ville_id, {
@@ -1672,8 +1736,15 @@
         if(e.reward){
           let buy = row.querySelector(".buybtn")
           if(buy){buy.style.backgroundColor = "#161"}
-          row.querySelector(".col-10 .row .col-6").insertAdjacentHTML("beforeend", `<b>Earn <span class="rafflereward"></span> by winning this raffle!</b>`)
+          row.querySelector(".col-10 .row .col-6").insertAdjacentHTML("beforeend", `<b>Earn <span class="rafflereward"></span> ${e.sourceName ? '<i class="rafflesource">from <a></a></i> ' : ""}by winning this raffle!</b>`)
           row.querySelector("span.rafflereward").innerText = e.reward // Not parsing as HTML
+          if(e.sourceName){
+            let a = row.querySelector("i.rafflesource a")
+            a.innerText = e.sourceName
+            if(e.sourcePlayerID){
+              a.setAttribute("href", "/profile/"+e.sourcePlayerID)
+            }
+          }
         }
       }
     })
@@ -1689,7 +1760,7 @@
         items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0].dataset.item ? JSON.parse(e.children[2].children[0].dataset.item) : todayTrader.items?.find(item=>item?.spritesheet === e.children[0].children[0].src.slice(22))).filter(Boolean),
       })
     }
-    if(nextDay - +new Date() > 300000){return}
+    if(!settings.alwaysTraderBuyAgain && nextDay - +new Date() > 300000){return}
     table.insertAdjacentHTML("afterend", `<div class="card" style="display: none; padding: 10px; text-align: center"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
     +`<style>
       #reBuyList > span {
@@ -1716,9 +1787,9 @@
     let tooLate
     let onclick = ev=>{
       if(tooLate){return showErrorToast("Too late!")}
-      let n = Math.floor(+prompt("How many? (Maximum 10.)"))
-      if(!(n >= 0 && n <= 10)){return showErrorToast("Not valid number.")}
       let item = JSON.parse(ev.target.dataset.item)
+      let n = Math.floor(+prompt(`How many? At ${item.value} GG each. (Maximum 10.)`))
+      if(!(n >= 0 && n <= 10)){return showErrorToast("Not valid number.")}
       let e = reBuyList.querySelector(`[data-item="${item.id}"]`) || reBuyItem.cloneNode(true)
       ev.target.innerHTML = "Buy again" + (n>0 ? ` <b>x${n}</b>` : "")
       if(n===0){

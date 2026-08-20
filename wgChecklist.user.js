@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-11
+// @version      2026-08-20
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -29,11 +29,15 @@
   var addCooldown = e=>{
     let cooldowns = GM_getValue("cooldowns", [])
     let index = cooldowns.findIndex(d=>d.type===e.type)
-    if(index===-1){cooldowns.push(e)}else{cooldowns[index] = e}
+    let smallChange
+    if(index===-1){cooldowns.push(e)}else{
+      smallChange = Math.abs(e.t - cooldowns[index].t) < 5000
+      cooldowns[index] = e
+    }
     GM_setValue("cooldowns", cooldowns)
 
     let LubloxKey = GM_getValue("LubloxKey")
-    if(LubloxKey){
+    if(LubloxKey && !smallChange){
       fetch("https://lublox.xyz/wg/cooldown/api", {
         method: "POST",
         headers: {
@@ -307,7 +311,17 @@
         })
       }
     }
-    // Vote
+    if(true){
+      let e = cooldowns.find(e=>e.type==="vote")
+      if(e){
+        actions.push({
+          name: "Vote",
+          timers: [{ t: e.t }],
+          done: e.t > tnow,
+          url: "/festival?c=2",
+        })
+      }
+    }
     if(cooldowns.find(e=>e.type.startsWith("mission."))){
       let l = cooldowns.filter(e=>e.type.startsWith("mission.") && e.t>tnow)
       actions.push({
@@ -509,5 +523,13 @@
       daily.visitedTrader = true
       GM_setValue("daily", daily)
     }
+  }
+
+  if(path==="/festival"){
+    if(!(secondsToNextHelperBonus>0)){return}
+    addCooldown({
+      type: "vote",
+      t: +new Date() + secondsToNextHelperBonus*1000,
+    })
   }
 })()

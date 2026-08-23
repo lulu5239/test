@@ -1815,7 +1815,7 @@
 
     setTimeout(async ()=>{
       for(let n=0; true; n++){
-        let e = reBuyList.children[i]
+        let e = reBuyList.children[n]
         if(!e){break}
         if(tooLate){
           e.dataset.status = "late"

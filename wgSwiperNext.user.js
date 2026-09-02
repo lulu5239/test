@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-20
+// @version      2026-08-23
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1780,6 +1780,9 @@
       #reBuyList > span[data-status="late"] {
         background-color: #a11;
       }
+      #reBuyList > span[data-status="retry"] {
+        background-color: #961;
+      }
     </style>`)
     let rows = [...table.querySelector("tbody").children].filter(e=>!e.children[2].children[0].classList.contains("buyBtn"))
     let reBuyList = document.querySelector("#reBuyList")
@@ -1811,7 +1814,9 @@
     }
 
     setTimeout(async ()=>{
-      for(let e of reBuyList.children){
+      for(let n=0; true; n++){
+        let e = reBuyList.children[n]
+        if(!e){break}
         if(tooLate){
           e.dataset.status = "late"
         continue}
@@ -1828,7 +1833,23 @@
              accept: "application/json",
           },
         })
-        if(firstData.status >= 400 || firstData.headers.get("content-type")==="application/json"){
+        if(firstData.headers.get("content-type")==="application/json"){
+          let data = await firstData.json()
+          if(data.message==="The Store expired. Reload the page and try again..."){
+            tooLate = true
+            e.dataset.status = "late"
+          }else if(data.message?.startsWith("The Trader only has ")){
+            n -= 1
+            e.dataset.status = "retry"
+          }else if(firstData.status === 429){
+            e.dataset.status = "retry"
+            await new Promise(ok=>setTimeout(ok, 1000))
+            n -= 1
+          }else{
+            tooLate = true
+            e.dataset.status = "late"
+          }
+        }else if(firstData.status >= 400){
           tooLate = true
           e.dataset.status = "late"
         continue}

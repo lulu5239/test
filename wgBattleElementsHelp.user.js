@@ -291,7 +291,12 @@
       body: JSON.stringify({_token: token, action: "pageload"}),
     })
     r = await r.json()
-    return JSON.parse(r.sequence[1].p.text.slice(2))
+    let stats = JSON.parse(r.sequence[1].p.text.slice(2))
+    for(let p of ["moves", "special", "stats"]){
+      stats[p] = JSON.parse(stats[p])
+    }
+    stats.nature = stats.card.nature.toLowerCase()
+    return stats
   }
 
   let swappingTo
@@ -612,7 +617,6 @@
     if(!currentCard.stats || !currentCard.nature){
       showSuccessToast("Fetching Animu's full data...")
       let stats = await fetchCurrentCard()
-      stats.nature = stats.card.nature.toLowerCase()
       currentCard.stats = stats.stats
       currentCard.nature = stats.nature
       // Store stats in party

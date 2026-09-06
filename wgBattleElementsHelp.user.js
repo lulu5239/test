@@ -268,12 +268,33 @@
   if(battleHelpVars.currentBattle.id !== battleID){
     battleHelpVars.currentBattle = {
       id: battleID,
-      p1: initialSwapData.map(a=>party[id]),
+      p1: initialSwapData.map(a=>party[a.id]),
       p2: [],
       order: initialSwapData.map(a=>a.id),
     }
     GM_setValue("currentBattle", battleHelpVars.currentBattle)
   }
+
+  let updateOrder = id=>{
+    let order = battleHelpVars.currentParty.order
+    if(id){
+      let p = order.findIndex(a=>a.id===id)
+      if(p>=0){order.splice(p, 1)}
+      order.splice(0, 0, id)
+    }
+    GM_setValue("currentParty", battleHelpVars.currentParty)
+  }
+  let fetchCurrentCard = async ()=>{ // Unneeded
+    let r = await fetch("/battle/"+battleID, {
+      method: "POST",
+      headers: {"content-type": "application/json"},
+      body: JSON.stringify({_token: token, action: "pageload"}),
+    })
+    r = await r.json()
+    return JSON.stringify(r.sequence[1].p.text.slice(2))
+  }
+
+  let swappingTo
   
   let handleSwapParty = (cards=[])=>{
     for(let card of cards){
@@ -284,8 +305,7 @@
     document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<maximumLevel && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
-  let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
-  // Use currentBattle order
+  let currentCard = party[battleHelpVars.currentBattle.order[0]]
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = battleHelpVars.fullStats = {}
@@ -327,10 +347,11 @@
       if(e.a==="newhp" && e.t==="player1" && currentCard){
         currentCard.hp = e.p.abs
       continue}
-      if(e.a==="faint"){
+      if(e.a==="forceswap" && e.t==="player1"){
         window.battleHelpVars.usingBest = false
         lastForcedSwap = +new Date()
-        // Update currentBattle order
+        currentCard = party[battleHelpVars.currentBattle.order.filter(a=>!party[a.id] || party[a.id].hp > 0).slice(-1)[0]?.id]
+        updateOrder(currentCard.id)
       continue}
       if(e.a==="narate" && winText===true){
         winText = e.p.text
@@ -429,7 +450,7 @@
       }
     }
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
-    if(swap){
+    if(swap && false){
       // Use currentBattle order
       let card = Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
       if(card){currentCard = card}
@@ -505,12 +526,17 @@
   }
   let originalHandleSwap = handleSwap
   handleSwap = (...args)=>{
-    // Use currentBattle order
-    currentCard = Object.values(party).find(c=>c.name===args[0].name) // No better way...
+    if(swappingTo){
+      currentCard = party[swappingTo]
+      swappingTo = null
+    }else{
+      currentCard = Object.values(party).find(c=>c.name===args[0].name) // No better way...
+    }
+    updateOrder(currentCard.id)
     currentCard.receivingXP = true
     fullStats.p1 = {
       ...currentCard,
-      moves:args[0].attacks,
+      moves: args[0].attacks,
     }
     currentCard.moves = args[0].attacks
     handleSwapParty(args[0].swap_party)
@@ -518,10 +544,16 @@
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
       updateGoodness()
-    },1000)
+    }, 1000)
     return r
   }
   let actionSwapList = document.querySelector("#action_swap")
+  actionSwapList.addEventListener("click", ev=>{
+    let button = ev.target.closest(".btn-swap")
+    if(!button){return}
+    swappingTo = button.dataset.swapto
+  })
+  
   //document.querySelector("#btn_swap").addEventListener("click", ()=>{
   var updateGoodness = window.battleHelpVars.updateGoodness = ()=>{
     for(let card of actionSwapList.children){

@@ -278,7 +278,7 @@
   let updateOrder = id=>{
     let order = battleHelpVars.currentBattle.order
     if(id){
-      let p = order.findIndex(a=>a.id===id)
+      let p = order.findIndex(a=>a===id)
       if(p>=0){order.splice(p, 1)}
       order.splice(0, 0, id)
     }
@@ -551,7 +551,7 @@
   actionSwapList.addEventListener("click", ev=>{
     let button = ev.target.closest(".btn-swap")
     if(!button){return}
-    swappingTo = button.dataset.swapto
+    swappingTo = +button.dataset.swapto
   })
   
   //document.querySelector("#btn_swap").addEventListener("click", ()=>{

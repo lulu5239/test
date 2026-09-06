@@ -276,13 +276,13 @@
   }
 
   let updateOrder = id=>{
-    let order = battleHelpVars.currentParty.order
+    let order = battleHelpVars.currentBattle.order
     if(id){
       let p = order.findIndex(a=>a.id===id)
       if(p>=0){order.splice(p, 1)}
       order.splice(0, 0, id)
     }
-    GM_setValue("currentParty", battleHelpVars.currentParty)
+    GM_setValue("currentBattle", battleHelpVars.currentBattle)
   }
   let fetchCurrentCard = async ()=>{ // Unneeded
     let r = await fetch("/battle/"+battleID, {

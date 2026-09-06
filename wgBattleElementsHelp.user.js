@@ -450,7 +450,7 @@
     }
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap){
-      let card = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp > 0).slice(-1)[0]?.id] || Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
+      let card = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp > 0).slice(-1)[0]] || Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
       if(card){
         currentCard = card
         updateOrder(currentCard.id)

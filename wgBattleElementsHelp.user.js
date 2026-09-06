@@ -347,11 +347,9 @@
       if(e.a==="newhp" && e.t==="player1" && currentCard){
         currentCard.hp = e.p.abs
       continue}
-      if(e.a==="forceswap" && e.t==="player1"){
+      if(e.a==="faint" && e.t==="player1"){
         window.battleHelpVars.usingBest = false
         lastForcedSwap = +new Date()
-        currentCard = party[battleHelpVars.currentBattle.order.filter(a=>!party[a.id] || party[a.id].hp > 0).slice(-1)[0]?.id]
-        updateOrder(currentCard.id)
       continue}
       if(e.a==="narate" && winText===true){
         winText = e.p.text
@@ -450,10 +448,12 @@
       }
     }
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
-    if(swap && false){
-      // Use currentBattle order
-      let card = Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
-      if(card){currentCard = card}
+    if(swap){
+      let card = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp > 0).slice(-1)[0]?.id] || Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
+      if(card){
+        currentCard = card
+        updateOrder(currentCard.id)
+      }
     }
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       if(args[0].output){

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-07
+// @version      2026-09-06
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -244,8 +244,8 @@
     }
   return}
   
-  let previousParty = window.battleHelpVars.previousParty = party
-  party = window.battleHelpVars.party = {}
+  let previousParty = battleHelpVars.previousParty = party
+  party = battleHelpVars.party = {}
   for(let card of initialSwapData){
     let c = previousParty[card.id]
     if(!c){
@@ -262,8 +262,18 @@
     party[card.id] = {...c}
   }
   GM_setValue("party", previousParty)
-  window.battleHelpVars.auto = [battleID, "all"].includes(GM_getValue("autoBattle"))
-  window.battleHelpVars.objectiveLevel = GM_getValue("objectiveLevel") || maximumLevel
+  battleHelpVars.auto = [battleID, "all"].includes(GM_getValue("autoBattle"))
+  battleHelpVars.objectiveLevel = GM_getValue("objectiveLevel") || maximumLevel
+  battleHelpVars.currentBattle = GM_getValue("currentBattle", {})
+  if(battleHelpVars.currentBattle.id !== battleID){
+    battleHelpVars.currentBattle = {
+      id: battleID,
+      p1: initialSwapData.map(a=>party[id]),
+      p2: [],
+      order: initialSwapData.map(a=>a.id),
+    }
+    GM_setValue("currentBattle", battleHelpVars.currentBattle)
+  }
   
   let handleSwapParty = (cards=[])=>{
     for(let card of cards){
@@ -275,9 +285,10 @@
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
   let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
+  // Use currentBattle order
   battleHelpVars.getCurrentCard = ()=>currentCard
 
-  let fullStats = window.battleHelpVars.fullStats = {}
+  let fullStats = battleHelpVars.fullStats = {}
   let winText; let lastForcedSwap = 0
   let lastSequenceData = {}
   let originalPlaySequence = playSequence
@@ -319,6 +330,7 @@
       if(e.a==="faint"){
         window.battleHelpVars.usingBest = false
         lastForcedSwap = +new Date()
+        // Update currentBattle order
       continue}
       if(e.a==="narate" && winText===true){
         winText = e.p.text
@@ -351,10 +363,16 @@
           previousParty[stats.id].nature = stats.nature
           GM_setValue("party", previousParty)
         }
+        if(e.p.text.startsWith("p1")){
+          battleHelpVars.currentBattle.p1[battleHelpVars.currentBattle.order.findIndex(a=>a===stats.id)] = stats
+        }else{
+          battleHelpVars.currentBattle.p2.push(stats)
+        }
+        GM_setValue("currentBattle", battleHelpVars.currentBattle)
         if(Object.keys(fullStats).length===2){
           showInventory({
             ...lastSequenceData,
-            faked:true,
+            faked: true,
           })
         }
         handleSwapParty()
@@ -405,13 +423,14 @@
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     if(!args[0].faked){
-      lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
+      lastSequenceData = battleHelpVars.lastSequenceData = args[0]
       if(fastBattle){
         for(let action of lastSequenceData.sequence){action.d = 0}
       }
     }
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap){
+      // Use currentBattle order
       let card = Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
       if(card){currentCard = card}
     }
@@ -486,6 +505,7 @@
   }
   let originalHandleSwap = handleSwap
   handleSwap = (...args)=>{
+    // Use currentBattle order
     currentCard = Object.values(party).find(c=>c.name===args[0].name) // No better way...
     currentCard.receivingXP = true
     fullStats.p1 = {

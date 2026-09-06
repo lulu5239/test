@@ -385,7 +385,8 @@
         if(e.p.text.startsWith("p1")){
           battleHelpVars.currentBattle.p1[battleHelpVars.currentBattle.order.findIndex(a=>a===stats.id)] = stats
         }else{
-          battleHelpVars.currentBattle.p2.push(stats)
+          let p = battleHelpVars.currentBattle.p2.findIndex(a=>a.id===stats.id)
+          battleHelpVars.currentBattle.p2[p===-1 ? battleHelpVars.currentBattle.p2.length : p] = stats
         }
         GM_setValue("currentBattle", battleHelpVars.currentBattle)
         if(Object.keys(fullStats).length===2){

@@ -347,7 +347,7 @@
       if(e.a==="newhp" && e.t==="player1" && currentCard){
         currentCard.hp = e.p.abs
       continue}
-      if(e.a==="faint" && e.t==="player1"){
+      if(e.a==="faint"){
         window.battleHelpVars.usingBest = false
         lastForcedSwap = +new Date()
       continue}

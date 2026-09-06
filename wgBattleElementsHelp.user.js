@@ -305,7 +305,7 @@
     document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<maximumLevel && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
-  let currentCard = party[battleHelpVars.currentBattle.order[0]]
+  let currentCard
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = battleHelpVars.fullStats = {}
@@ -381,6 +381,7 @@
           previousParty[stats.id].moves = stats.moves
           previousParty[stats.id].nature = stats.nature
           GM_setValue("party", previousParty)
+          updateOrder(stats.id)
         }
         if(e.p.text.startsWith("p1")){
           battleHelpVars.currentBattle.p1[battleHelpVars.currentBattle.order.findIndex(a=>a===stats.id)] = stats

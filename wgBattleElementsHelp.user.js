@@ -296,6 +296,7 @@
       stats[p] = JSON.parse(stats[p])
     }
     stats.nature = stats.card.nature.toLowerCase()
+    stats.name = stats.card.name
     return stats
   }
 
@@ -375,6 +376,7 @@
           stats[p] = JSON.parse(stats[p])
         }
         stats.nature = stats.card.nature.toLowerCase()
+        stats.name = stats.card.name
         if(party[stats.id]){
           currentCard = party[stats.id]
           currentCard.receivingXP = true

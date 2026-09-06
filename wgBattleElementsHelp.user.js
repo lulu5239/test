@@ -291,7 +291,7 @@
       body: JSON.stringify({_token: token, action: "pageload"}),
     })
     r = await r.json()
-    return JSON.stringify(r.sequence[1].p.text.slice(2))
+    return JSON.parse(r.sequence[1].p.text.slice(2))
   }
 
   let swappingTo

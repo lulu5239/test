@@ -284,7 +284,7 @@
     }
     GM_setValue("currentBattle", battleHelpVars.currentBattle)
   }
-  let fetchCurrentCard = async ()=>{ // Unneeded
+  let fetchCurrentCard = async ()=>{
     let r = await fetch("/battle/"+battleID, {
       method: "POST",
       headers: {"content-type": "application/json"},
@@ -594,9 +594,10 @@
     }
     let card = max!==undefined && Object.values(party).filter(card=>card.goodATT===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
     if(card===currentCard){ // Couldn't find better way to identify the current card
-      if(window.battleHelpVars.auto){
+      if(battleHelpVars.auto){
         return document.querySelector("#btn_bestMove").click()
       }
+      battleHelpVars.usingBest = true
       return showErrorToast("Already using best card!")
     }
     window.battleHelpVars.usingBest = true
@@ -607,8 +608,20 @@
   })
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
-  actionMenu.querySelector("#btn_bestMove").addEventListener("click", ()=>{
-    if(!currentCard.stats || !currentCard.nature){return document.location.reload()}
+  actionMenu.querySelector("#btn_bestMove").addEventListener("click", async ()=>{
+    if(!currentCard.stats || !currentCard.nature){
+      showSuccessToast("Fetching Animu's full data...")
+      let stats = await fetchCurrentCard()
+      stats.nature = stats.card.nature.toLowerCase()
+      currentCard.stats = stats.stats
+      currentCard.nature = stats.nature
+      // Store stats in party
+      previousParty[stats.id].stats = stats.stats
+      previousParty[stats.id].level = stats.level
+      previousParty[stats.id].moves = stats.moves
+      previousParty[stats.id].nature = stats.nature
+      GM_setValue("party", previousParty)
+    }
     let best; let canEnd
     for(let move of currentCard.moves){
       if(!move.pp){continue}

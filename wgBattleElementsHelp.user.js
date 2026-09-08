@@ -632,7 +632,7 @@
       card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<maximumLevel ? 5 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
-    let card = max!==undefined && (currentCard.goodATT ? currentCard : Object.values(party).filter(card=>card.goodATT===max).sort((c1,c2)=>c2.hp-c1.hp)[0])
+    let card = max!==undefined && (currentCard.goodATT===max ? currentCard : Object.values(party).filter(card=>card.goodATT===max).sort((c1,c2)=>c2.hp-c1.hp)[0])
     if(card.stats && card.nature){
       battleHelpVars.usingBest = true
     }

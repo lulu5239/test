@@ -275,6 +275,11 @@
     battleHelpVars.currentBattle.p1.reverse()
     GM_setValue("currentBattle", battleHelpVars.currentBattle)
   }
+  let gymMultiplier
+  if(GM_getValue("showGymMultiplier")){
+    document.querySelector("#opponent_name").parentElement.insertAdjacentHTML("beforeend", `<i><code id="gymMultiplier"></code></i>`)
+    gymMultiplier = document.querySelector("#gymMultiplier")
+  }
 
   let updateOrder = id=>{
     let order = battleHelpVars.currentBattle.order
@@ -405,7 +410,7 @@
         }
         handleSwapParty()
 
-        if(plr==="p1"){
+        if(plr==="p1" && gymMultiplier){
           highestStatistic = [-1]
           for(let a of Object.values(party)){
             if(!a.stats){continue}
@@ -456,8 +461,8 @@
         document.querySelector("#btn_bestMove").click()
       }
     },1000)
-    if(highestStatistic[0] >= 500){
-      navigator.multiplier = Math.round( fullStats.p2.stats[highestStatistic[1]]/highestStatistic[0] *200)/200
+    if(gymMultiplier && highestStatistic[0] >= 500){
+      gymMultiplier.innerText = "x"+ (Math.round( fullStats.p2.stats[highestStatistic[1]]/highestStatistic[0] *200)/200).toString().padEnd(5, "0")
     }
     return originalPlaySequence(...args)
   }

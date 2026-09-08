@@ -466,7 +466,12 @@
       }
     },1000)
     if(gymMultiplier && highestStatistic[0] >= 500){
-      gymMultiplier.innerText = "x"+ (Math.round( fullStats.p2.stats[highestStatistic[1]]/highestStatistic[0] *200)/200).toString().padEnd(5, "0")
+      if(lastSequenceData.output.foes.total !== 6){
+        gymMultiplier.parentElement.remove()
+        gymMultiplier = null
+      }else{
+        gymMultiplier.innerText = "x"+ (Math.round( fullStats.p2.stats[highestStatistic[1]]/highestStatistic[0] *200)/200).toString().padEnd(5, "0")
+      }
     }
     return originalPlaySequence(...args)
   }

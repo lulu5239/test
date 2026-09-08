@@ -316,7 +316,7 @@
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = battleHelpVars.fullStats = {}
-  let winText; let lastForcedSwap = 0
+  let winText; let lastForcedSwap = 0; let highestStatistic
   let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
@@ -404,6 +404,17 @@
           })
         }
         handleSwapParty()
+
+        if(plr==="p1"){
+          highestStatistic = [-1]
+          for(let a of Object.values(party)){
+            if(!a.stats){continue}
+            for(let p in a.stats){
+              if(a.stats[p] > highestStatistic[0]){highestStatistic = [a.stats[p], p, true]}
+            }
+          }
+        }
+        if(plr==="p2"){highestStatistic[2] = true}
       }
     }
     setTimeout(async ()=>{
@@ -425,7 +436,7 @@
             }
           })
           button.style.marginTop = "10px"
-        },5000)
+        }, 5000)
       }
       for(let i=0; i<10; i++){
         if(busy){await new Promise(ok=>setTimeout(ok, 500))}else{break}
@@ -445,6 +456,9 @@
         document.querySelector("#btn_bestMove").click()
       }
     },1000)
+    if(highestStatistic[0] >= 500){
+      navigator.multiplier = Math.round( fullStats.p2.stats[highestStatistic[1]]/highestStatistic[0] *200)/200
+    }
     return originalPlaySequence(...args)
   }
   let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]

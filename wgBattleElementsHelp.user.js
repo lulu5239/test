@@ -321,7 +321,7 @@
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = battleHelpVars.fullStats = {}
-  let winText; let lastForcedSwap = 0; let highestStatistic
+  let winText; let lastForcedSwap = 0; let highestStatistic = []
   let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{

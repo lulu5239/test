@@ -470,7 +470,7 @@
         gymMultiplier.parentElement.remove()
         gymMultiplier = null
       }else{
-        gymMultiplier.innerText = "x"+ (Math.round( fullStats.p2.stats[highestStatistic[1]]/highestStatistic[0] *200)/200).toString().padEnd(5, "0")
+        gymMultiplier.innerText = fullStats.p2.gymMultiplier = "x"+ (Math.round( fullStats.p2.stats[highestStatistic[1]]/highestStatistic[0] *200)/200).toString().padEnd(5, "0")
       }
     }
     return originalPlaySequence(...args)

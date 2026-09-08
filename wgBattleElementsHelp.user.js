@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-06
+// @version      2026-09-08
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -311,7 +311,7 @@
     document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<maximumLevel && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
-  let currentCard
+  let currentCard = party[currentBattle.order.slice(-1)[0]]
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = battleHelpVars.fullStats = {}
@@ -432,6 +432,18 @@
       }
       if(busy){return}
       window.scrollTo(0, window.scrollY + document.querySelector("#battle_view_opponent .hpBar").getBoundingClientRect().y - 55)
+      if(!currentCard.stats || !currentCard.nature){
+        showSuccessToast("Fetching Animu's full data...")
+        let stats = await fetchCurrentCard()
+        currentCard.stats = stats.stats
+        currentCard.nature = stats.nature
+        // Store stats in party
+        previousParty[stats.id].stats = stats.stats
+        previousParty[stats.id].level = stats.level
+        previousParty[stats.id].moves = stats.moves
+        previousParty[stats.id].nature = stats.nature
+        GM_setValue("party", previousParty)
+      }
       if(battleHelpVars.autoO?.pause){
         await new Promise(ok=>{battleHelpVars.autoO.pausePromise = ok})
       }
@@ -607,7 +619,9 @@
       battleHelpVars.usingBest = true
       return showErrorToast("Already using best card!")
     }
-    window.battleHelpVars.usingBest = true
+    if(card.stats && card.nature){
+      window.battleHelpVars.usingBest = true
+    }
     if(!card){
       return showErrorToast("No card to swap to...")
     }
@@ -616,18 +630,6 @@
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
   actionMenu.querySelector("#btn_bestMove").addEventListener("click", async ()=>{
-    if(!currentCard.stats || !currentCard.nature){
-      showSuccessToast("Fetching Animu's full data...")
-      let stats = await fetchCurrentCard()
-      currentCard.stats = stats.stats
-      currentCard.nature = stats.nature
-      // Store stats in party
-      previousParty[stats.id].stats = stats.stats
-      previousParty[stats.id].level = stats.level
-      previousParty[stats.id].moves = stats.moves
-      previousParty[stats.id].nature = stats.nature
-      GM_setValue("party", previousParty)
-    }
     let best; let canEnd
     for(let move of currentCard.moves){
       if(!move.pp){continue}

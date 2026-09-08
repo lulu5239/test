@@ -482,7 +482,7 @@
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap && !args[0].faked){
       updateOrder(currentCard.id, "first")
-      let card = party[swap.p.swap.swap_party.slice(-1)[0].id] //party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp > 0).slice(-1)[0]] || Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
+      let card = party[swap.p.swap.swap_party.filter(a=>a.currentHP > 0).slice(-1)[0].id]
       if(card.name !== swap.p.swap.name){
         alert("Attempt was incorrect! Problem!")
         navigator.test = [[...battleHelpVars.currentBattle.order], party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp > 0).slice(-1)[0]], Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv), swap.p.swap]

@@ -281,12 +281,16 @@
     gymMultiplier = document.querySelector("#gymMultiplier")
   }
 
-  let updateOrder = id=>{
+  let updateOrder = (id, to)=>{
     let order = battleHelpVars.currentBattle.order
     if(id){
       let p = order.findIndex(a=>a===id)
       if(p>=0){order.splice(p, 1)}
-      order.splice(0, 0, id)
+      if(to==="first"){
+        order.splice(0, 0, id)
+      }else{
+        order.push(id)
+      }
     }
     GM_setValue("currentBattle", battleHelpVars.currentBattle)
   }
@@ -477,10 +481,10 @@
     }
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap){
+      updateOrder(currentCard.id, "first")
       let card = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp > 0).slice(-1)[0]] || Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
       if(card){
         currentCard = card
-        updateOrder(currentCard.id)
       }
     }
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){

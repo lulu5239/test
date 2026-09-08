@@ -432,18 +432,6 @@
       }
       if(busy){return}
       window.scrollTo(0, window.scrollY + document.querySelector("#battle_view_opponent .hpBar").getBoundingClientRect().y - 55)
-      if(!currentCard.stats || !currentCard.nature){
-        showSuccessToast("Fetching Animu's full data...")
-        let stats = await fetchCurrentCard()
-        currentCard.stats = stats.stats
-        currentCard.nature = stats.nature
-        // Store stats in party
-        previousParty[stats.id].stats = stats.stats
-        previousParty[stats.id].level = stats.level
-        previousParty[stats.id].moves = stats.moves
-        previousParty[stats.id].nature = stats.nature
-        GM_setValue("party", previousParty)
-      }
       if(battleHelpVars.autoO?.pause){
         await new Promise(ok=>{battleHelpVars.autoO.pausePromise = ok})
       }
@@ -630,6 +618,18 @@
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
   actionMenu.querySelector("#btn_bestMove").addEventListener("click", async ()=>{
+    if(!currentCard.stats || !currentCard.nature){
+      showSuccessToast("Fetching Animu's full data...")
+      let stats = await fetchCurrentCard()
+      currentCard.stats = stats.stats
+      currentCard.nature = stats.nature
+      // Store stats in party
+      previousParty[stats.id].stats = stats.stats
+      previousParty[stats.id].level = stats.level
+      previousParty[stats.id].moves = stats.moves
+      previousParty[stats.id].nature = stats.nature
+      GM_setValue("party", previousParty)
+    }
     let best; let canEnd
     for(let move of currentCard.moves){
       if(!move.pp){continue}

@@ -272,6 +272,7 @@
       p2: [],
       order: initialSwapData.map(a=>a.id),
     }
+    battleHelpVars.currentBattle.p1.reverse()
     GM_setValue("currentBattle", battleHelpVars.currentBattle)
   }
 
@@ -371,7 +372,8 @@
         winText = true
       }
       if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {") || e.p.text.startsWith("Found next opponent: {")){
-        let stats = fullStats[e.p.text.startsWith("p1") ? "p1" : "p2"] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
+        let plr = e.p.text.startsWith("p1") ? "p1" : "p2"
+        let stats = fullStats[plr] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }
@@ -390,11 +392,9 @@
           GM_setValue("party", previousParty)
           updateOrder(stats.id)
         }
-        if(e.p.text.startsWith("p1")){
-          battleHelpVars.currentBattle.p1[battleHelpVars.currentBattle.order.findIndex(a=>a===stats.id)] = stats
-        }else{
-          let p = battleHelpVars.currentBattle.p2.findIndex(a=>a.id===stats.id)
-          battleHelpVars.currentBattle.p2[p===-1 ? battleHelpVars.currentBattle.p2.length : p] = stats
+        if(true){
+          let p = battleHelpVars.currentBattle[plr].findIndex(a=>a.id===stats.id)
+          battleHelpVars.currentBattle[plr][p===-1 ? battleHelpVars.currentBattle[plr].length : p] = stats
         }
         GM_setValue("currentBattle", battleHelpVars.currentBattle)
         if(Object.keys(fullStats).length===2){

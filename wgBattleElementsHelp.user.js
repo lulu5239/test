@@ -311,7 +311,7 @@
     document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<maximumLevel && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
-  let currentCard = party[currentBattle.order.slice(-1)[0]]
+  let currentCard = party[battleHelpVars.currentBattle.order.slice(-1)[0]]
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = battleHelpVars.fullStats = {}

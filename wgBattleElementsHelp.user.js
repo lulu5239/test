@@ -473,7 +473,7 @@
         fullStats.p2.gymMultiplier = Math.round( fullStats.p2.stats[highestStatistic[1]]/highestStatistic[0] *200)/200
         setTimeout(()=>{
           gymMultiplier.innerText = "x"+ fullStats.p2.gymMultiplier.toString().padEnd(5, "0")
-        }, 250)
+        }, 400)
       }
     }
     return originalPlaySequence(...args)
@@ -484,20 +484,13 @@
     if(!args[0].faked){
       lastSequenceData = battleHelpVars.lastSequenceData = args[0]
       if(fastBattle){
-        for(let action of lastSequenceData.sequence){action.d = 0}
+        for(let action of lastSequenceData.sequence){action.d = action.a==="debug" ? 400 : 0}
       }
     }
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap && !args[0].faked){
       updateOrder(currentCard.id, "first")
-      let card = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp>0).slice(-1)[0]] // party[swap.p.swap.swap_party.filter(a=>a.currentHP > 0).slice(-1)[0].id]
-      if(card.name !== swap.p.swap.name){
-        alert("Attempt was incorrect! Problem!")
-        navigator.test = [[...battleHelpVars.currentBattle.order], party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp > 0).slice(-1)[0]], Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv), swap.p.swap]
-      }
-      if(card){
-        currentCard = card
-      }
+      currentCard = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp>0).slice(-1)[0]] // party[swap.p.swap.swap_party.filter(a=>a.currentHP > 0).slice(-1)[0].id]
     }
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       if(args[0].output){

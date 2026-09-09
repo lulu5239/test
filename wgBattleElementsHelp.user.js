@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-08
+// @version      2026-09-09
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -571,10 +571,8 @@
       updateOrder(currentCard.id, "first")
       currentCard = party[swappingTo]
       swappingTo = null
-    }else{
-      currentCard = Object.values(party).find(c=>c.name===args[0].name) // No better way...
+      updateOrder(currentCard.id)
     }
-    updateOrder(currentCard.id)
     currentCard.receivingXP = true
     fullStats.p1 = {
       ...currentCard,

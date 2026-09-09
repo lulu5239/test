@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-07
+// @version      2026-09-09
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -244,8 +244,8 @@
     }
   return}
   
-  let previousParty = window.battleHelpVars.previousParty = party
-  party = window.battleHelpVars.party = {}
+  let previousParty = battleHelpVars.previousParty = party
+  party = battleHelpVars.party = {}
   for(let card of initialSwapData){
     let c = previousParty[card.id]
     if(!c){
@@ -262,8 +262,55 @@
     party[card.id] = {...c}
   }
   GM_setValue("party", previousParty)
-  window.battleHelpVars.auto = [battleID, "all"].includes(GM_getValue("autoBattle"))
-  window.battleHelpVars.objectiveLevel = GM_getValue("objectiveLevel") || maximumLevel
+  battleHelpVars.auto = [battleID, "all"].includes(GM_getValue("autoBattle"))
+  battleHelpVars.objectiveLevel = GM_getValue("objectiveLevel") || maximumLevel
+  battleHelpVars.currentBattle = GM_getValue("currentBattle", {})
+  if(battleHelpVars.currentBattle.id !== battleID){
+    battleHelpVars.currentBattle = {
+      id: battleID,
+      p1: initialSwapData.map(a=>party[a.id]),
+      p2: [],
+      order: initialSwapData.map(a=>a.id),
+    }
+    battleHelpVars.currentBattle.p1.reverse()
+    GM_setValue("currentBattle", battleHelpVars.currentBattle)
+  }
+  let gymMultiplier
+  if(true){
+    document.querySelector("#opponent_name").parentElement.insertAdjacentHTML("beforeend", `<i><code id="gymMultiplier"></code></i>`)
+    gymMultiplier = document.querySelector("#gymMultiplier")
+  }
+
+  let updateOrder = (id, to)=>{
+    let order = battleHelpVars.currentBattle.order
+    if(id){
+      let p = order.findIndex(a=>a===id)
+      if(p>=0){order.splice(p, 1)}
+      if(to==="first"){
+        order.splice(0, 0, id)
+      }else{
+        order.push(id)
+      }
+    }
+    GM_setValue("currentBattle", battleHelpVars.currentBattle)
+  }
+  let fetchCurrentCard = async ()=>{
+    let r = await fetch("/battle/"+battleID, {
+      method: "POST",
+      headers: {"content-type": "application/json"},
+      body: JSON.stringify({_token: token, action: "pageload"}),
+    })
+    r = await r.json()
+    let stats = JSON.parse(r.sequence[1].p.text.slice(2))
+    for(let p of ["moves", "special", "stats"]){
+      stats[p] = JSON.parse(stats[p])
+    }
+    stats.nature = stats.card.nature.toLowerCase()
+    stats.name = stats.card.name
+    return stats
+  }
+
+  let swappingTo
   
   let handleSwapParty = (cards=[])=>{
     for(let card of cards){
@@ -274,11 +321,11 @@
     document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<maximumLevel && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
     document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
   }
-  let currentCard = party[initialSwapData.find(c=>document.querySelector("#player_name").innerText.startsWith(c.name))?.id]
+  let currentCard = party[battleHelpVars.currentBattle.order.slice(-1)[0]]
   battleHelpVars.getCurrentCard = ()=>currentCard
 
-  let fullStats = window.battleHelpVars.fullStats = {}
-  let winText; let lastForcedSwap = 0
+  let fullStats = battleHelpVars.fullStats = {}
+  let winText; let lastForcedSwap = 0; let highestStatistic = []
   let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
@@ -334,11 +381,13 @@
         winText = true
       }
       if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {") || e.p.text.startsWith("Found next opponent: {")){
-        let stats = fullStats[e.p.text.startsWith("p1") ? "p1" : "p2"] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
+        let plr = e.p.text.startsWith("p1") ? "p1" : "p2"
+        let stats = fullStats[plr] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }
         stats.nature = stats.card.nature.toLowerCase()
+        stats.name = stats.card.name
         if(party[stats.id]){
           currentCard = party[stats.id]
           currentCard.receivingXP = true
@@ -350,14 +399,31 @@
           previousParty[stats.id].moves = stats.moves
           previousParty[stats.id].nature = stats.nature
           GM_setValue("party", previousParty)
+          updateOrder(stats.id)
         }
+        if(true){
+          let p = battleHelpVars.currentBattle[plr].findIndex(a=>a.id===stats.id)
+          battleHelpVars.currentBattle[plr][p===-1 ? battleHelpVars.currentBattle[plr].length : p] = stats
+        }
+        GM_setValue("currentBattle", battleHelpVars.currentBattle)
         if(Object.keys(fullStats).length===2){
           showInventory({
             ...lastSequenceData,
-            faked:true,
+            faked: true,
           })
         }
         handleSwapParty()
+
+        if(plr==="p1" && gymMultiplier){
+          highestStatistic = [-1]
+          for(let a of Object.values(party)){
+            if(!a.stats){continue}
+            for(let p in a.stats){
+              if(a.stats[p] > highestStatistic[0]){highestStatistic = [a.stats[p], p, true]}
+            }
+          }
+        }
+        if(plr==="p2"){highestStatistic[2] = true}
       }
     }
     setTimeout(async ()=>{
@@ -379,7 +445,7 @@
             }
           })
           button.style.marginTop = "10px"
-        },5000)
+        }, 5000)
       }
       for(let i=0; i<10; i++){
         if(busy){await new Promise(ok=>setTimeout(ok, 500))}else{break}
@@ -399,21 +465,32 @@
         document.querySelector("#btn_bestMove").click()
       }
     },1000)
+    if(gymMultiplier && highestStatistic[0] >= 500){
+      if(lastSequenceData.output.foes.total !== 6){
+        gymMultiplier.parentElement.remove()
+        gymMultiplier = null
+      }else{
+        fullStats.p2.gymMultiplier = Math.round( fullStats.p2.stats[highestStatistic[1]]/highestStatistic[0] *200)/200
+        setTimeout(()=>{
+          gymMultiplier.innerText = "x"+ fullStats.p2.gymMultiplier.toString().padEnd(5, "0")
+        }, 400)
+      }
+    }
     return originalPlaySequence(...args)
   }
   let opponentElement = document.querySelector("#battle_view_opponent").style.backgroundImage.split("/").slice(-1)[0].split(".")[0]
   originalShowInventory = showInventory
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     if(!args[0].faked){
-      lastSequenceData = window.battleHelpVars.lastSequenceData = args[0]
+      lastSequenceData = battleHelpVars.lastSequenceData = args[0]
       if(fastBattle){
-        for(let action of lastSequenceData.sequence){action.d = 0}
+        for(let action of lastSequenceData.sequence){action.d = action.a==="debug" ? 400 : 0}
       }
     }
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
-    if(swap){
-      let card = Object.values(party).find(c=>c.name===swap.p.swap.name && c.level===swap.p.swap.lv)
-      if(card){currentCard = card}
+    if(swap && !args[0].faked){
+      updateOrder(currentCard.id, "first")
+      currentCard = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp>0).slice(-1)[0]] // party[swap.p.swap.swap_party.filter(a=>a.currentHP > 0).slice(-1)[0].id]
     }
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       if(args[0].output){
@@ -486,11 +563,16 @@
   }
   let originalHandleSwap = handleSwap
   handleSwap = (...args)=>{
-    currentCard = Object.values(party).find(c=>c.name===args[0].name) // No better way...
+    if(swappingTo){
+      updateOrder(currentCard.id, "first")
+      currentCard = party[swappingTo]
+      swappingTo = null
+      updateOrder(currentCard.id)
+    }
     currentCard.receivingXP = true
     fullStats.p1 = {
       ...currentCard,
-      moves:args[0].attacks,
+      moves: args[0].attacks,
     }
     currentCard.moves = args[0].attacks
     handleSwapParty(args[0].swap_party)
@@ -498,10 +580,16 @@
     let r = originalHandleSwap(...args)
     setTimeout(()=>{
       updateGoodness()
-    },1000)
+    }, 1000)
     return r
   }
   let actionSwapList = document.querySelector("#action_swap")
+  actionSwapList.addEventListener("click", ev=>{
+    let button = ev.target.closest(".btn-swap")
+    if(!button){return}
+    swappingTo = +button.dataset.swapto
+  })
+  
   //document.querySelector("#btn_swap").addEventListener("click", ()=>{
   var updateGoodness = window.battleHelpVars.updateGoodness = ()=>{
     for(let card of actionSwapList.children){
@@ -534,18 +622,21 @@
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max
     for(let card of Object.values(party)){
-      if(!card.hp || card.noPP || card.level<maximumLevel && card.hp<50 || card.level<maximumLevel && window.battleHelpVars.objectiveLevel && card.level>=window.battleHelpVars.objectiveLevel){delete card.goodATT; continue}
+      if(!card.hp || card.noPP || card.level<maximumLevel && card.hp<50 || card.level<maximumLevel && battleHelpVars.objectiveLevel && card.level>=battleHelpVars.objectiveLevel){delete card.goodATT; continue}
       card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.elemental) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<maximumLevel ? 5 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
-    let card = max!==undefined && Object.values(party).filter(card=>card.goodATT===max).sort((c1,c2)=>c2.hp-c1.hp)[0]
+    let card = max!==undefined && (currentCard.goodATT===max ? currentCard : Object.values(party).filter(card=>card.goodATT===max).sort((c1,c2)=>c2.hp-c1.hp)[0])
+    if(card.stats && card.nature){
+      battleHelpVars.usingBest = true
+    }
     if(card===currentCard){ // Couldn't find better way to identify the current card
-      if(window.battleHelpVars.auto){
+      if(battleHelpVars.auto){
         return document.querySelector("#btn_bestMove").click()
       }
+      battleHelpVars.usingBest = true
       return showErrorToast("Already using best card!")
     }
-    window.battleHelpVars.usingBest = true
     if(!card){
       return showErrorToast("No card to swap to...")
     }
@@ -553,8 +644,19 @@
   })
 
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_bestMove" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-sword"></i> Use best attack</button><div>`)
-  actionMenu.querySelector("#btn_bestMove").addEventListener("click", ()=>{
-    if(!currentCard.stats || !currentCard.nature){return document.location.reload()}
+  actionMenu.querySelector("#btn_bestMove").addEventListener("click", async ()=>{
+    if(!currentCard.stats || !currentCard.nature){
+      showSuccessToast("Fetching Animu's full data...")
+      let stats = await fetchCurrentCard()
+      currentCard.stats = stats.stats
+      currentCard.nature = stats.nature
+      // Store stats in party
+      previousParty[stats.id].stats = stats.stats
+      previousParty[stats.id].level = stats.level
+      previousParty[stats.id].moves = stats.moves
+      previousParty[stats.id].nature = stats.nature
+      GM_setValue("party", previousParty)
+    }
     let best; let canEnd
     for(let move of currentCard.moves){
       if(!move.pp){continue}

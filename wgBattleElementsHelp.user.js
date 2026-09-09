@@ -276,7 +276,7 @@
     GM_setValue("currentBattle", battleHelpVars.currentBattle)
   }
   let gymMultiplier
-  if(GM_getValue("showGymMultiplier")){
+  if(true){
     document.querySelector("#opponent_name").parentElement.insertAdjacentHTML("beforeend", `<i><code id="gymMultiplier"></code></i>`)
     gymMultiplier = document.querySelector("#gymMultiplier")
   }

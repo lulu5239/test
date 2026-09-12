@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-23
+// @version      2026-09-12
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1643,7 +1643,7 @@
             let missions = GM_getValue("WaifuvilleMissions", [])
             let data = {
               name: document.querySelector("#tab-missions h3").childNodes[2].data.trim(),
-              CR: +document.querySelector("#tab-missions h3 strong").innerText.trim().slice(3).replace(/\,/g, ""),
+              CR: +document.querySelector("#myfuMissionChallengeRating").value || 0,
               building: dynamicContext.vb.building_identifier,
               reward: [...document.querySelectorAll(`div.col-md-12:has(#startMission) div.text-center nobr`)].map(r=>{
                 if(r.querySelector("abbr")){return ["shards", +r.childNodes[1].data.trim().slice(0, -7)]}

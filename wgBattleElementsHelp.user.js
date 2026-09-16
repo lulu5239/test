@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-09
+// @version      2026-09-17
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -382,25 +382,26 @@
       }
       if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {") || e.p.text.startsWith("Found next opponent: {")){
         let plr = e.p.text.startsWith("p1") ? "p1" : "p2"
-        let stats = fullStats[plr] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
+        let stats = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }
         stats.nature = stats.card.nature.toLowerCase()
         stats.name = stats.card.name
         if(party[stats.id]){
-          currentCard = party[stats.id]
-          currentCard.receivingXP = true
-          currentCard.stats = stats.stats
-          currentCard.nature = stats.nature
           // Store stats in party
           previousParty[stats.id].stats = stats.stats
           previousParty[stats.id].level = stats.level
           previousParty[stats.id].moves = stats.moves
           previousParty[stats.id].nature = stats.nature
           GM_setValue("party", previousParty)
-          updateOrder(stats.id)
+          if(currentCard.id!==stats.id){continue}
+          currentCard = party[stats.id]
+          currentCard.receivingXP = true
+          currentCard.stats = stats.stats
+          currentCard.nature = stats.nature
         }
+        fullStats[plr] = stats
         if(true){
           let p = battleHelpVars.currentBattle[plr].findIndex(a=>a.id===stats.id)
           battleHelpVars.currentBattle[plr][p===-1 ? battleHelpVars.currentBattle[plr].length : p] = stats

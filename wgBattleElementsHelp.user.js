@@ -282,8 +282,8 @@
   }
 
   let updateOrder = (id, to)=>{
-    let order = battleHelpVars.currentBattle.order
     if(id){
+      let order = battleHelpVars.currentBattle.order
       let p = order.findIndex(a=>a===id)
       if(p>=0){order.splice(p, 1)}
       if(to==="first"){
@@ -293,6 +293,11 @@
       }
     }
     GM_setValue("currentBattle", battleHelpVars.currentBattle)
+  }
+  for(let i=0; i<5; i++){
+    let id = battleHelpVars.currentBattle.order.slice(-1)[0]
+    if(party[id].element!=="???"){break}
+    updateOrder(id, "first")
   }
   let fetchCurrentCard = async ()=>{
     let r = await fetch("/battle/"+battleID, {
@@ -491,7 +496,7 @@
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap && !args[0].faked){
       updateOrder(currentCard.id, "first")
-      currentCard = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp>0).slice(-1)[0]] // party[swap.p.swap.swap_party.filter(a=>a.currentHP > 0).slice(-1)[0].id]
+      currentCard = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp>0 && party[a].element!=="???").slice(-1)[0]] // party[swap.p.swap.swap_party.filter(a=>a.currentHP > 0).slice(-1)[0].id]
     }
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       if(args[0].output){

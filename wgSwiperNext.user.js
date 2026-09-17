@@ -335,6 +335,7 @@
         multiplier: multipliers[i] + 0.5*(magic ? p.startsWith("Sp") : i<2),
         specialMin: shownStats.special["SAIPLE"[i]], specialMax: shownStats.special["SAIPLE"[i]],
       }))
+      let precise = stats.find(s=>s.min%1>0)
       for(let level = shownStats.Level; level < maximumLevel; level++){
         for(let stat of stats){
           if(level%10 === 6 && stat.specialMax < 10){
@@ -350,7 +351,7 @@
           td.innerText = maximumLevel
         continue}
         let stat = stats.find(s=>s.p===td.dataset.stat.slice(6))
-        td.innerText = `${stat.min} - ${stat.max}`
+        td.innerText = `${precise ? stat.min : Math.round(stat.min)} - ${precise ? stat.max : Math.round(stat.max)}`
       }
       statsTable.classList.add("dream-table")
       return stats

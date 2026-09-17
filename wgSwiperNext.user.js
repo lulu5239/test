@@ -300,7 +300,61 @@
 
   if(true){
     const container = document.querySelector('#statsContainer')
-    let statsEstimator
+    
+    let statsEstimator; let shownStats
+    let natures = {grid: [
+      ["Hardy", "Lonely", "Adamant", "Naughty", "Brave"],
+      ["Bold", "Docile", "Impish", "Lax", "Relaxed"],
+      ["Modest", "Mild", "Bashful", "Rash", "Quiet"],
+      ["Calm", "Gentle", "Careful", "Quirky", "Sassy"],
+      ["Timid", "Hasty", "Jolly", "Naive", "Serious"],
+    ]}
+    for(let good in natures.grid){
+      for(let bad in natures.grid[good]){
+        natures[natures.grid[good][bad].toLowerCase()] = [+good, +bad]
+      }
+    }
+    let specialIncreases = [
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, 2],
+    ]
+    let round = n=>Math.round(n*1000)/1000
+    let multipliers = [1.312, 1.212, 1.312, 1.212, 1.091, 1.516]
+    const estimate = maximumLevel=>{
+      let magic = ["grass", "fire", "water", "electric", "psychic", "ice", "music", "dark", "light"].includes(shownStats.Element)
+      let nature = natures[shownStats.Nature] || []
+      let level = shownStats.Level
+      let stats = ["ATT", "DEF", "SpATT", "SpDEF", "SPD", "HP"].map((p, i)=>({
+        p,
+        min: shownStats.stats[p], max: shownStats.stats[p],
+        natureMultiplier: 1 + (nature[0]===i ? 0.1 : 0) - (nature[1]===i ? 0.1 : 0),
+        multiplier: multipliers[i] + 0.5*(magic ? p.startsWith("Sp") : i<2),
+        specialMin: showStats.special["SAIPLE"[i]], specialMax: showStats.special["SAIPLE"[i]],
+      }))
+      for(let level = shownStats.Level; level < maximumLevel; level++){
+        for(let stat of stats){
+          if(level%10 === 6 && stat.specialMax < 10){
+            stat.specialMax = Math.min(stat.specialMax + specialIncreases[shownStats.Rarity][Math.floor(level/10)], 10)
+          }
+          stat.min = round(stat.min + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMin))
+          stat.max = round(stat.max + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMax))
+        }
+      }
+      let statsTable = container.querySelector(`table[about="stats"]`)
+      for(let td of statsTable.querySelectorAll(`td`)){
+        if(td.dataset.stat === "Level"){
+          td.innerText = maximumLevel
+        continue}
+        let stat = stats.find(s=>s.p===td.dataset.stat.slice(5))
+        td.innerText = `${stat.min} - ${stat.max}`
+      }
+      statsTable.classList.add("dream-table")
+      return stats
+    }
     let initStatsTables = ()=>{
       container.innerHTML = `<div class="row mt-2" style="margin-bottom: 3px">
         <div class="col-6">
@@ -310,13 +364,20 @@
           </table>
         </div>
       </div>
-      <div class="text-center" id="statsEstimator"></div>`
+      <div class="text-center" id="statsEstimator"><label><input type="checkbox" /> Estimate at</label> <label>level <input value="120" max="120" /></label></div>
+      <style>
+        .dream-table {
+          border: solid 1px #90e;
+        }
+      </style>`
       let row = container.querySelector("tr")
       row.remove()
       let firstTable = container.querySelector(".col-6")
-      let secondTable = container.parentElement.cloneNode(true)
+      let secondTable = firstTable.cloneNode(true)
       secondTable.classList.add("pl-0")
       container.children[0].append(secondTable)
+      firstTable.dataset.about = "special"
+      secondTable.dataset.about = "stats"
       for(let p of ["Strength", "Perception", "Endurance", "Charisma", "Intelligence", "Agility", "Luck"]){
         let line = row.cloneNode(true)
         line.children[0].innerText = p
@@ -330,8 +391,20 @@
         secondTable.children[0].append(line)
       }
       statsEstimator = container.querySelector("#statsEstimator")
+      statsEstimator.addEventListener("change", ev=>{
+        if(ev.target.type==="checkbox"){
+          if(ev.target.checked){
+            return estimate(statsEstimator.querySelector(`input[type="number"]`).value)
+          }
+          let statsTable = container.querySelector(`table[about="stats"]`)
+          for(let td of statsTable.querySelectorAll("td[data-stat]")){
+            td.innerText = td.dataset.stat.split(".").reduce((d, p)=>d[p], data)
+          }
+          statsTable.classList.remove("dream-table")
+        return}
+        estimate(ev.target.value.value)
+      })
     }
-    let shownStats
     showStatsModal = async (anniemayID)=>{
       document.querySelector('#waifuStatsTrigger').click();
       
@@ -343,6 +416,7 @@
           td.innerText = ""
         }
         statsEstimator.style.display = "none"
+        container.querySelector(`table[about="stats"]`).classList.remove("dream-table")
       }
       if(selectedAnimu.id === anniemayID){
         container.parentElement.querySelector(".insertWaifuName").innerText = selectedAnimu.name
@@ -360,14 +434,14 @@
       })
 
       if(!data && !fullData){
-        // Close menu ?
+        document.querySelector(".close-menu").click()
       return}
       if(!data){
         data = {special: {}}
         data.Name = fullData.name
         data.Level = fullData.level
       }
-      if(fullData.level === data.Level){
+      if(fullData?.level === data.Level){
         data.stats = fullData.stats
       }
 
@@ -375,7 +449,7 @@
         td.innerText = td.dataset.stat.split(".").reduce((d, p)=>d[p], data)
       }
 
-      showStats = data
+      shownStats = data
 
       if(data.Level < 120){
         statsEstimator.style.display = null

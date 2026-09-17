@@ -333,12 +333,12 @@
         min: shownStats.stats[p], max: shownStats.stats[p],
         natureMultiplier: 1 + (nature[0]===i ? 0.1 : 0) - (nature[1]===i ? 0.1 : 0),
         multiplier: multipliers[i] + 0.5*(magic ? p.startsWith("Sp") : i<2),
-        specialMin: showStats.special["SAIPLE"[i]], specialMax: showStats.special["SAIPLE"[i]],
+        specialMin: shownStats.special["SAIPLE"[i]], specialMax: shownStats.special["SAIPLE"[i]],
       }))
       for(let level = shownStats.Level; level < maximumLevel; level++){
         for(let stat of stats){
           if(level%10 === 6 && stat.specialMax < 10){
-            stat.specialMax = Math.min(stat.specialMax + specialIncreases[shownStats.Rarity][Math.floor(level/10)], 10)
+            stat.specialMax = Math.min(stat.specialMax + specialIncreases[shownStats.Rarity][Math.floor(level/10)]||0, 10)
           }
           stat.min = round(stat.min + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMin))
           stat.max = round(stat.max + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMax))
@@ -364,7 +364,7 @@
           </table>
         </div>
       </div>
-      <div class="text-center" id="statsEstimator"><label><input type="checkbox" /> Estimate at</label> <label>level <input value="120" max="120" /></label></div>
+      <div class="text-center" id="statsEstimator"><label><input type="checkbox" /> Estimate at</label> <label>level <input type="number" value="120" max="120" /></label></div>
       <style>
         .dream-table {
           border: solid 1px #90e;

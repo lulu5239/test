@@ -320,7 +320,7 @@
       [null, null, null, null, null, null, null, null, null, null, null, null],
       [null, null, null, null, null, null, null, null, null, null, null, null],
       [null, null, null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null, null, 2],
+      [26, null, null, null, null, null, null, null, null, 3, 3, 2],
     ]
     let round = n=>Math.round(n*1000)/1000
     let multipliers = [1.312, 1.212, 1.312, 1.212, 1.091, 1.516]
@@ -344,7 +344,7 @@
           stat.max = round(stat.max + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMax))
         }
       }
-      let statsTable = container.querySelector(`table[about="stats"]`)
+      let statsTable = container.querySelector(`table[data-about="stats"]`)
       for(let td of statsTable.querySelectorAll(`td`)){
         if(td.dataset.stat === "Level"){
           td.innerText = maximumLevel
@@ -396,7 +396,7 @@
           if(ev.target.checked){
             return estimate(statsEstimator.querySelector(`input[type="number"]`).value)
           }
-          let statsTable = container.querySelector(`table[about="stats"]`)
+          let statsTable = container.querySelector(`table[data-about="stats"]`)
           for(let td of statsTable.querySelectorAll("td[data-stat]")){
             td.innerText = td.dataset.stat.split(".").reduce((d, p)=>d[p], data)
           }
@@ -416,7 +416,7 @@
           td.innerText = ""
         }
         statsEstimator.style.display = "none"
-        container.querySelector(`table[about="stats"]`).classList.remove("dream-table")
+        container.querySelector(`table[data-about="stats"]`).classList.remove("dream-table")
       }
       if(selectedAnimu.id === anniemayID){
         container.parentElement.querySelector(".insertWaifuName").innerText = selectedAnimu.name

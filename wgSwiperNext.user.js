@@ -325,7 +325,7 @@
     let round = n=>Math.round(n*1000)/1000
     let multipliers = [1.312, 1.212, 1.312, 1.212, 1.091, 1.516]
     const estimate = maximumLevel=>{
-      let magic = ["grass", "fire", "water", "electric", "psychic", "ice", "music", "dark", "light"].includes(shownStats.Element)
+      let magic = ["grass", "fire", "water", "electric", "psychic", "ice", "music", "dark", "light"].includes(shownStats.Element.toLowerCase())
       let nature = natures[shownStats.Nature] || []
       let level = shownStats.Level
       let stats = ["ATT", "DEF", "SpATT", "SpDEF", "SPD", "HP"].map((p, i)=>({
@@ -366,7 +366,7 @@
       </div>
       <div class="text-center" id="statsEstimator"><label><input type="checkbox" /> Estimate at</label> <label>level <input type="number" value="120" max="120" /></label></div>
       <style>
-        .dream-table {
+        .dream-table tr {
           border: solid 1px #90e;
         }
       </style>`
@@ -402,7 +402,9 @@
           }
           statsTable.classList.remove("dream-table")
         return}
-        estimate(ev.target.value.value)
+        if(statsEstimator.querySelector(`input[type="checkbox"]`).checked){
+          estimate(ev.target.value.value)
+        }
       })
     }
     showStatsModal = async (anniemayID)=>{

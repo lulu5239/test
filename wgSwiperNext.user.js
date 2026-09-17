@@ -413,9 +413,9 @@
         for(let td of container.querySelectorAll("td")){
           td.innerText = ""
         }
-        statsEstimator.style.display = "none"
         container.querySelector(`table[data-about="stats"]`).classList.remove("dream-table")
       }
+      statsEstimator.style.display = "none"
 
       let fullData = typeof(battleHelpVars)!=="undefined" && battleHelpVars.party?.[anniemayID]
       container.parentElement.querySelector(".insertWaifuName").innerText = fullData?.name ? fullData.name : selectedAnimu?.id===anniemayID ? selectedAnimu.id : "Loading..."

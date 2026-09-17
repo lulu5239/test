@@ -301,7 +301,7 @@
   if(true){
     const container = document.querySelector('#statsContainer')
     
-    let statsEstimator; let shownStats
+    let statsEstimator; let shownStats; let statsEstimatorInputs
     let natures = {grid: [
       ["Hardy", "Lonely", "Adamant", "Naughty", "Brave"],
       ["Bold", "Docile", "Impish", "Lax", "Relaxed"],
@@ -319,8 +319,8 @@
       [16, null, null, null, null, null, null, null, null, null /* 30 */, null, null],
       [18, 1, 2, 2 /* 23 */, null, null, null, null, null, null /* 34 */, null, null],
       [20, 2, 2, 2 /* 26 */, null, null, null, null, null, null /* 38 */, null, null],
-      [22, null, null, null, null, null, null, null, null, null /* 41 */, null, null],
-      [24, null, null, null, null, null, null, null, null, null /* 45 */, null, null],
+      [22, 2, 2, 2, 2, 3, 2, 2, 2, 2, 3, 2],
+      [24, 2, 2, 3, 2, 3, 2, 2, 3, 2, 3, 2],
       [26, 2, 3, 2, 3, 3, 2, 3, 2, 3, 3, 2],
     ]
     let round = n=>Math.round(n*1000)/1000
@@ -349,7 +349,7 @@
       let statsTable = container.querySelector(`table[data-about="stats"]`)
       for(let td of statsTable.querySelectorAll(`td`)){
         if(td.dataset.stat === "Level"){
-          td.innerText = maximumLevel
+          td.innerText = Math.max(maximumLevel, shownStats.Level)
         continue}
         let stat = stats.find(s=>s.p===td.dataset.stat.slice(6))
         td.innerText = stat.min===stat.max ? (precise ? stat.min : Math.round(stat.min)) : `${precise ? stat.min : Math.round(stat.min)}\n${precise ? stat.max : Math.round(stat.max)}`
@@ -366,7 +366,7 @@
           </table>
         </div>
       </div>
-      <div class="text-center" id="statsEstimator"><label><input type="checkbox" /> Estimate at</label> <label>level <input type="number" value="120" max="120" /></label></div>
+      <div class="text-center" id="statsEstimator"><label><input type="checkbox" /> Estimate at</label> <label>level <input type="number" value="120" max="120" style="width: 60px" /></label></div>
       <style>
         .dream-table tr {
           border: solid 1px #90e;
@@ -393,10 +393,11 @@
         secondTable.children[0].append(line)
       }
       statsEstimator = container.querySelector("#statsEstimator")
+      statsEstimatorInputs = [...statsEstimator.querySelectorAll("input")]
       statsEstimator.addEventListener("change", ev=>{
-        if(ev.target.type==="checkbox"){
+        if(ev.target===statsEstimatorInputs[0]){
           if(ev.target.checked){
-            return estimate(statsEstimator.querySelector(`input[type="number"]`).value)
+            return estimate(statsEstimatorInputs[1].value)
           }
           let statsTable = container.querySelector(`table[data-about="stats"]`)
           for(let td of statsTable.querySelectorAll("td[data-stat]")){
@@ -404,7 +405,7 @@
           }
           statsTable.classList.remove("dream-table")
         return}
-        if(statsEstimator.querySelector(`input[type="checkbox"]`).checked){
+        if(statsEstimatorInputs[0].checked){
           estimate(ev.target.value.value)
         }
       })
@@ -457,6 +458,9 @@
 
       if(data.Level < 120){
         statsEstimator.style.display = null
+        statsEstimatorInputs[1].min = data.Level
+        statsEstimatorInputs[0].checked = false
+        statsEstimatorInputs[1].value = 120
       }
     }
   }

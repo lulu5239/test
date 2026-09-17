@@ -314,15 +314,7 @@
         natures[natures.grid[good][bad]] = [+good, +bad]
       }
     }
-    // [...document.querySelectorAll("td[data-stat]")].filter(e=>e.dataset.stat.startsWith("special.")).reduce((p, e)=>p+ +e.innerText, 0)
-    let specialIncreases = [
-      [16, null, null, null, null, null, null, null, null, null /* 30 */, null, null],
-      [18, 1, 2, 2 /* 23 */, null, null, null, null, null, null /* 34 */, null, null],
-      [20, 2, 2, 2, 2, 2, 2, null, null, null /* 38 */, null, null],
-      [22, 2, 2, 2, 2, 3, 2, 2, 2, 2, 3, 2],
-      [24, 2, 2, 3, 2, 3, 2, 2, 3, 2, 3, 2],
-      [26, 2, 3, 2, 3, 3, 2, 3, 2, 3, 3, 2],
-    ]
+    let calculateSpecialAmount = (rarity, level)=>Math.floor((16+2*rarity)*(level<0 ? 0 : 10+Math.floor(level/10))/10)
     let round = n=>Math.round(n*1000)/1000
     let multipliers = [1.312, 1.212, 1.312, 1.212, 1.091, 1.516]
     const estimate = maximumLevel=>{
@@ -340,7 +332,8 @@
       for(let level = shownStats.Level + 1; level <= maximumLevel; level++){
         for(let stat of stats){
           if(level%10 === 6 && stat.specialMax < 10){
-            stat.specialMax = Math.min(stat.specialMax + specialIncreases[shownStats.Rarity][Math.floor(level/10)]||0, 10)
+            let increase = calculateSpecialAmount(shownStats.Rarity, level) - calculateSpecialAmount(shownStats.Rarity, level - 10)
+            stat.specialMax = Math.min(stat.specialMax + increase, 10)
           }
           stat.min = round(stat.min + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMin))
           stat.max = round(stat.max + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMax))

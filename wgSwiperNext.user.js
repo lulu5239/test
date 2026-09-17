@@ -318,7 +318,7 @@
     let specialIncreases = [
       [16, null, null, null, null, null, null, null, null, null /* 30 */, null, null],
       [18, 1, 2, 2 /* 23 */, null, null, null, null, null, null /* 34 */, null, null],
-      [20, 2, 2, 2 /* 26 */, null, null, null, null, null, null /* 38 */, null, null],
+      [20, 2, 2, 2, 2, 2, 2, null, null, null /* 38 */, null, null],
       [22, 2, 2, 2, 2, 3, 2, 2, 2, 2, 3, 2],
       [24, 2, 2, 3, 2, 3, 2, 2, 3, 2, 3, 2],
       [26, 2, 3, 2, 3, 3, 2, 3, 2, 3, 3, 2],
@@ -423,11 +423,9 @@
         statsEstimator.style.display = "none"
         container.querySelector(`table[data-about="stats"]`).classList.remove("dream-table")
       }
-      if(selectedAnimu.id === anniemayID){
-        container.parentElement.querySelector(".insertWaifuName").innerText = selectedAnimu.name
-      }
 
       let fullData = typeof(battleHelpVars)!=="undefined" && battleHelpVars.party?.[anniemayID]
+      container.parentElement.querySelector(".insertWaifuName").innerText = fullData?.name ? fullData.name : selectedAnimu?.id===anniemayID ? selectedAnimu.id : "Loading..."
 
       const r = await fetch("/json/am/" + anniemayID, {
         headers: { "accept": "application/json" },
@@ -455,6 +453,7 @@
       }
 
       shownStats = data
+      container.parentElement.querySelector(".insertWaifuName").innerText = data.Name
 
       if(data.Level < 120){
         statsEstimator.style.display = null

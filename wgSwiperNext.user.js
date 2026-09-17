@@ -441,7 +441,7 @@
         data.Name = fullData.name
         data.Level = fullData.level
       }
-      if(fullData?.level === data.Level){
+      if(fullData?.stats && fullData.level === data.Level){
         data.stats = fullData.stats
       }
 

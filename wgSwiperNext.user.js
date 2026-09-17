@@ -314,7 +314,6 @@
         natures[natures.grid[good][bad]] = [+good, +bad]
       }
     }
-    let calculateSpecialAmount = (rarity, level)=>Math.floor((16+2*rarity)*(level<0 ? 0 : 10+Math.floor(level/10))/10)
     let round = n=>Math.round(n*1000)/1000
     let multipliers = [1.312, 1.212, 1.312, 1.212, 1.091, 1.516]
     const estimate = maximumLevel=>{
@@ -327,12 +326,13 @@
         natureMultiplier: 1 + (nature[0]===i ? 0.1 : 0) - (nature[1]===i ? 0.1 : 0),
         multiplier: multipliers[i] + 0.5*(magic ? p.startsWith("Sp") : i<2),
         specialMin: shownStats.special["SAIPLE"[i]], specialMax: shownStats.special["SAIPLE"[i]],
+        otherSpecials: Object.entries(shownStats.special).filter(e=>e[0]!=="SAIPLE"[i]).reduce((p, e)=>p+e[1], 0),
       }))
       let precise = stats.find(s=>s.min%1>0)
       for(let level = shownStats.Level + 1; level <= maximumLevel; level++){
         for(let stat of stats){
           if(level%10 === 6 && stat.specialMax < 10){
-            let increase = calculateSpecialAmount(shownStats.Rarity, level) - calculateSpecialAmount(shownStats.Rarity, level - 10)
+            let increase = Math.floor((16+2*shownStats.Rarity)*(10+Math.floor(level/10))/10) - (stat.otherSpecials + stat.specialMax)
             stat.specialMax = Math.min(stat.specialMax + increase, 10)
           }
           stat.min = round(stat.min + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMin))

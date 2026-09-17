@@ -311,16 +311,17 @@
     ]}
     for(let good in natures.grid){
       for(let bad in natures.grid[good]){
-        natures[natures.grid[good][bad].toLowerCase()] = [+good, +bad]
+        natures[natures.grid[good][bad]] = [+good, +bad]
       }
     }
+    // [...document.querySelectorAll("td[data-stat]")].filter(e=>e.dataset.stat.startsWith("special.")).reduce((p, e)=>p+ +e.innerText, 0)
     let specialIncreases = [
-      [null, null, null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null, null, null],
-      [null, null, null, null, null, null, null, null, null, null, null, null],
-      [26, null, null, null, null, null, null, null, null, 3, 3, 2],
+      [16, null, null, null, null, null, null, null, null, null, null, null],
+      [18, null, null, null, null, null, null, null, null, null, null, null],
+      [20, null, null, null, null, null, null, null, null, null, null, null],
+      [22, null, null, null, null, null, null, null, null, null, null, null],
+      [24, null, null, null, null, null, null, null, null, null, null, null],
+      [26, 2, null, null, null, null, null, null, null, 3, 3, 2],
     ]
     let round = n=>Math.round(n*1000)/1000
     let multipliers = [1.312, 1.212, 1.312, 1.212, 1.091, 1.516]
@@ -351,7 +352,7 @@
           td.innerText = maximumLevel
         continue}
         let stat = stats.find(s=>s.p===td.dataset.stat.slice(6))
-        td.innerText = `${precise ? stat.min : Math.round(stat.min)} - ${precise ? stat.max : Math.round(stat.max)}`
+        td.innerText = stat.min===stat.max ? (precise ? stat.min : Math.round(stat.min)) : `${precise ? stat.min : Math.round(stat.min)} - ${precise ? stat.max : Math.round(stat.max)}`
       }
       statsTable.classList.add("dream-table")
       return stats

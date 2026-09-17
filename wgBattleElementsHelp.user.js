@@ -512,21 +512,18 @@
         if(move.pp>0){noPP=false}
         let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1] || null
         move.estimatedDamage =
-          move.power // Move power
-          * (
-            ( // Player attack with this the move
-              fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] // Attack statistic in use
-              // Element modifier (calculated later)
-              * ((magicElements.includes(move.elemental_type) ? ["modest", "mild", "rash", "quiet"] : ["lonely", "adamant", "naughty", "brave"]).includes(fullStats.p1.nature) ? 1.1 : (magicElements.includes(move.elemental_type) ? ["adamant", "impish", "careful", "jolly"] : ["bold", "modest", "calm", "timid"]).includes(fullStats.p1.nature) ? 0.9 : 1) // Nature modifier
-            ) / ( // Opponent defense
-              fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] // Defense statistic in use
-              // Element modifier (calculated later)
-              * ((magicElements.includes(move.elemental_type) ? ["calm", "gentle", "careful", "sassy"] : ["bold", "impish", "lax", "relaxed"]).includes(fullStats.p2.nature) ? 1.1 : (magicElements.includes(move.elemental_type) ? ["naughty", "lax", "rash", "naive"] : ["lonely", "mild", "gentle", "hasty"]).includes(fullStats.p2.nature) ? 0.9 : 1) // Nature modifier
-            )
-            )
-          * ([null, "><", "<>"].includes(effect) ? 1 : effect.startsWith(">>") ? 4 : effect.startsWith("<<") ? 1/2 : effect===">" ? 2 : effect==="<" ? 1/2 : 1) // Element modifier
-          * (move.elemental_type===fullStats.p1.element || move.elemental_type==="normal" ? 1.2 : 1) // Moves are more efficient with their element match the Animu element
-          * 0.52 // Not sure why
+          // Move power
+          move.power
+          // Player attack
+          * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"]
+          // Opponent defense
+          / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"]
+          // Element modifier
+          * ([null, "><", "<>"].includes(effect) ? 1 : effect.startsWith(">>") ? 4 : effect.startsWith("<<") ? 1/2 : effect===">" ? 2 : effect==="<" ? 1/2 : 1)
+          // Moves are more efficient with their element match the Animu element
+          * (move.elemental_type===fullStats.p1.element || move.elemental_type==="normal" ? 1.2 : 1)
+          // Not sure why
+          * 0.52
       }
       if(noPP){currentCard.noPP = true}
     }

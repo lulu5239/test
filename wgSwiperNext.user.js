@@ -376,8 +376,8 @@
       let secondTable = firstTable.cloneNode(true)
       secondTable.classList.add("pl-0")
       container.children[0].append(secondTable)
-      firstTable.dataset.about = "special"
-      secondTable.dataset.about = "stats"
+      firstTable.children[0].dataset.about = "special"
+      secondTable.children[0].dataset.about = "stats"
       for(let p of ["Strength", "Perception", "Endurance", "Charisma", "Intelligence", "Agility", "Luck"]){
         let line = row.cloneNode(true)
         line.children[0].innerText = p

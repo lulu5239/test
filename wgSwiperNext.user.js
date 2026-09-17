@@ -337,7 +337,7 @@
         specialMin: shownStats.special["SAIPLE"[i]], specialMax: shownStats.special["SAIPLE"[i]],
       }))
       let precise = stats.find(s=>s.min%1>0)
-      for(let level = shownStats.Level; level < maximumLevel; level++){
+      for(let level = shownStats.Level + 1; level <= maximumLevel; level++){
         for(let stat of stats){
           if(level%10 === 6 && stat.specialMax < 10){
             stat.specialMax = Math.min(stat.specialMax + specialIncreases[shownStats.Rarity][Math.floor(level/10)]||0, 10)
@@ -397,7 +397,7 @@
       statsEstimator.addEventListener("change", ev=>{
         if(ev.target===statsEstimatorInputs[0]){
           if(ev.target.checked){
-            return estimate(statsEstimatorInputs[1].value)
+            return estimate(+statsEstimatorInputs[1].value)
           }
           let statsTable = container.querySelector(`table[data-about="stats"]`)
           for(let td of statsTable.querySelectorAll("td[data-stat]")){
@@ -406,7 +406,7 @@
           statsTable.classList.remove("dream-table")
         return}
         if(statsEstimatorInputs[0].checked){
-          estimate(ev.target.value.value)
+          estimate(+ev.target.value)
         }
       })
     }

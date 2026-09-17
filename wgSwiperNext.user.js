@@ -349,7 +349,7 @@
         if(td.dataset.stat === "Level"){
           td.innerText = maximumLevel
         continue}
-        let stat = stats.find(s=>s.p===td.dataset.stat.slice(5))
+        let stat = stats.find(s=>s.p===td.dataset.stat.slice(6))
         td.innerText = `${stat.min} - ${stat.max}`
       }
       statsTable.classList.add("dream-table")
@@ -398,7 +398,7 @@
           }
           let statsTable = container.querySelector(`table[data-about="stats"]`)
           for(let td of statsTable.querySelectorAll("td[data-stat]")){
-            td.innerText = td.dataset.stat.split(".").reduce((d, p)=>d[p], data)
+            td.innerText = td.dataset.stat.split(".").reduce((d, p)=>d[p], shownStats)
           }
           statsTable.classList.remove("dream-table")
         return}

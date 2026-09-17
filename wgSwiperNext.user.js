@@ -316,11 +316,11 @@
     }
     // [...document.querySelectorAll("td[data-stat]")].filter(e=>e.dataset.stat.startsWith("special.")).reduce((p, e)=>p+ +e.innerText, 0)
     let specialIncreases = [
-      [16, null, null, null, null, null, null, null, null, null, null, null],
-      [18, null, null, null, null, null, null, null, null, null, null, null],
-      [20, null, null, null, null, null, null, null, null, null, null, null],
-      [22, null, null, null, null, null, null, null, null, null, null, null],
-      [24, null, null, null, null, null, null, null, null, null, null, null],
+      [16, null, null, null, null, null, null, null, null, null /* 30 */, null, null],
+      [18, 1, 2, 2 /* 23 */, null, null, null, null, null, null /* 34 */, null, null],
+      [20, 2, 2, 2 /* 26 */, null, null, null, null, null, null /* 38 */, null, null],
+      [22, null, null, null, null, null, null, null, null, null /* 41 */, null, null],
+      [24, null, null, null, null, null, null, null, null, null /* 45 */, null, null],
       [26, 2, 3, 2, 3, 3, 2, 3, 2, 3, 3, 2],
     ]
     let round = n=>Math.round(n*1000)/1000
@@ -352,7 +352,7 @@
           td.innerText = maximumLevel
         continue}
         let stat = stats.find(s=>s.p===td.dataset.stat.slice(6))
-        td.innerText = stat.min===stat.max ? (precise ? stat.min : Math.round(stat.min)) : `${precise ? stat.min : Math.round(stat.min)} - ${precise ? stat.max : Math.round(stat.max)}`
+        td.innerText = stat.min===stat.max ? (precise ? stat.min : Math.round(stat.min)) : `${precise ? stat.min : Math.round(stat.min)}\n${precise ? stat.max : Math.round(stat.max)}`
       }
       statsTable.classList.add("dream-table")
       return stats

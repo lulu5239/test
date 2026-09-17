@@ -298,7 +298,7 @@
     return r
   }
 
-  if(true){
+  if(!settings.normalStatsMenu){
     const container = document.querySelector('#statsContainer')
     
     let statsEstimator; let shownStats; let statsEstimatorInputs

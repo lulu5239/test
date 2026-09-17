@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-12
+// @version      2026-09-17
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -296,6 +296,91 @@
     thing.removeAttribute("id")
     p.id = "waifuFeed"
     return r
+  }
+
+  if(true){
+    const container = document.querySelector('#statsContainer')
+    let statsEstimator
+    let initStatsTables = ()=>{
+      container.innerHTML = `<div class="row mt-2" style="margin-bottom: 3px">
+        <div class="col-6">
+          <table class="table table-borderless text-center rounded-sm color-gray-dark shadow-l">
+            <colgroup><col width="70%" /><col width="30%" /></colgroup>
+            <tr><th></th><td></td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="text-center" id="statsEstimator"></div>`
+      let row = container.querySelector("tr")
+      row.remove()
+      let firstTable = container.querySelector("table")
+      let secondTable.cloneNode(true)
+      secondTable.classList.add("pl-0")
+      container.children[0].append(secondTable)
+      for(let p of ["Strength", "Perception", "Endurance", "Charisma", "Intelligence", "Agility", "Luck"]){
+        let line = row.cloneNode(true)
+        line.children[0].innerText = p
+        line.children[1].dataset.stat = "special."+p.slice(0, 1)
+        firstTable.append(line)
+      }
+      for(let p of [["Level"], ["Attack", "ATT"], ["Defense", "DEF"], ["Magic attack", "SpATT"], ["Magic defense", "SpDEF"], ["Speed", "SPD"], ["Health points", "HP"]]){
+        let line = row.cloneNode(true)
+        line.children[0].innerText = p[0]
+        line.children[1].dataset.stat = p[1] ? "stats."+p[1] : p[0]
+        secondTable.append(line)
+      }
+      statsEstimator = container.querySelector("#statsEstimator")
+    }
+    let shownStats
+    showStatsModal = async (anniemayID)=>{
+      document.querySelector('#waifuStatsTrigger').click();
+      
+      if(!container.dataset.ready){
+        initStatsTables()
+        container.dataset.ready = "true"
+      }else{
+        for(let td of container.querySelectorAll("td")){
+          td.innerText = ""
+        }
+        statsEstimator.style.display = "none"
+      }
+      if(selectedAnimu.id === anniemayID){
+        container.querySelector(".insertWaifuName").innerText = selectedAnimu.name
+      }
+
+      let fullData = typeof(battleHelpVars)!=="undefined" && battleHelpVars.party?.[anniemayID]
+
+      const r = await fetch("/json/am/" + anniemayID, {
+        headers: { "accept": "application/json" },
+      }).catch(e=>{
+        showErrorToast("Failed to request Animu statistics.")
+      })
+      let data = r && await r.json().catch(e=>{
+        showErrorToast("Failed to load Animu statistics.")
+      })
+
+      if(!data && !fullData){
+        // Close menu ?
+      return}
+      if(!data){
+        data = {special: {}}
+        data.Name = fullData.name
+        data.Level = fullData.level
+      }
+      if(fullData.level === data.Level){
+        data.stats = fullData.stats
+      }
+
+      for(let td of container.querySelectorAll("td[data-stat]")){
+        td.innerText = td.dataset.stat.split(".").reduce((d, p)=>d[p], data)
+      }
+
+      showStats = data
+
+      if(data.Level < 120){
+        statsEstimator.style.display = null
+      }
+    }
   }
 
   navigator.serviceWorker.originalRegister = navigator.serviceWorker.register

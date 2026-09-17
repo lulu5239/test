@@ -313,21 +313,21 @@
       <div class="text-center" id="statsEstimator"></div>`
       let row = container.querySelector("tr")
       row.remove()
-      let firstTable = container.querySelector("table")
-      let secondTable.cloneNode(true)
+      let firstTable = container.querySelector(".col-6")
+      let secondTable = container.parentElement.cloneNode(true)
       secondTable.classList.add("pl-0")
       container.children[0].append(secondTable)
       for(let p of ["Strength", "Perception", "Endurance", "Charisma", "Intelligence", "Agility", "Luck"]){
         let line = row.cloneNode(true)
         line.children[0].innerText = p
         line.children[1].dataset.stat = "special."+p.slice(0, 1)
-        firstTable.append(line)
+        firstTable.children[0].append(line)
       }
       for(let p of [["Level"], ["Attack", "ATT"], ["Defense", "DEF"], ["Magic attack", "SpATT"], ["Magic defense", "SpDEF"], ["Speed", "SPD"], ["Health points", "HP"]]){
         let line = row.cloneNode(true)
         line.children[0].innerText = p[0]
         line.children[1].dataset.stat = p[1] ? "stats."+p[1] : p[0]
-        secondTable.append(line)
+        secondTable.children[0].append(line)
       }
       statsEstimator = container.querySelector("#statsEstimator")
     }
@@ -345,7 +345,7 @@
         statsEstimator.style.display = "none"
       }
       if(selectedAnimu.id === anniemayID){
-        container.querySelector(".insertWaifuName").innerText = selectedAnimu.name
+        container.parentElement.querySelector(".insertWaifuName").innerText = selectedAnimu.name
       }
 
       let fullData = typeof(battleHelpVars)!=="undefined" && battleHelpVars.party?.[anniemayID]

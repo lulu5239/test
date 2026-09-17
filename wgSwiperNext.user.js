@@ -321,7 +321,7 @@
       [20, null, null, null, null, null, null, null, null, null, null, null],
       [22, null, null, null, null, null, null, null, null, null, null, null],
       [24, null, null, null, null, null, null, null, null, null, null, null],
-      [26, 2, null, null, null, null, null, null, null, 3, 3, 2],
+      [26, 2, 3, 2, 3, 3, 2, 3, 2, 3, 3, 2],
     ]
     let round = n=>Math.round(n*1000)/1000
     let multipliers = [1.312, 1.212, 1.312, 1.212, 1.091, 1.516]

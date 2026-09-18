@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-23
+// @version      2026-09-17
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -296,6 +296,169 @@
     thing.removeAttribute("id")
     p.id = "waifuFeed"
     return r
+  }
+
+  if(!settings.normalStatsMenu){
+    const container = document.querySelector('#statsContainer')
+    
+    let statsEstimator; let shownStats; let statsEstimatorInputs
+    let natures = {grid: [
+      ["Hardy", "Lonely", "Adamant", "Naughty", "Brave"],
+      ["Bold", "Docile", "Impish", "Lax", "Relaxed"],
+      ["Modest", "Mild", "Bashful", "Rash", "Quiet"],
+      ["Calm", "Gentle", "Careful", "Quirky", "Sassy"],
+      ["Timid", "Hasty", "Jolly", "Naive", "Serious"],
+    ]}
+    for(let good in natures.grid){
+      for(let bad in natures.grid[good]){
+        natures[natures.grid[good][bad]] = [+good, +bad]
+      }
+    }
+    let round = n=>Math.round(n*1000)/1000
+    let multipliers = [1.312, 1.212, 1.312, 1.212, 1.091, 1.516]
+    const estimate = maximumLevel=>{
+      let magic = ["grass", "fire", "water", "electric", "psychic", "ice", "music", "dark", "light"].includes(shownStats.Element.toLowerCase())
+      let nature = natures[shownStats.Nature] || []
+      let level = shownStats.Level
+      let stats = ["ATT", "DEF", "SpATT", "SpDEF", "SPD", "HP"].map((p, i)=>({
+        p,
+        min: shownStats.stats[p], max: shownStats.stats[p],
+        natureMultiplier: 1 + (nature[0]===i ? 0.1 : 0) - (nature[1]===i ? 0.1 : 0),
+        multiplier: multipliers[i] + 0.5*(magic ? p.startsWith("Sp") : i<2),
+        specialMin: shownStats.special["SAIPLE"[i]], specialMax: shownStats.special["SAIPLE"[i]],
+        otherSpecials: Object.entries(shownStats.special).filter(e=>e[0]!=="SAIPLE"[i]).reduce((p, e)=>p+e[1], 0),
+      }))
+      let precise = stats.find(s=>s.min%1>0)
+      for(let level = shownStats.Level + 1; level <= maximumLevel; level++){
+        for(let stat of stats){
+          if(level%10 === 6 && stat.specialMax < 10){
+            let increase = Math.floor((16+2*shownStats.Rarity)*(10+Math.floor(level/10))/10) - (stat.otherSpecials + stat.specialMax)
+            stat.specialMax = Math.min(stat.specialMax + increase, 10)
+          }
+          stat.min = round(stat.min + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMin))
+          stat.max = round(stat.max + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMax))
+        }
+      }
+      let statsTable = container.querySelector(`table[data-about="stats"]`)
+      for(let td of statsTable.querySelectorAll(`td`)){
+        if(td.dataset.stat === "Level"){
+          td.innerText = Math.max(maximumLevel, shownStats.Level)
+        continue}
+        let stat = stats.find(s=>s.p===td.dataset.stat.slice(6))
+        td.innerText = stat.min===stat.max ? (precise ? stat.min : Math.round(stat.min)) : `${precise ? stat.min : Math.round(stat.min)}\n${precise ? stat.max : Math.round(stat.max)}`
+      }
+      statsTable.classList.add("dream-table")
+      return stats
+    }
+    let initStatsTables = ()=>{
+      container.innerHTML = `<div class="row mt-2" style="margin-bottom: 3px">
+        <div class="col-6">
+          <table class="table table-borderless text-center rounded-sm color-gray-dark shadow-l">
+            <colgroup><col width="70%" /><col width="30%" /></colgroup>
+            <tr><th></th><td></td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="text-center" id="statsEstimator"><label><input type="checkbox" /> Estimate at</label> <label>level <input type="number" value="120" max="120" style="width: 60px" /></label></div>
+      <style>
+        .dream-table tr {
+          border: solid 1px #90e;
+        }
+      </style>`
+      let row = container.querySelector("tr")
+      row.remove()
+      let firstTable = container.querySelector(".col-6")
+      let secondTable = firstTable.cloneNode(true)
+      secondTable.classList.add("pl-0")
+      container.children[0].append(secondTable)
+      firstTable.children[0].dataset.about = "special"
+      secondTable.children[0].dataset.about = "stats"
+      for(let p of ["Strength", "Perception", "Endurance", "Charisma", "Intelligence", "Agility", "Luck"]){
+        let line = row.cloneNode(true)
+        line.children[0].innerText = p
+        line.children[1].dataset.stat = "special."+p.slice(0, 1)
+        firstTable.children[0].append(line)
+      }
+      for(let p of [["Level"], ["Attack", "ATT"], ["Defense", "DEF"], ["Magic attack", "SpATT"], ["Magic defense", "SpDEF"], ["Speed", "SPD"], ["Health points", "HP"]]){
+        let line = row.cloneNode(true)
+        line.children[0].innerText = p[0]
+        line.children[1].dataset.stat = p[1] ? "stats."+p[1] : p[0]
+        secondTable.children[0].append(line)
+      }
+      statsEstimator = container.querySelector("#statsEstimator")
+      statsEstimatorInputs = [...statsEstimator.querySelectorAll("input")]
+      statsEstimator.addEventListener("change", ev=>{
+        if(ev.target===statsEstimatorInputs[0]){
+          if(ev.target.checked){
+            return estimate(+statsEstimatorInputs[1].value)
+          }
+          let statsTable = container.querySelector(`table[data-about="stats"]`)
+          for(let td of statsTable.querySelectorAll("td[data-stat]")){
+            td.innerText = td.dataset.stat.split(".").reduce((d, p)=>d[p], shownStats)
+          }
+          statsTable.classList.remove("dream-table")
+        return}
+        if(statsEstimatorInputs[0].checked){
+          estimate(+ev.target.value)
+        }
+      })
+    }
+    showStatsModal = async (anniemayID)=>{
+      document.querySelector('#waifuStatsTrigger').click();
+      
+      if(!container.dataset.ready){
+        initStatsTables()
+        container.dataset.ready = "true"
+      }else{
+        container.querySelector(`table[data-about="stats"]`).classList.remove("dream-table")
+      }
+      statsEstimator.style.display = "none"
+
+      let fullData = typeof(battleHelpVars)!=="undefined" && battleHelpVars.party?.[anniemayID]
+      container.parentElement.querySelector(".insertWaifuName").innerText = fullData?.name ? fullData.name : selectedAnimu?.id===anniemayID ? selectedAnimu.id : "Loading..."
+      for(let td of container.querySelectorAll("td[data-stat]")){
+        td.innerText = !fullData ? "" : td.dataset.stat.split(".").reduce((d, p)=>d?.[p], fullData) ?? ""
+      }
+
+      let showedError
+      const r = await fetch("/json/am/" + anniemayID, {
+        headers: { "accept": "application/json" },
+      }).catch(e=>{
+        showErrorToast("Failed to request Animu statistics.")
+        showedError = true
+      })
+      let data = r && await r.json().catch(e=>{
+        showErrorToast("Failed to load Animu statistics.")
+        showedError = true
+      })
+
+      if(!data?.stats && !fullData?.stats){
+        if(!showedError){showErrorToast(data?.message ?? "Failed to receive the Animu statistics.")}
+        document.querySelector(".close-menu").click()
+      return}
+      if(!data?.stats){
+        data = {special: {}}
+        data.Name = fullData.name
+        data.Level = fullData.level
+      }
+      if(fullData?.stats && fullData.level === data.Level){
+        data.stats = fullData.stats
+      }
+
+      for(let td of container.querySelectorAll("td[data-stat]")){
+        td.innerText = td.dataset.stat.split(".").reduce((d, p)=>d?.[p], data) ?? ""
+      }
+
+      shownStats = data
+      container.parentElement.querySelector(".insertWaifuName").innerText = data.Name
+
+      if(data.Level < 120){
+        statsEstimator.style.display = null
+        statsEstimatorInputs[1].min = data.Level
+        statsEstimatorInputs[0].checked = false
+        statsEstimatorInputs[1].value = 120
+      }
+    }
   }
 
   navigator.serviceWorker.originalRegister = navigator.serviceWorker.register
@@ -1643,7 +1806,7 @@
             let missions = GM_getValue("WaifuvilleMissions", [])
             let data = {
               name: document.querySelector("#tab-missions h3").childNodes[2].data.trim(),
-              CR: +document.querySelector("#tab-missions h3 strong").innerText.trim().slice(3).replace(/\,/g, ""),
+              CR: +document.querySelector("#myfuMissionChallengeRating").value || 0,
               building: dynamicContext.vb.building_identifier,
               reward: [...document.querySelectorAll(`div.col-md-12:has(#startMission) div.text-center nobr`)].map(r=>{
                 if(r.querySelector("abbr")){return ["shards", +r.childNodes[1].data.trim().slice(0, -7)]}

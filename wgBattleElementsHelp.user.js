@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-09
+// @version      2026-09-17
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -282,8 +282,8 @@
   }
 
   let updateOrder = (id, to)=>{
-    let order = battleHelpVars.currentBattle.order
     if(id){
+      let order = battleHelpVars.currentBattle.order
       let p = order.findIndex(a=>a===id)
       if(p>=0){order.splice(p, 1)}
       if(to==="first"){
@@ -293,6 +293,11 @@
       }
     }
     GM_setValue("currentBattle", battleHelpVars.currentBattle)
+  }
+  for(let i=0; i<5; i++){
+    let id = battleHelpVars.currentBattle.order.slice(-1)[0]
+    if(party[id].element!=="???"){break}
+    updateOrder(id, "first")
   }
   let fetchCurrentCard = async ()=>{
     let r = await fetch("/battle/"+battleID, {
@@ -318,8 +323,9 @@
       party[card.id].level = card.lvl
       party[card.id].id = card.id
     }
-    document.querySelector("#swapForXPoption").dataset.card = Object.values(party).find(c=>c.level<maximumLevel && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level))?.id || ""
-    document.querySelector("#swapForXPoption").style.display = document.querySelector("#swapForXPoption").dataset.card ? "block" : "none"
+    let e = document.querySelector("#swapForXPoption")
+    e.dataset.card = Object.values(party).find(c=>c.level<maximumLevel && !c.receivingXP && c.hp>0 && (!c.stats || c.stats.SPD>fullStats.p2?.stats.SPD || c.level>fullStats.p2?.level) && c.element!=="???")?.id || ""
+    e.style.display = e.dataset.card ? "block" : "none"
   }
   let currentCard = party[battleHelpVars.currentBattle.order.slice(-1)[0]]
   battleHelpVars.getCurrentCard = ()=>currentCard
@@ -382,25 +388,26 @@
       }
       if(e.p.text.startsWith("p1{") || e.p.text.startsWith("p2 {") || e.p.text.startsWith("Found next opponent: {")){
         let plr = e.p.text.startsWith("p1") ? "p1" : "p2"
-        let stats = fullStats[plr] = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
+        let stats = JSON.parse(e.p.text.startsWith("p1") ? e.p.text.slice(2) : e.p.text.startsWith("p2") ? e.p.text.slice(3).split("}").slice(0,-1).join("}")+"}" : e.p.text.slice(e.p.text.indexOf("{")))
         for(let p of ["moves", "special", "stats"]){
           stats[p] = JSON.parse(stats[p])
         }
         stats.nature = stats.card.nature.toLowerCase()
         stats.name = stats.card.name
         if(party[stats.id]){
-          currentCard = party[stats.id]
-          currentCard.receivingXP = true
-          currentCard.stats = stats.stats
-          currentCard.nature = stats.nature
           // Store stats in party
           previousParty[stats.id].stats = stats.stats
           previousParty[stats.id].level = stats.level
           previousParty[stats.id].moves = stats.moves
           previousParty[stats.id].nature = stats.nature
           GM_setValue("party", previousParty)
-          updateOrder(stats.id)
+          if(currentCard.id!==stats.id){continue}
+          currentCard = party[stats.id]
+          currentCard.receivingXP = true
+          currentCard.stats = stats.stats
+          currentCard.nature = stats.nature
         }
+        fullStats[plr] = stats
         if(true){
           let p = battleHelpVars.currentBattle[plr].findIndex(a=>a.id===stats.id)
           battleHelpVars.currentBattle[plr][p===-1 ? battleHelpVars.currentBattle[plr].length : p] = stats
@@ -490,7 +497,7 @@
     let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap && !args[0].faked){
       updateOrder(currentCard.id, "first")
-      currentCard = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp>0).slice(-1)[0]] // party[swap.p.swap.swap_party.filter(a=>a.currentHP > 0).slice(-1)[0].id]
+      currentCard = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp>0 && party[a].element!=="???").slice(-1)[0]] // party[swap.p.swap.swap_party.filter(a=>a.currentHP > 0).slice(-1)[0].id]
     }
     if(fullStats.p1?.stats && fullStats.p1.level===currentCard.level){
       if(args[0].output){
@@ -505,21 +512,18 @@
         if(move.pp>0){noPP=false}
         let effect = advantages.find(a=>a[0]===move.elemental_type && a[2]===opponentElement)?.[1] || null
         move.estimatedDamage =
-          move.power // Move power
-          * (
-            ( // Player attack with this the move
-              fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"] // Attack statistic in use
-              // Element modifier (calculated later)
-              * ((magicElements.includes(move.elemental_type) ? ["modest", "mild", "rash", "quiet"] : ["lonely", "adamant", "naughty", "brave"]).includes(fullStats.p1.nature) ? 1.1 : (magicElements.includes(move.elemental_type) ? ["adamant", "impish", "careful", "jolly"] : ["bold", "modest", "calm", "timid"]).includes(fullStats.p1.nature) ? 0.9 : 1) // Nature modifier
-            ) / ( // Opponent defense
-              fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"] // Defense statistic in use
-              // Element modifier (calculated later)
-              * ((magicElements.includes(move.elemental_type) ? ["calm", "gentle", "careful", "sassy"] : ["bold", "impish", "lax", "relaxed"]).includes(fullStats.p2.nature) ? 1.1 : (magicElements.includes(move.elemental_type) ? ["naughty", "lax", "rash", "naive"] : ["lonely", "mild", "gentle", "hasty"]).includes(fullStats.p2.nature) ? 0.9 : 1) // Nature modifier
-            )
-            )
-          * ([null, "><", "<>"].includes(effect) ? 1 : effect.startsWith(">>") ? 4 : effect.startsWith("<<") ? 1/2 : effect===">" ? 2 : effect==="<" ? 1/2 : 1) // Element modifier
-          * (move.elemental_type===fullStats.p1.element || move.elemental_type==="normal" ? 1.2 : 1) // Moves are more efficient with their element match the Animu element
-          * 0.52 // Not sure why
+          // Move power
+          move.power
+          // Player attack
+          * fullStats.p1.stats[magicElements.includes(move.elemental_type) ? "SpATT" : "ATT"]
+          // Opponent defense
+          / fullStats.p2.stats[magicElements.includes(move.elemental_type) ? "SpDEF" : "DEF"]
+          // Element modifier
+          * ([null, "><", "<>"].includes(effect) ? 1 : effect.startsWith(">>") ? 4 : effect.startsWith("<<") ? 1/2 : effect===">" ? 2 : effect==="<" ? 1/2 : 1)
+          // Moves are more efficient with their element match the Animu element
+          * (move.elemental_type===fullStats.p1.element || move.elemental_type==="normal" ? 1.2 : 1)
+          // Not sure why
+          * 0.52
       }
       if(noPP){currentCard.noPP = true}
     }

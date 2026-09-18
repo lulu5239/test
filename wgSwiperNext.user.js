@@ -417,7 +417,7 @@
       let fullData = typeof(battleHelpVars)!=="undefined" && battleHelpVars.party?.[anniemayID]
       container.parentElement.querySelector(".insertWaifuName").innerText = fullData?.name ? fullData.name : selectedAnimu?.id===anniemayID ? selectedAnimu.id : "Loading..."
       for(let td of container.querySelectorAll("td[data-stat]")){
-        td.innerText = (fullData && td.dataset.stat.toLowerCase().split(".").reduce((d, p)=>d?.[p], fullData)) ?? ""
+        td.innerText = (fullData && td.dataset.stat.split(".").reduce((d, p)=>d?.[p], fullData)) ?? ""
       }
 
       let showedError

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-17
+// @version      2026-09-18
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1306,7 +1306,7 @@
           ])} useless gym messages<br>
           ${settingCheckbox("cardCreatorPageInput", "Add box to choose images page on card creator page")}<br>
           ${settingCheckbox("alwaysTraderBuyAgain", "Always show buttons to buy again items from trader")} <i>(else they are only shown 5 minutes before restock)</i><br>
-          Overtide the delay for the level up dialog to appear to ${settingSelect("levelUpDialogDelay", [
+          Override the delay for the level up dialog to appear to ${settingSelect("levelUpDialogDelay", [
             {value: "", name: "none"},
             {value: "500", name: "500ms"},
             {value: "1000", name: "1s"},

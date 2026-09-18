@@ -433,10 +433,10 @@
       })
 
       if(!data?.stats && !fullData?.stats){
-        if(!showedError){showErrorToast(data?.message || "Failed to receive the Animu statistics.")}
+        if(!showedError){showErrorToast(data?.message ?? "Failed to receive the Animu statistics.")}
         document.querySelector(".close-menu").click()
       return}
-      if(!data){
+      if(!data?.stats){
         data = {special: {}}
         data.Name = fullData.name
         data.Level = fullData.level
@@ -446,7 +446,7 @@
       }
 
       for(let td of container.querySelectorAll("td[data-stat]")){
-        td.innerText = td.dataset.stat.split(".").reduce((d, p)=>d[p], data)
+        td.innerText = td.dataset.stat.split(".").reduce((d, p)=>d?.[p], data) ?? ""
       }
 
       shownStats = data

@@ -1985,7 +1985,7 @@
       return missing
     }
     let missing = addBuyAgainButtons()
-    let fetchButton = document.querySelector("fetchMissingTraderItems")
+    let fetchButton = document.querySelector("#fetchMissingTraderItems")
     if(missing.length){
       fetchButton.parentElement.style.display = null
       fetchButton.addEventListener("click", async ev=>{

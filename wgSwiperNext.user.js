@@ -420,16 +420,20 @@
       let fullData = typeof(battleHelpVars)!=="undefined" && battleHelpVars.party?.[anniemayID]
       container.parentElement.querySelector(".insertWaifuName").innerText = fullData?.name ? fullData.name : selectedAnimu?.id===anniemayID ? selectedAnimu.id : "Loading..."
 
+      let showedError
       const r = await fetch("/json/am/" + anniemayID, {
         headers: { "accept": "application/json" },
       }).catch(e=>{
         showErrorToast("Failed to request Animu statistics.")
+        showedError = true
       })
       let data = r && await r.json().catch(e=>{
         showErrorToast("Failed to load Animu statistics.")
+        showedError = true
       })
 
-      if(!data && !fullData){
+      if(!data?.stats && !fullData?.stats){
+        if(!showedError){showErrorToast(data?.message || "Failed to receive the Animu statistics.")}
         document.querySelector(".close-menu").click()
       return}
       if(!data){

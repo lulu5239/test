@@ -1993,7 +1993,7 @@
         let r = await fetch("https://lublox.xyz/wg/items", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify(missing.map(item=>({ spritesheet: item.spritesheet }))),
+          body: JSON.stringify(missing.map(row=>({ spritesheet: row.children[0].children[0].src.slice(22) }))),
         }).catch(console.warn)
         r = r && await r.json().catch(console.warn)
         if(!r){
@@ -2001,6 +2001,7 @@
           showErrorToast("Couldn't get data from the Lublox website.")
         return}
         todayTrader.items.push(...r)
+        GM_setValue("todayTrader", todayTrader)
         fetchButton.parentElement.remove()
         return addBuyAgainButtons()
       })

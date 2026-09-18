@@ -1925,7 +1925,7 @@
     }
     if(!settings.alwaysTraderBuyAgain && nextDay - +new Date() > 300000){return}
     table.insertAdjacentHTML("afterend", `<div class="card card-custom" style="display: none"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
-    +`<div class="card card-custom" style="display: none"><span>The user-script doesn't have enough data about some of the items!</span><button id="fetchMissingTraderItems" class="btn btn-block">Fetch from Lulu5239's website</button></div>`
+    +`<div class="card card-custom" style="display: none"><span>The user-script doesn't have enough data about some of the items!</span><button id="fetchMissingTraderItems" class="btn btn-block bg-orange-dark mt-2">Fetch from Lulu5239's website</button></div>`
     +`<style>
       .card-custom {
         text-align: center;
@@ -1993,14 +1993,14 @@
         let r = await fetch("https://lublox.xyz/wg/items", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: missing.map(item=>({ spritesheet: item.spritesheet })),
+          body: JSON.stringify(missing.map(item=>({ spritesheet: item.spritesheet }))),
         }).catch(console.warn)
-        r = r ?? await r.json().catch(console.warn)
+        r = r && await r.json().catch(console.warn)
         if(!r){
           ev.target.disabled = false
           showErrorToast("Couldn't get data from the Lublox website.")
         return}
-        todayTrader.items.push(r)
+        todayTrader.items.push(...r)
         fetchButton.parentElement.remove()
         return addBuyAgainButtons()
       })

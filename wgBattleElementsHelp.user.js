@@ -401,7 +401,7 @@
           previousParty[stats.id].moves = stats.moves
           previousParty[stats.id].nature = stats.nature
           GM_setValue("party", previousParty)
-          if(currentCard.id!==stats.id){continue}
+          if(currentCard.id!==stats.id && args[0].find(e=>e.a==="forceswap" && e.t==="player1")){continue}
           currentCard = party[stats.id]
           currentCard.receivingXP = true
           currentCard.stats = stats.stats
@@ -595,7 +595,7 @@
   })
   
   //document.querySelector("#btn_swap").addEventListener("click", ()=>{
-  var updateGoodness = window.battleHelpVars.updateGoodness = ()=>{
+  var updateGoodness = battleHelpVars.updateGoodness = ()=>{
     for(let card of actionSwapList.children){
       let button = card.querySelector("button")
       let data = party[button.dataset.swapto]
@@ -619,7 +619,7 @@
   actionMenu.querySelector("#btn_swapForXP").addEventListener("click", ()=>{
     let card = document.querySelector("#swapForXPoption").dataset.card
     if(!card){return}
-    window.battleHelpVars.usingBest = false
+    battleHelpVars.usingBest = false
     actionSwapList.querySelector(`button[data-swapto="${card}"]`)?.click()
   })
   actionMenu.insertAdjacentHTML("beforeend", `<div class="col-12 col-md-6 mb-2"><button id="btn_swapToBest" class="btn btn-block btn-secondary btn-sm"><i class="fas fa-exchange-alt"></i> Swap to best</button><div>`)
@@ -634,7 +634,9 @@
     if(card.stats && card.nature){
       battleHelpVars.usingBest = true
     }
-    if(card===currentCard){ // Couldn't find better way to identify the current card
+    let goodEnough = card.goodATT / currentCard.goodATT > 0.7
+    if(goodEnough && card.stats?.SPD && card.stats.SPD > fullStats.p2.stats.SPD){goodEnough = false}
+    if(card===currentCard || goodEnough){
       if(battleHelpVars.auto){
         return document.querySelector("#btn_bestMove").click()
       }

@@ -634,7 +634,7 @@
     if(card.stats && card.nature){
       battleHelpVars.usingBest = true
     }
-    let goodEnough = card.goodATT / currentCard.goodATT > 0.7
+    let goodEnough = card.goodATT / currentCard.goodATT < 1.25
     if(goodEnough && card.stats?.SPD && card.stats.SPD > fullStats.p2.stats.SPD){goodEnough = false}
     if(card===currentCard || goodEnough){
       if(battleHelpVars.auto){

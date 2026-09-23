@@ -243,6 +243,8 @@
       })
     }
   return}
+
+  let saveUpMoves = 1
   
   let previousParty = battleHelpVars.previousParty = party
   party = battleHelpVars.party = {}
@@ -331,7 +333,7 @@
   battleHelpVars.getCurrentCard = ()=>currentCard
 
   let fullStats = battleHelpVars.fullStats = {}
-  let winText; let lastForcedSwap = 0; let highestStatistic = []
+  let winText; let lastForcedSwap = 0; let highestStatistic = []; let opponentsRemaining
   let lastSequenceData = {}
   let originalPlaySequence = playSequence
   playSequence = (...args)=>{
@@ -472,6 +474,7 @@
         document.querySelector("#btn_bestMove").click()
       }
     },1000)
+    opponentsRemaining = lastSequenceData.output.foes.alive
     if(gymMultiplier && highestStatistic[0] >= 500){
       if(lastSequenceData.output.foes.total !== 6){
         gymMultiplier.parentElement.remove()
@@ -641,7 +644,7 @@
         return document.querySelector("#btn_bestMove").click()
       }
       battleHelpVars.usingBest = true
-      return showErrorToast("Already using best card!")
+      return showErrorToast(card===currentCard ? "Already using best card!" : "Already using good enough card!")
     }
     if(!card){
       return showErrorToast("No card to swap to...")
@@ -667,7 +670,7 @@
     for(let move of currentCard.moves){
       if(!move.pp){continue}
       if(!best){best=move; continue}
-      if(move.estimatedDamage*0.95>fullStats.p2.hp){ // Try to end battle with a single move (doesn't cost PP)
+      if(move.estimatedDamage*0.95>fullStats.p2.hp && opponentsRemaining===1){ // Try to end battle with a single move (doesn't cost PP)
         if(move.accuracy>=best.accuracy){
           best = move
         }
@@ -675,7 +678,7 @@
         continue
       }
       if(canEnd){continue}
-      if(move.pp > 1 && move.estimatedDamage > best.estimatedDamage){
+      if(move.pp > saveUpMoves && move.estimatedDamage > best.estimatedDamage){
         best = move
       }
     }

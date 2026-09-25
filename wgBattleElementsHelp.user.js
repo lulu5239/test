@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-23
+// @version      2026-09-25
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -432,7 +432,12 @@
             }
           }
         }
-        if(plr==="p2"){highestStatistic[2] = true}
+        if(plr==="p2"){
+          highestStatistic[2] = true
+          setTimeout(()=>{
+            $("#opponent_pic .actionShowCard").data("cardid", stats.card_id)
+          }, 200)
+        }
       }
     }
     setTimeout(async ()=>{

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-25
+// @version      2026-09-26
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -664,12 +664,14 @@
       let stats = await fetchCurrentCard()
       currentCard.stats = stats.stats
       currentCard.nature = stats.nature
+      currentCard.moves = stats.moves
       // Store stats in party
       previousParty[stats.id].stats = stats.stats
       previousParty[stats.id].level = stats.level
       previousParty[stats.id].moves = stats.moves
       previousParty[stats.id].nature = stats.nature
       GM_setValue("party", previousParty)
+      showInventory({ faked: true })
     }
     let best; let canEnd
     for(let move of currentCard.moves){

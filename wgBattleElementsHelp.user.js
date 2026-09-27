@@ -502,7 +502,7 @@
         for(let action of lastSequenceData.sequence){action.d = action.a==="debug" ? 400 : 0}
       }
     }
-    let swap = args[0].sequence.find(e=>e.a==="forceswap" && e.t==="player1")
+    let swap = args[0].sequence?.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap && !args[0].faked){
       updateOrder(currentCard.id, "first")
       currentCard = party[battleHelpVars.currentBattle.order.filter(a=>!party[a] || party[a].hp>0 && party[a].element!=="???").slice(-1)[0]] // party[swap.p.swap.swap_party.filter(a=>a.currentHP > 0).slice(-1)[0].id]

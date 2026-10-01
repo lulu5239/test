@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-26
+// @version      2026-10-01
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -665,6 +665,7 @@
       currentCard.stats = stats.stats
       currentCard.nature = stats.nature
       currentCard.moves = stats.moves
+      fullStats.p1 = stats
       // Store stats in party
       previousParty[stats.id].stats = stats.stats
       previousParty[stats.id].level = stats.level

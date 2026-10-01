@@ -672,7 +672,7 @@
       previousParty[stats.id].moves = stats.moves
       previousParty[stats.id].nature = stats.nature
       GM_setValue("party", previousParty)
-      showInventory({ faked: true })
+      showInventory({ ...lastSequenceData, faked: true })
     }
     let best; let canEnd
     for(let move of currentCard.moves){

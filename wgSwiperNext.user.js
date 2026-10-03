@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-18
+// @version      2026-10-03
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -25,6 +25,7 @@
   }
 
   if(typeof(startCountdown)==="undefined"){return}
+  var swiperNext = window.swiperNext = {}
 
   var colors = {
     selected: "7fa",
@@ -170,6 +171,15 @@
       if(settings.manualRerollOnly && !args[0] && document.querySelector("#waifuMenu .giftableItem")){return}
       return originalReroll(...args)
     }
+    swiperNext.prepareFeed = async (am=selectedAnimu)=>{
+      let best = GM_getValue("bestItems")
+      if(!best){return}
+      let card
+      if(!["Max Level!", "Lv. 120", "Lv.120"].includes(am?.xpText)){
+        card = await fetchCardData(am.cardID)
+      }
+      setRerollItems({ best, card })
+    }
 
     let delayedClicks = []; let clicked = false
     let hpBar = document.querySelector("#waifuMenu .progress .hpBar")
@@ -184,7 +194,7 @@
         clickItem(e[0], e[1], true)
       break}
     }
-    clickItem = async (am, target, bypass)=>{
+    clickItem = swiperNext.clickItem = async (am, target, bypass)=>{
       let now = +new Date()
       if(!bypass && (clicked || delayedClicks.length)){
         if(delayedClicks.length>5){return}
@@ -489,7 +499,7 @@
     }
   return}
 
-  let setFormation = async (id, formations=GM_getValue("formations")||{})=>{
+  let setFormation = swiperNext.setFormation = async (id, formations=GM_getValue("formations")||{})=>{
     let r = await fetch("/formation/change",{
       method:"POST",
       headers:{"content-type":"application/x-www-form-urlencoded"},
@@ -519,7 +529,7 @@
     return formation
   }
 
-  let unwishlistCard = async (id, wl=GM_getValue("wishedCards") || [])=>{
+  let unwishlistCard = swiperNext.unwishlistCard = async (id, wl=GM_getValue("wishedCards") || [])=>{
     await fetch('https://waifugame.com/profile/wishlist', {
       method: 'POST',
       headers: {

@@ -25,7 +25,7 @@
   }
 
   if(typeof(startCountdown)==="undefined"){return}
-  var swiperNext = window.swiperNext = {}
+  swiperNext = window.swiperNext = {}
 
   var colors = {
     selected: "7fa",

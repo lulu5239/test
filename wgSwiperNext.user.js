@@ -959,11 +959,11 @@
           let words = data.result.slice(data.result.indexOf("... Outcome: ")+13).split(" ")
           while(i<words.length){
             if(words[i]==="Lv.UP"){i += 2}
-            let name = words.findIndex((w, p)=>p>i && w.slice(0, 1)==="+" && w.slice(-2)==="XP")
+            let name = words.findIndex((w, p)=>p>i && w.slice(0, 1)==="+" && (w.slice(-2)==="XP" || w.slice(-3)==="XP,"))
             if(name===-1){break}
             name = words.slice(i, name)
             i += name.length // name is array of words
-            let xp = +words[i].slice(1, -2).replace(/\,/g, "")
+            let xp = +words[i].replace(/\,/g, "").slice(1, -2)
             i = words.findIndex((w, p)=>p>i && w.endsWith(",")) +1
             if(gainXP){gainXP(xp, name.join(" "))}
             if(!i){break}

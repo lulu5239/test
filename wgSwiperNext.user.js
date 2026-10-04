@@ -1808,7 +1808,7 @@
       if(loadingBuilding){
         let start = document.querySelector("#startMission")
         if(start){
-          let id = document.querySelector(`#startMission input[name="mission_id"]`).value,
+          let id = document.querySelector(`#startMission input[name="mission_id"]`).value
           if(!id.startsWith("chop_wood")){
             start.parentElement.insertAdjacentHTML("afterend",
               `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-random"></i> Reroll</button>`
@@ -1828,7 +1828,7 @@
                 if(fa==="fa-gg"){return ["GG", +r.innerText.trim()]}
                 return ["item", r.innerText.trim()]
               }),
-              id: document.querySelector(`#startMission input[name="mission_id"]`).value,
+              id,
             }
             let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
             if(index===-1){

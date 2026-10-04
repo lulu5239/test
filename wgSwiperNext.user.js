@@ -260,7 +260,8 @@
           r.levelsChanged = 0
         }
       }
-      return giveItemHandler(r)
+      giveItemHandler(r)
+      return r
     }
     document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
       let target = ev.target.closest(".giftableItem")

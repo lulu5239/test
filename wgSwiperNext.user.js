@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-03
+// @version      2026-10-04
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1808,10 +1808,13 @@
       if(loadingBuilding){
         let start = document.querySelector("#startMission")
         if(start){
-          start.parentElement.insertAdjacentHTML("afterend",
-            `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-random"></i> Reroll</button>`
-          )
-          document.querySelector("#rerollMissionBtn").addEventListener("click", reroll)
+          let id = document.querySelector(`#startMission input[name="mission_id"]`).value,
+          if(!id.startsWith("chop_wood")){
+            start.parentElement.insertAdjacentHTML("afterend",
+              `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-random"></i> Reroll</button>`
+            )
+            document.querySelector("#rerollMissionBtn").addEventListener("click", reroll)
+          }
           if(settings.recordWaifuvilleMissions){
             let missions = GM_getValue("WaifuvilleMissions", [])
             let data = {

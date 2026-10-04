@@ -171,12 +171,12 @@
       if(settings.manualRerollOnly && !args[0] && document.querySelector("#waifuMenu .giftableItem")){return}
       return originalReroll(...args)
     }
-    swiperNext.prepareFeed = async (am=selectedAnimu)=>{
+    swiperNext.prepareFeed = async (am=selectedAnimu, nature)=>{
       let best = GM_getValue("bestItems")
       if(!best){return}
       let card
       if(!["Max Level!", "Lv. 120", "Lv.120"].includes(am?.xpText)){
-        card = await fetchCardData(am.cardID)
+        card = nature ? { Nature: nature } : await fetchCardData(am.cardID)
       }
       setRerollItems({ best, card })
     }

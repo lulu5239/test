@@ -1605,6 +1605,7 @@
   if(path==="/hotel"){
     let bye = document.querySelector("#multiGoodbye")
     bye.parentElement.innerHTML = `<select class="form-control" id="multi_select">
+      <option value="label" disabled default>Action</option>
       <option value="selectAll">Select all</option>
       <option value="unselectAll">Unselect all</option>
       <option value="selectAbove">Select all above selection</option>
@@ -1689,8 +1690,11 @@
     select.addEventListener("change", ev=>{
       let f = swiperNext.hotelMultiActions[ev.target.value]
       if(!f){return showErrorToast("I don't know what to do!")}
-      ev.preventDefault()
-      return f()
+      ev.target.value = "label"
+      f()
+      // Update selection count
+      const count = Object.keys(multiSelection).length;
+      document.querySelector('.currentSelectionCount').innerText = count + (count === 1 ? " Animu" : " Animus");
     })
 
     document.querySelector(`#hoteledWaifuMenu .btnOpenStats`).insertAdjacentHTML("beforebegin", 

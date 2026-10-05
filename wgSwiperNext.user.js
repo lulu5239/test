@@ -1615,11 +1615,48 @@
     </select>`
     let select = document.querySelector("#multi_select")
     swiperNext.hotelMultiActions = {
-      selectAll: ()=>{},
-      unselectAll: ()=>{},
-      selectAbove: ()=>{},
-      selectBelow: ()=>{},
-      unselectDuplicateName: ()=>{},
+      selectAll: ()=>{
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          e.parentElement.classList.add("animu-selected")
+          multiSelection[e.dataset.amid] = 1
+        }
+      },
+      unselectAll: ()=>{
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          e.parentElement.classList.remove("animu-selected")
+          delete multiSelection[e.dataset.amid]
+        }
+      },
+      selectAbove: ()=>{
+        let stop
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          if(stop){continue}
+          if(multiSelection[e.dataset.amid]){stop = true; continue}
+          e.parentElement.classList.add("animu-selected")
+          multiSelection[e.dataset.amid] = 1
+        }
+      },
+      selectBelow: ()=>{
+        let begin
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          if(!begin){
+            if(!multiSelection[e.dataset.amid]){continue}
+            begin = true
+          }
+          e.parentElement.classList.add("animu-selected")
+          multiSelection[e.dataset.amid] = 1
+        }
+      },
+      unselectDuplicateName: ()=>{
+        let names = new Map()
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          if(names.has(e.dataset.name)){
+            e.parentElement.classList.remove("animu-selected")
+            delete multiSelection[e.dataset.amid]
+          continue}
+          names.set(e.dataset.name, true)
+        }
+      },
 
       goodbye: ()=>{},
       unwishlist: ()=>{

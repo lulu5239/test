@@ -1603,12 +1603,14 @@
   }
 
   if(path==="/hotel"){
-    document.querySelector("#multiGoodbye").parentElement.innerHTML = `<select class="form-control" id="multi_select">
+    let bye = document.querySelector("#multiGoodbye")
+    bye.parentElement.innerHTML = `<select class="form-control" id="multi_select">
       <option value="selectAll">Select all</option>
       <option value="unselectAll">Unselect all</option>
       <option value="selectAbove">Select all above selection</option>
       <option value="selectBelow">Select all below selection</option>
       <option value="unselectDuplicateName">Unselect duplicates by name</option>
+      <option value="unselectFirstName">Unselect first duplicate by name</option>
       <option value="sep" disabled>-</option>
       <option value="goodbye">Goodbye</option>
       <option value="unwishlist">Unwishlist</option>
@@ -1657,8 +1659,19 @@
           names.set(e.dataset.name, true)
         }
       },
+      unselectFirstName: ()=>{
+        let names = new Map()
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          if(names.has(e.dataset.name)){continue}
+          e.parentElement.classList.remove("animu-selected")
+          delete multiSelection[e.dataset.amid]
+          names.set(e.dataset.name, true)
+        }
+      },
 
-      goodbye: ()=>{},
+      goodbye: ()=>{
+        multiGoodbye.click()
+      },
       unwishlist: ()=>{
         let wishedCards = GM_getValue("wishedCards") || []
         let ids = Array.from(document.querySelectorAll(".hotelListing.animu-selected a")).map(e=>e.dataset.cardid).filter(id=>wishedCards.includes(id))
@@ -1673,6 +1686,12 @@
         })
       },
     }
+    select.addEventListener("change", ev=>{
+      let f = swiperNext.hotelMultiActions[ev.target.value]
+      if(!f){return showErrorToast("I don't know what to do!")}
+      ev.preventDefault()
+      return f()
+    })
 
     document.querySelector(`#hoteledWaifuMenu .btnOpenStats`).insertAdjacentHTML("beforebegin", 
     `<a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="feed" style="width: 50%; display: inline-block">

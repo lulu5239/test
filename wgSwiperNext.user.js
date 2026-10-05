@@ -1671,7 +1671,7 @@
       },
 
       goodbye: ()=>{
-        multiGoodbye.click()
+        bye.click()
       },
       unwishlist: ()=>{
         let wishedCards = GM_getValue("wishedCards") || []
@@ -1696,6 +1696,7 @@
       const count = Object.keys(multiSelection).length;
       document.querySelector('.currentSelectionCount').innerText = count + (count === 1 ? " Animu" : " Animus");
     })
+    select.value = "label"
 
     document.querySelector(`#hoteledWaifuMenu .btnOpenStats`).insertAdjacentHTML("beforebegin", 
     `<a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="feed" style="width: 50%; display: inline-block">

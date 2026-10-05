@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-04
+// @version      2026-10-05
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1603,22 +1603,39 @@
   }
 
   if(path==="/hotel"){
-    let bye = document.querySelector("#multiGoodbye")
-    bye.insertAdjacentHTML("beforebegin", `<button id="multiUnwishlist" class="btn font-14 btn-block rounded-s text-center mb-2">Unwishlist</button>`)
-    bye.parentElement.parentElement.parentElement.style.marginBottom = "100px"
-    document.querySelector("#multiUnwishlist").addEventListener("click", ()=>{
-      let wishedCards = GM_getValue("wishedCards") || []
-      let ids = Array.from(document.querySelectorAll(".hotelListing.animu-selected a")).map(e=>e.dataset.cardid).filter(id=>wishedCards.includes(id))
-      ids = ids.filter((id,i)=>!ids.slice(0, i).includes(id))
-      if(!ids.length){return showErrorToast("None of the cards you selected are in your wishlist!")}
-      areYouSure(`Do you want to remove ${ids.length} cards from your wishlist?`, async ()=>{
-        let menu = document.querySelector("#areYouSure")
-        await unwishlistManyCards(ids, txt=>{
-          menu.querySelector(".areYouSureText").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
-        }, wishedCards)
-        menu.querySelector(".close-menu").click()
-      })
-    })
+    document.querySelector("#multiGoodbye").parentElement.innerHTML = `<select class="form-control" id="multi_select">
+      <option value="selectAll">Select all</option>
+      <option value="unselectAll">Unselect all</option>
+      <option value="selectAbove">Select all above selection</option>
+      <option value="selectBelow">Select all below selection</option>
+      <option value="unselectDuplicateName">Unselect duplicates by name</option>
+      <option value="sep" disabled>-</option>
+      <option value="goodbye">Goodbye</option>
+      <option value="unwishlist">Unwishlist</option>
+    </select>`
+    let select = document.querySelector("#multi_select")
+    swiperNext.hotelMultiActions = {
+      selectAll: ()=>{},
+      unselectAll: ()=>{},
+      selectAbove: ()=>{},
+      selectBelow: ()=>{},
+      unselectDuplicateName: ()=>{},
+
+      goodbye: ()=>{},
+      unwishlist: ()=>{
+        let wishedCards = GM_getValue("wishedCards") || []
+        let ids = Array.from(document.querySelectorAll(".hotelListing.animu-selected a")).map(e=>e.dataset.cardid).filter(id=>wishedCards.includes(id))
+        ids = ids.filter((id,i)=>!ids.slice(0, i).includes(id))
+        if(!ids.length){return showErrorToast("None of the cards you selected are in your wishlist!")}
+        areYouSure(`Do you want to remove ${ids.length} cards from your wishlist?`, async ()=>{
+          let menu = document.querySelector("#areYouSure")
+          await unwishlistManyCards(ids, txt=>{
+            menu.querySelector(".areYouSureText").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
+          }, wishedCards)
+          menu.querySelector(".close-menu").click()
+        })
+      },
+    }
 
     document.querySelector(`#hoteledWaifuMenu .btnOpenStats`).insertAdjacentHTML("beforebegin", 
     `<a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="feed" style="width: 50%; display: inline-block">

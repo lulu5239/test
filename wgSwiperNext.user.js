@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-09-18
+// @version      2026-10-05
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -25,6 +25,7 @@
   }
 
   if(typeof(startCountdown)==="undefined"){return}
+  swiperNext = window.swiperNext = {}
 
   var colors = {
     selected: "7fa",
@@ -170,6 +171,15 @@
       if(settings.manualRerollOnly && !args[0] && document.querySelector("#waifuMenu .giftableItem")){return}
       return originalReroll(...args)
     }
+    swiperNext.prepareFeed = async (am=selectedAnimu, nature)=>{
+      let best = GM_getValue("bestItems")
+      if(!best){return}
+      let card
+      if(!["Max Level!", "Lv. 120", "Lv.120"].includes(am?.xpText)){
+        card = nature ? { Nature: nature } : await fetchCardData(am.cardID)
+      }
+      setRerollItems({ best, card })
+    }
 
     let delayedClicks = []; let clicked = false
     let hpBar = document.querySelector("#waifuMenu .progress .hpBar")
@@ -184,7 +194,7 @@
         clickItem(e[0], e[1], true)
       break}
     }
-    clickItem = async (am, target, bypass)=>{
+    clickItem = swiperNext.clickItem = async (am, target, bypass)=>{
       let now = +new Date()
       if(!bypass && (clicked || delayedClicks.length)){
         if(delayedClicks.length>5){return}
@@ -250,7 +260,8 @@
           r.levelsChanged = 0
         }
       }
-      return giveItemHandler(r)
+      giveItemHandler(r)
+      return r
     }
     document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
       let target = ev.target.closest(".giftableItem")
@@ -489,7 +500,7 @@
     }
   return}
 
-  let setFormation = async (id, formations=GM_getValue("formations")||{})=>{
+  let setFormation = swiperNext.setFormation = async (id, formations=GM_getValue("formations")||{})=>{
     let r = await fetch("/formation/change",{
       method:"POST",
       headers:{"content-type":"application/x-www-form-urlencoded"},
@@ -519,7 +530,7 @@
     return formation
   }
 
-  let unwishlistCard = async (id, wl=GM_getValue("wishedCards") || [])=>{
+  let unwishlistCard = swiperNext.unwishlistCard = async (id, wl=GM_getValue("wishedCards") || [])=>{
     await fetch('https://waifugame.com/profile/wishlist', {
       method: 'POST',
       headers: {
@@ -949,11 +960,11 @@
           let words = data.result.slice(data.result.indexOf("... Outcome: ")+13).split(" ")
           while(i<words.length){
             if(words[i]==="Lv.UP"){i += 2}
-            let name = words.findIndex((w, p)=>p>i && w.slice(0, 1)==="+" && w.slice(-2)==="XP")
+            let name = words.findIndex((w, p)=>p>i && w.slice(0, 1)==="+" && (w.slice(-2)==="XP" || w.slice(-3)==="XP,"))
             if(name===-1){break}
             name = words.slice(i, name)
             i += name.length // name is array of words
-            let xp = +words[i].slice(1, -2).replace(/\,/g, "")
+            let xp = +words[i].replace(/\,/g, "").slice(1, -2)
             i = words.findIndex((w, p)=>p>i && w.endsWith(",")) +1
             if(gainXP){gainXP(xp, name.join(" "))}
             if(!i){break}
@@ -1593,21 +1604,99 @@
 
   if(path==="/hotel"){
     let bye = document.querySelector("#multiGoodbye")
-    bye.insertAdjacentHTML("beforebegin", `<button id="multiUnwishlist" class="btn font-14 btn-block rounded-s text-center mb-2">Unwishlist</button>`)
-    bye.parentElement.parentElement.parentElement.style.marginBottom = "100px"
-    document.querySelector("#multiUnwishlist").addEventListener("click", ()=>{
-      let wishedCards = GM_getValue("wishedCards") || []
-      let ids = Array.from(document.querySelectorAll(".hotelListing.animu-selected a")).map(e=>e.dataset.cardid).filter(id=>wishedCards.includes(id))
-      ids = ids.filter((id,i)=>!ids.slice(0, i).includes(id))
-      if(!ids.length){return showErrorToast("None of the cards you selected are in your wishlist!")}
-      areYouSure(`Do you want to remove ${ids.length} cards from your wishlist?`, async ()=>{
-        let menu = document.querySelector("#areYouSure")
-        await unwishlistManyCards(ids, txt=>{
-          menu.querySelector(".areYouSureText").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
-        }, wishedCards)
-        menu.querySelector(".close-menu").click()
-      })
+    bye.parentElement.innerHTML = `<select class="form-control" id="multi_select">
+      <option value="label" disabled default>Action</option>
+      <option value="selectAll">Select all</option>
+      <option value="unselectAll">Unselect all</option>
+      <option value="selectAbove">Select all above selection</option>
+      <option value="selectBelow">Select all below selection</option>
+      <option value="unselectDuplicateName">Unselect duplicates by name</option>
+      <option value="unselectFirstName">Unselect first duplicate by name</option>
+      <option value="sep" disabled>-</option>
+      <option value="goodbye">Goodbye</option>
+      <option value="unwishlist">Unwishlist</option>
+    </select>`
+    let select = document.querySelector("#multi_select")
+    swiperNext.hotelMultiActions = {
+      selectAll: ()=>{
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          e.parentElement.classList.add("animu-selected")
+          multiSelection[e.dataset.amid] = 1
+        }
+      },
+      unselectAll: ()=>{
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          e.parentElement.classList.remove("animu-selected")
+          delete multiSelection[e.dataset.amid]
+        }
+      },
+      selectAbove: ()=>{
+        let stop
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          if(stop){continue}
+          if(multiSelection[e.dataset.amid]){stop = true; continue}
+          e.parentElement.classList.add("animu-selected")
+          multiSelection[e.dataset.amid] = 1
+        }
+      },
+      selectBelow: ()=>{
+        let begin
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          if(!begin){
+            if(!multiSelection[e.dataset.amid]){continue}
+            begin = true
+          }
+          e.parentElement.classList.add("animu-selected")
+          multiSelection[e.dataset.amid] = 1
+        }
+      },
+      unselectDuplicateName: ()=>{
+        let names = new Map()
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          if(names.has(e.dataset.name)){
+            e.parentElement.classList.remove("animu-selected")
+            delete multiSelection[e.dataset.amid]
+          continue}
+          names.set(e.dataset.name, true)
+        }
+      },
+      unselectFirstName: ()=>{
+        let names = new Map()
+        for(let e of document.querySelectorAll(".actionShowHotelWaifu")){
+          if(names.has(e.dataset.name)){continue}
+          e.parentElement.classList.remove("animu-selected")
+          delete multiSelection[e.dataset.amid]
+          names.set(e.dataset.name, true)
+        }
+      },
+
+      goodbye: ()=>{
+        bye.click()
+      },
+      unwishlist: ()=>{
+        let wishedCards = GM_getValue("wishedCards") || []
+        let ids = Array.from(document.querySelectorAll(".hotelListing.animu-selected a")).map(e=>e.dataset.cardid).filter(id=>wishedCards.includes(id))
+        ids = ids.filter((id,i)=>!ids.slice(0, i).includes(id))
+        if(!ids.length){return showErrorToast("None of the cards you selected are in your wishlist!")}
+        areYouSure(`Do you want to remove ${ids.length} cards from your wishlist?`, async ()=>{
+          let menu = document.querySelector("#areYouSure")
+          await unwishlistManyCards(ids, txt=>{
+            menu.querySelector(".areYouSureText").innerHTML = `Removing cards from wishlist (${txt})... <i>Close this page if you want to cancel.</i>`
+          }, wishedCards)
+          menu.querySelector(".close-menu").click()
+        })
+      },
+    }
+    select.addEventListener("change", ev=>{
+      let f = swiperNext.hotelMultiActions[ev.target.value]
+      if(!f){return showErrorToast("I don't know what to do!")}
+      ev.target.value = "label"
+      f()
+      // Update selection count
+      const count = Object.keys(multiSelection).length;
+      document.querySelector('.currentSelectionCount').innerText = count + (count === 1 ? " Animu" : " Animus");
     })
+    select.value = "label"
 
     document.querySelector(`#hoteledWaifuMenu .btnOpenStats`).insertAdjacentHTML("beforebegin", 
     `<a href="#" class="btn font-14 shadow-l rounded-s font-600 btn-secondary text-center mb-2" data-action="feed" style="width: 50%; display: inline-block">
@@ -1798,10 +1887,13 @@
       if(loadingBuilding){
         let start = document.querySelector("#startMission")
         if(start){
-          start.parentElement.insertAdjacentHTML("afterend",
-            `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-random"></i> Reroll</button>`
-          )
-          document.querySelector("#rerollMissionBtn").addEventListener("click", reroll)
+          let id = document.querySelector(`#startMission input[name="mission_id"]`).value
+          if(!id.startsWith("chop_wood")){
+            start.parentElement.insertAdjacentHTML("afterend",
+              `<button class="btn btn-lg btn-block btn-round mt-md-2" style="background-color: #33c; margin-top: 10px" id="rerollMissionBtn"><i class="fas fa-random"></i> Reroll</button>`
+            )
+            document.querySelector("#rerollMissionBtn").addEventListener("click", reroll)
+          }
           if(settings.recordWaifuvilleMissions){
             let missions = GM_getValue("WaifuvilleMissions", [])
             let data = {
@@ -1815,7 +1907,7 @@
                 if(fa==="fa-gg"){return ["GG", +r.innerText.trim()]}
                 return ["item", r.innerText.trim()]
               }),
-              id: document.querySelector(`#startMission input[name="mission_id"]`).value,
+              id,
             }
             let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
             if(index===-1){

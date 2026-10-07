@@ -579,14 +579,8 @@
       )
       box = document.querySelector("#swapContainer #swapReloadOption")
     }
-    document.querySelector("#swapContainer").addEventListener("click", ev=>{
-      if(!ev.target.classList.contains("actionSetSlot")){return}
-      ev.stopPropagation()
-      ev.preventDefault()
-      const waifu = selectedAnniemay;
-      const newSlot = +ev.target.dataset.slot;
-
-      fetch("/am/" + selectedAnniemay, {
+    let swap = async (am, newSlot)=>{
+      let r = await fetch("/am/" + am.id, {
         method: "POST",
         body: JSON.stringify({
           '_token': token,
@@ -597,37 +591,50 @@
           "content-type": "application/json",
           accept: "application/json",
         },
-      }).then(async r=>{
-        let body = await r.json()
-        if(body.message){
-          console.warn(body)
-          return showErrorToast(body.message)
+      })
+      let body = await r.json()
+      if(body.message){
+        console.warn(body)
+        return showErrorToast(body.message)
+      }
+      let levelingUp = GM_getValue("levelingUpAnimus", [])
+      if(!levelingUp.find(a=>a.id==am.id) && newSlot<6){ // Not just swapping 2 Animus in the party
+        let index = levelingUp.findIndex(a=>a.slot===newSlot)
+        if(index>=0){levelingUp.splice(index, 1)}
+        if(am?.Level < 120 && "stats" in am && newSlot < 6){
+          levelingUp.push({
+            name: am.name,
+            id: am.id,
+            cardid: am.cardID,
+            xp: am.absXP,
+            slot: newSlot,
+          })
         }
-        let levelingUp = GM_getValue("levelingUpAnimus", [])
-        if(!levelingUp.find(a=>a.id==selectedAnniemay) && newSlot<6){ // Not just swapping 2 Animus in the party
-          let index = levelingUp.findIndex(a=>a.slot===newSlot)
-          if(index>=0){levelingUp.splice(index, 1)}
-          if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.id == selectedAnniemay && newSlot < 6){
-            levelingUp.push({
-              name: selectedAnimu.name,
-              id: selectedAnniemay,
-              cardid: selectedAnimu.cardID,
-              xp: selectedAnimu.absXP,
-              slot: newSlot,
-            })
-          }
-          GM_setValue("levelingUpAnimus", levelingUp)
-        }
-        if(!box || box.checked){
-          document.location.reload()
-        }else{
-          showSuccessToast("Edited team members.")
-        }
-      }).catch(e=>{
+        GM_setValue("levelingUpAnimus", levelingUp)
+      }
+      // Update level up slots ?
+      if(!box || box.checked){
+        document.location.reload()
+      }else{
+        showSuccessToast("Edited team members.")
+      }
+    }
+    document.querySelector("#swapContainer").addEventListener("click", ev=>{
+      if(!ev.target.classList.contains("actionSetSlot")){return}
+      ev.stopPropagation()
+      ev.preventDefault()
+
+      swap(selectedAnimu || {id: selectedAnniemay}, +ev.target.dataset.slot).catch(e=>{
         console.error(e)
         $('#toast-4').toast('show');
       })
     }, {capture: true})
+
+    swiperNext.levelUpAnimu = async (a=selectedAnimu, slot)=>{
+      let am = a.stats ? a : {...(await (await fetch("/json/am/"+a)).json()), id: a}
+      let formation = GM_getValue("formations").find(f=>f.selected)
+      swap(am, slot>=0 && formation?.levelUpSlots?.[slot] || 0)
+    }
   }
 
   if(settings.cardInfoPage){

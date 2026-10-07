@@ -251,7 +251,9 @@
           if(holder[k]?.id == target.dataset.id){delete holder[k]}
         }
         GM_setValue("bestItems", best)
-        fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
+        if(selectedAnniemay===am && selectedAnimu?.cardID){
+          fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
+        }
       return}
       if(r.message === "yo wait.."){
         return showErrorToast("Rate-limits!")

@@ -104,7 +104,7 @@
   
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
-    let rerolled = false; let noReroll = false
+    let rerolled = false
     let alternatives = [
       ["meal", 2, "snack", "2 snacks"],
       ["present10000", 2, "present5000", "2 big presents"],
@@ -158,7 +158,6 @@
       p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{
-      if(noReroll){return}
       if(args[0]){rerolled = true}
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
@@ -173,22 +172,13 @@
       return originalReroll(...args)
     }
 
-    navigator.log = []
-    let log = txt=>{navigator.log.push(txt); console.log(txt)}
     swiperNext.prepareFeed = async (am=selectedAnimu, nature)=>{
-      log("I'm swiperNext.prepareFeed and I've been called!")
-      log("I received the Animu "+am?.id+" "+(am?.Name || am?.name))
-      log(nature ? "I received the nature "+nature : "I didn't receive nature")
       let best = GM_getValue("bestItems")
-      log(best ? "Best items exists." : "Best items missing.")
       if(!best){return}
       let card
       if(!["Max Level!", "Lv. 120", "Lv.120"].includes(am?.xpText)){
-        log("Not maximum level... Card ID: "+am?.cardID)
         card = nature ? { Nature: nature } : await fetchCardData(am.cardID)
-        log("I've obtained card! "+JSON.stringify(card))
       }
-      log("Finishing...")
       setRerollItems({ best, card })
     }
 
@@ -217,14 +207,16 @@
       if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
       if(resetLevelUpDialogTimeout){resetLevelUpDialogTimeout()}
 
-      if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
+      if(typeof(am)==="string" || typeof(am)==="number"){am = {id: am}}
+
+      if(selectedAnimu?.id == am.id && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
         clicked = false
         return showErrorToast("The Animu doesn't need items!")
       }
       if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${target.dataset.id}"]`)){
         return clickNext()
       }
-      let r = await fetch("/am/" + am, {
+      let r = await fetch("/am/" + am.id, {
         method: "POST", 
         body: JSON.stringify({
           "_token": token,
@@ -251,8 +243,12 @@
           if(holder[k]?.id == target.dataset.id){delete holder[k]}
         }
         GM_setValue("bestItems", best)
-        if(selectedAnniemay===am && selectedAnimu?.cardID){
-          fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
+        if(am.Nature){
+          setRerollItems({ best, card: am })
+        }else if(selectedAnimu?.id==am.id && am?.cardID){
+          let card = await fetchCardData(am.cardID)
+          setRerollItems({ best, card })
+          am.Nature = card.Nature
         }
       return}
       if(r.message === "yo wait.."){
@@ -261,7 +257,7 @@
       if(r.message && !r.currentXP){
         return showErrorToast(r.message)
       }
-      if(selectedAnimu?.id == am){
+      if(selectedAnimu?.id == am.id){
         selectedAnimu.absXP = r.currentXP
         selectedAnimu.relHP = r.relativeHP
         selectedAnimu.relXP = Math.min(r.relativeXP, 100)
@@ -272,11 +268,8 @@
           showLevelUpDialog(selectedAnimu.name, r)
           r.levelsChanged = 0
         }
-      }else{
-        noReroll = true
       }
       giveItemHandler(r)
-      noReroll = false
       return r
     }
     document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
@@ -295,7 +288,7 @@
         }
       return}
       
-      return clickItem(selectedAnniemay, target)
+      return clickItem(selectedAnimu, target)
     }, {capture: true})
   }
   let originalGive = giveItemHandler

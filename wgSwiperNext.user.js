@@ -172,13 +172,23 @@
       if(settings.manualRerollOnly && !args[0] && document.querySelector("#waifuMenu .giftableItem")){return}
       return originalReroll(...args)
     }
+
+    navigator.log = []
+    let log = txt=>{navigator.log.push(txt); console.log(txt)}
     swiperNext.prepareFeed = async (am=selectedAnimu, nature)=>{
+      log("I'm swiperNext.prepareFeed and I've been called!")
+      log("I received the Animu "+am?.id+" "+(am?.Name || am?.name))
+      log(nature ? "I received the nature "+nature : "I didn't receive nature")
       let best = GM_getValue("bestItems")
+      log(best ? "Best items exists." : "Best items missing.")
       if(!best){return}
       let card
       if(!["Max Level!", "Lv. 120", "Lv.120"].includes(am?.xpText)){
+        log("Not maximum level... Card ID: "+am?.cardID)
         card = nature ? { Nature: nature } : await fetchCardData(am.cardID)
+        log("I've obtained card! "+JSON.stringify(card))
       }
+      log("Finishing...")
       setRerollItems({ best, card })
     }
 

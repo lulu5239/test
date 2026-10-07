@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-05
+// @version      2026-10-06
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -154,7 +154,7 @@
           + (item.item?.name || item.alternative) + '</p></div>';
       }
       
-      $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
+      for(let e of document.querySelectorAll('#waifuMenu :is(.giftableItem, .removeThisThing)')){e.remove()};
       p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{
@@ -179,6 +179,7 @@
         card = nature ? { Nature: nature } : await fetchCardData(am.cardID)
       }
       setRerollItems({ best, card })
+      // await new Promise(ok=>setTimeout(ok, 1))
     }
 
     let delayedClicks = []; let clicked = false

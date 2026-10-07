@@ -353,7 +353,7 @@
               stat.specialMax = Math.min(stat.specialMax + increase, 10)
             }
             if(total > 60){
-              stat.specialMin = Math.max(stat.specialMin, total - 60)
+              stat.specialMin = Math.max(stat.specialMin, Math.min(total - 60, 10))
             }
           }
           stat.min = round(stat.min + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMin))

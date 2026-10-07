@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-06
+// @version      2026-10-07
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -101,7 +101,8 @@
       resetLevelUpDialogTimeout()
     }
   }
-  
+
+  navigator.log = []
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     let rerolled = false
@@ -158,13 +159,16 @@
       p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{
+      navigator.log.push("rerolling")
       if(args[0]){rerolled = true}
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
-        if(best){
+        if(best && selectedAnimu?.xpText){
+          navigator.log.push("show base items")
           setRerollItems({ best })
-          if(!["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)){
+          if(selectedAnimu.cardID && !["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)){
             fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
+            navigator.log.push("showing better items")
           }
         return}
       }
@@ -180,6 +184,8 @@
         card = nature ? { Nature: nature } : await fetchCardData(am.cardID)
       }
       setRerollItems({ best, card })
+      selectedAnimu = card || {}
+      navigator.log.push("prepared feed", am)
     }
 
     let delayedClicks = []; let clicked = false
@@ -269,6 +275,7 @@
           r.levelsChanged = 0
         }
       }
+      navigator.log.push("giveItemHandler")
       giveItemHandler(r)
       return r
     }

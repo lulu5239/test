@@ -346,7 +346,7 @@
       let precise = stats.find(s=>s.min%1>0)
       for(let level = shownStats.Level + 1; level <= maximumLevel; level++){
         for(let stat of stats){
-          if(level%10 === 6 && stat.specialMax < 10){
+          if(level%10 === 6){
             let total = (16+2*shownStats.Rarity)*(10+Math.floor(level/10))/10
             if(stat.specialMax < 10){
               let increase = Math.floor(total - (stat.otherSpecials + stat.specialMax))

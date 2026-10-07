@@ -180,7 +180,6 @@
         card = nature ? { Nature: nature } : await fetchCardData(am.cardID)
       }
       setRerollItems({ best, card })
-      await new Promise(ok=>setTimeout(ok, 1))
     }
 
     let delayedClicks = []; let clicked = false
@@ -348,9 +347,9 @@
       for(let level = shownStats.Level + 1; level <= maximumLevel; level++){
         for(let stat of stats){
           if(level%10 === 6 && stat.specialMax < 10){
-            let total = (16+2*shownStats.Rarity)*(10+Math.floor(level/10))/10)
+            let total = (16+2*shownStats.Rarity)*(10+Math.floor(level/10))/10
             if(stat.specialMax < 10){
-              let increase = Math.floor(total - (stat.otherSpecials + stat.specialMax)
+              let increase = Math.floor(total - (stat.otherSpecials + stat.specialMax))
               stat.specialMax = Math.min(stat.specialMax + increase, 10)
             }
             if(total > 60){

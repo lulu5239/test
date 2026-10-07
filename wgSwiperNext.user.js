@@ -632,7 +632,7 @@
 
     swiperNext.levelUpAnimu = async (a=selectedAnimu, slot=0)=>{
       let am = a.stats ? a : {...(await (await fetch("/json/am/"+a)).json()), id: a}
-      let formation = GM_getValue("formations").find(f=>f.selected)
+      let formation = Object.values(GM_getValue("formations", {})).find(f=>f.selected)
       swap(am, slot>=0 && formation?.levelUpSlots?.[slot] || 0, true)
     }
   }

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-05
+// @version      2026-10-06
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -104,7 +104,7 @@
   
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
-    let rerolled = false
+    let rerolled = false; let noReroll = false
     let alternatives = [
       ["meal", 2, "snack", "2 snacks"],
       ["present10000", 2, "present5000", "2 big presents"],
@@ -154,10 +154,11 @@
           + (item.item?.name || item.alternative) + '</p></div>';
       }
       
-      $('#waifuMenu .giftableItem,#waifuMenu .removeThisThing').remove();
+      for(let e of document.querySelectorAll('#waifuMenu :is(.giftableItem, .removeThisThing)')){e.remove()};
       p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{
+      if(noReroll){return}
       if(args[0]){rerolled = true}
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
@@ -259,8 +260,11 @@
           showLevelUpDialog(selectedAnimu.name, r)
           r.levelsChanged = 0
         }
+      }else{
+        noReroll = true
       }
       giveItemHandler(r)
+      noReroll = false
       return r
     }
     document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
@@ -342,9 +346,15 @@
       let precise = stats.find(s=>s.min%1>0)
       for(let level = shownStats.Level + 1; level <= maximumLevel; level++){
         for(let stat of stats){
-          if(level%10 === 6 && stat.specialMax < 10){
-            let increase = Math.floor((16+2*shownStats.Rarity)*(10+Math.floor(level/10))/10) - (stat.otherSpecials + stat.specialMax)
-            stat.specialMax = Math.min(stat.specialMax + increase, 10)
+          if(level%10 === 6){
+            let total = (16+2*shownStats.Rarity)*(10+Math.floor(level/10))/10
+            if(stat.specialMax < 10){
+              let increase = Math.floor(total - (stat.otherSpecials + stat.specialMax))
+              stat.specialMax = Math.min(stat.specialMax + increase, 10)
+            }
+            if(total > 60){
+              stat.specialMin = Math.max(stat.specialMin, Math.min(total - 60, 10))
+            }
           }
           stat.min = round(stat.min + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMin))
           stat.max = round(stat.max + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMax))
@@ -569,14 +579,8 @@
       )
       box = document.querySelector("#swapContainer #swapReloadOption")
     }
-    document.querySelector("#swapContainer").addEventListener("click", ev=>{
-      if(!ev.target.classList.contains("actionSetSlot")){return}
-      ev.stopPropagation()
-      ev.preventDefault()
-      const waifu = selectedAnniemay;
-      const newSlot = +ev.target.dataset.slot;
-
-      fetch("/am/" + selectedAnniemay, {
+    let swap = async (am, newSlot, noReload)=>{
+      let r = await fetch("/am/" + am.id, {
         method: "POST",
         body: JSON.stringify({
           '_token': token,
@@ -587,37 +591,50 @@
           "content-type": "application/json",
           accept: "application/json",
         },
-      }).then(async r=>{
-        let body = await r.json()
-        if(body.message){
-          console.warn(body)
-          return showErrorToast(body.message)
+      })
+      let body = await r.json()
+      if(body.message){
+        console.warn(body)
+        return showErrorToast(body.message)
+      }
+      let levelingUp = GM_getValue("levelingUpAnimus", [])
+      if(!levelingUp.find(a=>a.id==am.id) && newSlot<6){ // Not just swapping 2 Animus in the party
+        let index = levelingUp.findIndex(a=>a.slot===newSlot)
+        if(index>=0){levelingUp.splice(index, 1)}
+        if(am?.Level < 120 && "stats" in am && newSlot < 6){
+          levelingUp.push({
+            name: am.name,
+            id: am.id,
+            cardid: am.cardID,
+            xp: am.absXP,
+            slot: newSlot,
+          })
         }
-        let levelingUp = GM_getValue("levelingUpAnimus", [])
-        if(!levelingUp.find(a=>a.id==selectedAnniemay) && newSlot<6){ // Not just swapping 2 Animus in the party
-          let index = levelingUp.findIndex(a=>a.slot===newSlot)
-          if(index>=0){levelingUp.splice(index, 1)}
-          if(selectedAnimu?.Level < 120 && "stats" in selectedAnimu && selectedAnimu.id == selectedAnniemay && newSlot < 6){
-            levelingUp.push({
-              name: selectedAnimu.name,
-              id: selectedAnniemay,
-              cardid: selectedAnimu.cardID,
-              xp: selectedAnimu.absXP,
-              slot: newSlot,
-            })
-          }
-          GM_setValue("levelingUpAnimus", levelingUp)
-        }
-        if(!box || box.checked){
-          document.location.reload()
-        }else{
-          showSuccessToast("Edited team members.")
-        }
-      }).catch(e=>{
+        GM_setValue("levelingUpAnimus", levelingUp)
+      }
+      // Update level up slots ?
+      if(!noReload && (!box || box.checked)){
+        document.location.reload()
+      }else{
+        showSuccessToast("Edited team members.")
+      }
+    }
+    document.querySelector("#swapContainer").addEventListener("click", ev=>{
+      if(!ev.target.classList.contains("actionSetSlot")){return}
+      ev.stopPropagation()
+      ev.preventDefault()
+
+      swap(selectedAnimu || {id: selectedAnniemay}, +ev.target.dataset.slot).catch(e=>{
         console.error(e)
         $('#toast-4').toast('show');
       })
     }, {capture: true})
+
+    swiperNext.levelUpAnimu = async (a=selectedAnimu, slot=0)=>{
+      let am = a.stats ? a : {...(await (await fetch("/json/am/"+a)).json()), id: a}
+      let formation = Object.values(GM_getValue("formations", {})).find(f=>f.selected)
+      swap(am, slot>=0 && formation?.levelUpSlots?.[slot] || 0, true)
+    }
   }
 
   if(settings.cardInfoPage){

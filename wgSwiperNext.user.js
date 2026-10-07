@@ -104,7 +104,7 @@
   
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
-    let rerolled = false
+    let rerolled = false; let noReroll = false
     let alternatives = [
       ["meal", 2, "snack", "2 snacks"],
       ["present10000", 2, "present5000", "2 big presents"],
@@ -158,6 +158,7 @@
       p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{
+      if(noReroll){return}
       if(args[0]){rerolled = true}
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
@@ -260,8 +261,11 @@
           showLevelUpDialog(selectedAnimu.name, r)
           r.levelsChanged = 0
         }
+      }else{
+        noReroll = true
       }
       giveItemHandler(r)
+      noReroll = false
       return r
     }
     document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
@@ -344,8 +348,14 @@
       for(let level = shownStats.Level + 1; level <= maximumLevel; level++){
         for(let stat of stats){
           if(level%10 === 6 && stat.specialMax < 10){
-            let increase = Math.floor((16+2*shownStats.Rarity)*(10+Math.floor(level/10))/10) - (stat.otherSpecials + stat.specialMax)
-            stat.specialMax = Math.min(stat.specialMax + increase, 10)
+            let total = (16+2*shownStats.Rarity)*(10+Math.floor(level/10))/10)
+            if(stat.specialMax < 10){
+              let increase = Math.floor(total - (stat.otherSpecials + stat.specialMax)
+              stat.specialMax = Math.min(stat.specialMax + increase, 10)
+            }
+            if(total > 60){
+              stat.specialMin = Math.max(stat.specialMin, total - 60)
+            }
           }
           stat.min = round(stat.min + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMin))
           stat.max = round(stat.max + stat.multiplier * stat.natureMultiplier * (1 + 0.2 * stat.specialMax))

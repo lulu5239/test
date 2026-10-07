@@ -179,7 +179,7 @@
         card = nature ? { Nature: nature } : await fetchCardData(am.cardID)
       }
       setRerollItems({ best, card })
-      // await new Promise(ok=>setTimeout(ok, 1))
+      await new Promise(ok=>setTimeout(ok, 1))
     }
 
     let delayedClicks = []; let clicked = false

@@ -158,7 +158,6 @@
       p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{
-      navigator.log.push("rerolling")
       if(args[0]){rerolled = true}
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")

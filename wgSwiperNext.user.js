@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-07
+// @version      2026-10-08
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -102,7 +102,6 @@
     }
   }
 
-  navigator.log = []
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
     let rerolled = false
@@ -164,11 +163,9 @@
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
         if(best && selectedAnimu?.xpText){
-          navigator.log.push("show base items")
           setRerollItems({ best })
           if(selectedAnimu.cardID && !["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)){
             fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
-            navigator.log.push("showing better items")
           }
         return}
       }
@@ -185,7 +182,6 @@
       }
       setRerollItems({ best, card })
       selectedAnimu = card || {}
-      navigator.log.push("prepared feed", am)
     }
 
     let delayedClicks = []; let clicked = false
@@ -217,6 +213,7 @@
 
       if(selectedAnimu?.id == am.id && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
         clicked = false
+        console.warn("Animu doesn't need items anymore!")
         return showErrorToast("The Animu doesn't need items!")
       }
       if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${target.dataset.id}"]`)){
@@ -234,6 +231,7 @@
           accept: "application/json",
         },
       }).catch(e=>{
+        console.warn("Feed status code:", e.response?.status)
         showErrorToast(e.response?.status===429 ? "Rate-limits!" : "Couldn't use item.")
         clicked = false
         throw e
@@ -241,6 +239,7 @@
       r = await r.json().catch(console.warn) || {message: "Couldn't parse JSON..."}
       setTimeout(clickNext, Math.max(0, 500 - (+new Date() - now)))
       if(r.message === "Insufficient items available"){
+        console.warn(r.message)
         showErrorToast("Ran out of that item!")
         ratelimited = new Promise(ok=>setTimeout(()=>{ratelimited = undefined; ok()}, 5000))
         let best = GM_getValue("bestItems")
@@ -258,9 +257,11 @@
         }
       return}
       if(r.message === "yo wait.."){
+        console.warn(r.message)
         return showErrorToast("Rate-limits!")
       }
       if(r.message && !r.currentXP){
+        console.warn(r.message)
         return showErrorToast(r.message)
       }
       if(selectedAnimu?.id == am.id){
@@ -275,7 +276,6 @@
           r.levelsChanged = 0
         }
       }
-      navigator.log.push("giveItemHandler")
       giveItemHandler(r)
       return r
     }

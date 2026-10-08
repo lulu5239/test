@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-06
+// @version      2026-10-08
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -25,7 +25,7 @@
   }
 
   if(typeof(startCountdown)==="undefined"){return}
-  swiperNext = window.swiperNext = {}
+  window.swiperNext = navigator.swiperNext = swiperNext = {}
 
   var colors = {
     selected: "7fa",
@@ -101,10 +101,10 @@
       resetLevelUpDialogTimeout()
     }
   }
-  
+
   if((settings.manualRerollOnly || settings.defaultRerollSet) && typeof(ReRollGifts)!=="undefined"){
     let originalReroll = ReRollGifts
-    let rerolled = false; let noReroll = false
+    let rerolled = false
     let alternatives = [
       ["meal", 2, "snack", "2 snacks"],
       ["present10000", 2, "present5000", "2 big presents"],
@@ -158,13 +158,12 @@
       p.insertAdjacentHTML("afterbegin", htmlBag)
     }
     ReRollGifts = (...args)=>{
-      if(noReroll){return}
       if(args[0]){rerolled = true}
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
-        if(best){
+        if(best && selectedAnimu?.xpText){
           setRerollItems({ best })
-          if(!["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)){
+          if(selectedAnimu.cardID && !["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)){
             fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
           }
         return}
@@ -172,6 +171,7 @@
       if(settings.manualRerollOnly && !args[0] && document.querySelector("#waifuMenu .giftableItem")){return}
       return originalReroll(...args)
     }
+
     swiperNext.prepareFeed = async (am=selectedAnimu, nature)=>{
       let best = GM_getValue("bestItems")
       if(!best){return}
@@ -180,6 +180,7 @@
         card = nature ? { Nature: nature } : await fetchCardData(am.cardID)
       }
       setRerollItems({ best, card })
+      selectedAnimu = card || {}
     }
 
     let delayedClicks = []; let clicked = false
@@ -207,14 +208,17 @@
       if(!delayedClicks.length){hpBar.style.backgroundColor = "#da4453"}
       if(resetLevelUpDialogTimeout){resetLevelUpDialogTimeout()}
 
-      if(selectedAnimu?.id == selectedAnniemay && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
+      if(typeof(am)==="string" || typeof(am)==="number"){am = {id: am}}
+
+      if(selectedAnimu?.id == am.id && selectedAnimu.hpText.split(" ", 1)[0].split("/").reduce((p, n)=>(!p ? n : n===p), null) && selectedAnimu.xpText==="Max Level!" && !settings.allowWastingItems){
         clicked = false
+        console.warn("Animu doesn't need items anymore!")
         return showErrorToast("The Animu doesn't need items!")
       }
       if(!document.querySelector(`#waifuFeed .giftableItem a[data-id="${target.dataset.id}"]`)){
         return clickNext()
       }
-      let r = await fetch("/am/" + am, {
+      let r = await fetch("/am/" + am.id, {
         method: "POST", 
         body: JSON.stringify({
           "_token": token,
@@ -226,13 +230,16 @@
           accept: "application/json",
         },
       }).catch(e=>{
+        console.warn("Feed status code:", e.response?.status)
         showErrorToast(e.response?.status===429 ? "Rate-limits!" : "Couldn't use item.")
         clicked = false
         throw e
       })
+      if(r && swiperNext.handleHeaders){swiperNext.handleHeaders(r.headers)}
       r = await r.json().catch(console.warn) || {message: "Couldn't parse JSON..."}
       setTimeout(clickNext, Math.max(0, 500 - (+new Date() - now)))
       if(r.message === "Insufficient items available"){
+        console.warn(r.message)
         showErrorToast("Ran out of that item!")
         ratelimited = new Promise(ok=>setTimeout(()=>{ratelimited = undefined; ok()}, 5000))
         let best = GM_getValue("bestItems")
@@ -241,15 +248,23 @@
           if(holder[k]?.id == target.dataset.id){delete holder[k]}
         }
         GM_setValue("bestItems", best)
-        fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))
+        if(am.Nature){
+          setRerollItems({ best, card: am })
+        }else if(selectedAnimu?.id==am.id && am?.cardID){
+          let card = await fetchCardData(am.cardID)
+          setRerollItems({ best, card })
+          am.Nature = card.Nature
+        }
       return}
       if(r.message === "yo wait.."){
+        console.warn(r.message)
         return showErrorToast("Rate-limits!")
       }
       if(r.message && !r.currentXP){
+        console.warn(r.message)
         return showErrorToast(r.message)
       }
-      if(selectedAnimu?.id == am){
+      if(selectedAnimu?.id == am.id){
         selectedAnimu.absXP = r.currentXP
         selectedAnimu.relHP = r.relativeHP
         selectedAnimu.relXP = Math.min(r.relativeXP, 100)
@@ -260,11 +275,8 @@
           showLevelUpDialog(selectedAnimu.name, r)
           r.levelsChanged = 0
         }
-      }else{
-        noReroll = true
       }
       giveItemHandler(r)
-      noReroll = false
       return r
     }
     document.querySelector("#waifuFeed").addEventListener("click", async ev=>{
@@ -283,7 +295,7 @@
         }
       return}
       
-      return clickItem(selectedAnniemay, target)
+      return clickItem(selectedAnimu, target)
     }, {capture: true})
   }
   let originalGive = giveItemHandler

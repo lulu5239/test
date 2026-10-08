@@ -235,6 +235,7 @@
         clicked = false
         throw e
       })
+      if(r && swiperNext.handleHeaders){swiperNext.handleHeaders(r.headers)}
       r = await r.json().catch(console.warn) || {message: "Couldn't parse JSON..."}
       setTimeout(clickNext, Math.max(0, 500 - (+new Date() - now)))
       if(r.message === "Insufficient items available"){

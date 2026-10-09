@@ -636,7 +636,7 @@
       ev.stopPropagation()
       ev.preventDefault()
 
-      swap(selectedAnimu || {id: selectedAnniemay}, +ev.target.dataset.slot).catch(e=>{
+      swap(selectedAnimu?.id===selectedAnniemay ? selectedAnimu : {id: selectedAnniemay}, +ev.target.dataset.slot).catch(e=>{
         console.error(e)
         $('#toast-4').toast('show');
       })

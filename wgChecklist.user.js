@@ -219,7 +219,7 @@
       }
 
       isBookmarked.Animus = [...hotelList.children].map(e=>({
-        id: e.querySelector(".actionShowHotelWaifu").dataset.id,
+        id: e.querySelector(".actionShowHotelWaifu")?.dataset.id,
       })).filter(am=>am.id)
       GM_setValue("bookmarks", bookmarks)
     }

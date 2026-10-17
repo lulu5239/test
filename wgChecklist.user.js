@@ -153,7 +153,7 @@
     let hasSettings
     list.addEventListener("contextmenu", ev=>{
       let e = ev.target.closest(".nav-link")
-      if(e===bookmarkNew || e===hasSettings){return}
+      if(e===buttonNew || e===hasSettings){return}
       ev.preventDefault()
       hasSettings = e
       e.after(settings)

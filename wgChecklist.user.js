@@ -166,7 +166,7 @@
       addAnimu: ()=>{
         if(typeof(swiperNext)==="undefined"){return showErrorToast("Requires wgSwiperNext")}
         let b = bookmarks.find(b=>b.url === hasSettings.getAttribute("href"))
-        if(!b.Animus){return showErrorToast("Visit that page so I can view the Animus!")}
+        if(!b.Animus?.[0]){return showErrorToast("Visit that page so I can view the Animus!")}
         let am = b.Animus.splice(0, 1)[0]
         GM_setValue("bookmarks", bookmarks)
         swiperNext.levelUpAnimu(am.id)

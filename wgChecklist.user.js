@@ -657,9 +657,8 @@
     }
     if(last){
       last.insertAdjacentHTML("afterend",
-        `<div id="lastViewedLine">
-          <hr>
-          <h3>New raffles since last time:</h3>
+        `<div id="lastViewedLine" style="padding-top: 10px">
+          <h3 style="border-top: solid #ff0 2px; padding: 20px">New raffles since last time:</h3>
         </div>`
       )
       // Add button to scroll to there ?
@@ -675,6 +674,7 @@
       ev.target.disabled = true
       let e = document.querySelector("#lastViewedLine")
       if(e){e.remove()}
+      ev.target.classList.remove("bg-blue-dark")
 
       addCooldown({
         type: "viewRaffles",

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-20
+// @version      2026-10-17
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -45,7 +45,7 @@
           authorization: LubloxKey,
         },
         body: JSON.stringify(e),
-      }).catch(e=>showErrorToast(e.body))
+      }).catch(e=>e.response?.body && showErrorToast(e.response.body))
     }
   }
 
@@ -84,16 +84,29 @@
           <span class="menu-title">Bookmark</span>
           <i class="fa fa-angle-right"${isOldStyle ? ' style="float: right;"' : ''}></i>
         </a>
+        <div id="bookmark-settings" style="display: flex; gap: 5px; padding: 5px">
+          <button class="btn" style="width: 20px"><i class="fa fa-times"></i></button>
+          <select style="flex-grow: 99">
+            <option value="" selected disabled>Edit this bookmark...</option>
+            <optgroup label="Any bookmark">
+              <option value="rename">Rename</option>
+              <option value="url">Set to this URL</option>
+              <option value="delete">Delete</option>
+            </optgroup>
+          </select>
+        </div>
       </div>`
     )
     let list = document.querySelector("#bookmarks-list")
     let bookmarks = GM_getValue("bookmarks", [])
     let buttonNew = list.children[0]
     let buttonModel = buttonNew.cloneNode(true)
-    for(let bookmark of bookmarks){
+    for(let i in bookmarks){
+      let bookmark = bookmarks[i]
       let e = buttonModel.cloneNode(true)
       e.children[1].innerText = bookmark.name
       e.href = bookmark.url
+      e.dataset.n = i
       list.append(e)
     }
     list.append(buttonNew)
@@ -105,6 +118,13 @@
       buttonNew.children[0].style.background = isBookmarked ? "linear-gradient(20deg, #a22, #937)" : "linear-gradient(20deg, #2a2, #397)"
     }
     updateButtonNew()
+    let reN = ()=>{
+      let i = 0
+      for(let e of list.children){
+        if(!e.classList.has("nav-link")){continue}
+        e.dataset.n = i
+      i++}
+    }
     buttonNew.addEventListener("click", ev=>{
       if(isBookmarked){
         let e = list.querySelector(`[href="${here}"]`)
@@ -125,6 +145,24 @@
       }
       GM_setValue("bookmarks", bookmarks)
       updateButtonNew()
+    })
+    
+    let settings = list.querySelector("#bookmark-settings")
+    settings.remove()
+    let hasSettings
+    list.addEventListener("contextmenu", ev=>{
+      let e = ev.target.closest(".nav-link")
+      if(e===bookmarkNew || e===hasSettings){return}
+      ev.preventDefault()
+      hasSettings = e
+      list.append(settings) // Put at correct place
+    })
+    settings.querySelector("button").addEventListener(()=>{
+      hasSettings = undefined
+      settings.remove()
+    })
+    settings.querySelector("select").addEventListener("change", ev=>{
+      ev.target.value = ""
     })
   }
 

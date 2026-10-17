@@ -642,7 +642,7 @@
   }
 
   if(path==="/raffles"){
-    document.querySelector(".content > .page-content").insertAdjacentHTML("afterend",
+    document.querySelector(".page-content > .content").insertAdjacentHTML("afterend",
       `<div>
         <button class="btn btn-block bg-blue-dark" id="sawRaffles">I looked at the raffles</button>
       </div>`

@@ -684,7 +684,7 @@
       GM_setValue("lastRaffleSeen", null)
     }
     document.querySelector("#sawRaffles").addEventListener("click", ev=>{
-      GM_setValue("lastRaffleSeen", document.querySelector(".page-content > .content > .raffle-row:last-child").dataset.id)
+      GM_setValue("lastRaffleSeen", document.querySelector(".page-content > .content > :nth-last-child(1 of .raffle-row)").dataset.id)
       ev.target.disabled = true
       let e = document.querySelector("#lastViewedLine")
       if(e){e.remove()}

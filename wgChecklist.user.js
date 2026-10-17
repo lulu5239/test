@@ -164,7 +164,7 @@
     let settingsFunctions = {
       addAnimu: ()=>{
         if(typeof(swiperNext)==="undefined"){return showErrorToast("Requires wgSwiperNext")}
-        let b = bookmarks.find(b=>b.url === hasSettings.href)
+        let b = bookmarks.find(b=>b.url === hasSettings.getAttribute("href"))
         let am = b.Animus.splice(0, 1)[0]
         GM_setValue("bookmarks", bookmarks)
         swiperNext.levelUpAnimu(am.id)
@@ -173,12 +173,12 @@
       rename: ()=>{
         let name = prompt("New bookmark name:")
         if(!name){return}
-        bookmarks.find(b=>b.url === hasSettings.href).name = name
+        bookmarks.find(b=>b.url === hasSettings.getAttribute("href")).name = name
         GM_setValue("bookmarks", bookmarks)
         hasSettings.children[1].innerText = name
       },
       url: ()=>{
-        bookmarks.find(b=>b.url === hasSettings.href).url = here
+        bookmarks.find(b=>b.url === hasSettings.getAttribute("href")).url = here
         GM_setValue("bookmarks", bookmarks)
         hasSettings.href = here
       },
@@ -186,7 +186,7 @@
         if(!confirm(`Do you really want to delete the bookmark "${hasSettings.children[1].innerText}"?`)){return}
         hasSettings.remove()
         settings.remove()
-        let index = bookmarks.findIndex(b=>b.url === hasSettings.href)
+        let index = bookmarks.findIndex(b=>b.url === hasSettings.getAttribute("href"))
         if(index >= 0){bookmarks.splice(index, 1)}
         GM_setValue("bookmarks", bookmarks)
         if(isBookmarked === hasSettings){

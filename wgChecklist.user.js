@@ -131,6 +131,7 @@
         if(e){e.remove()}
         let index = bookmarks.findIndex(b=>b.url === here)
         if(index >= 0){bookmarks.splice(index, 1)}
+        reN()
       }else{
         let name = prompt("Bookmark name:")
         if(!name){return}
@@ -155,9 +156,9 @@
       if(e===bookmarkNew || e===hasSettings){return}
       ev.preventDefault()
       hasSettings = e
-      list.append(settings) // Put at correct place
+      e.after(settings)
     })
-    settings.querySelector("button").addEventListener(()=>{
+    settings.querySelector("button").addEventListener("click", ()=>{
       hasSettings = undefined
       settings.remove()
     })

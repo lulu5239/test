@@ -191,7 +191,7 @@
         let index = bookmarks.findIndex(b=>b.url === hasSettings.getAttribute("href"))
         if(index >= 0){bookmarks.splice(index, 1)}
         GM_setValue("bookmarks", bookmarks)
-        if(isBookmarked === hasSettings){
+        if(isBookmarked.url === hasSettings.getAttribute("href")){
           updateButtonNew()
         }
         hasSettings = undefined

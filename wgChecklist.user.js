@@ -428,6 +428,17 @@
         url: "/ville",
       })
     }
+    if(true){
+      let e = cooldowns.find(e=>e.type==="viewRaffles")
+      if(e && tnow - e.t < 48*3600000){
+        actions.push({
+          name: "Look at new raffles",
+          timers: [{ t: e.t }],
+          done: e.t > tnow,
+          url: "/raffles?scrollToNew=true",
+        })
+      }
+    }
     // Complete daily quest
     if(true){
       let n = !daily.gyms ? 0 : Object.values(daily.gyms).reduce((p, n)=>p+n, 0)
@@ -627,6 +638,48 @@
     addCooldown({
       type: "vote",
       t: +new Date() + secondsToNextHelperBonus*1000,
+    })
+  }
+
+  if(path==="/raffles"){
+    document.querySelector(".content > .page-content").insertAdjacentHTML("afterend",
+      `<div>
+        <button class="btn btn-block bg-blue-dark" id="sawRaffles">I looked at the raffles</button>
+      </div>`
+    )
+    let lastID = GM_getValue("lastRaffleSeen", 0)
+    let last = document.querySelector(`.raffle-row[data-id="${lastID}"]`)
+    if(!last && lastID){
+      for(let row of document.querySelectorAll(".raffle-row")){
+        if(row.dataset.id > lastID){break}
+        last = row
+      }
+    }
+    if(last){
+      last.insertAdjacentHTML("afterend",
+        `<div id="lastViewedLine">
+          <hr>
+          <h3>New raffles since last time:</h3>
+        </div>`
+      )
+      // Add button to scroll to there ?
+      if(new URLSearchParams(document.location.search).get("scrollToNew")){
+        document.querySelector("#lastViewedLine").scrollIntoView()
+      }
+    }else{
+      lastID = null
+      GM_setValue("lastRaffleSeen", undefined)
+    }
+    document.querySelector("#sawRaffles").addEventListener("click", ev=>{
+      GM_setValue("lastRaffleSeen", document.querySelector(".page-content > .content > :last-child").dataset.id)
+      ev.target.disabled = true
+      let e = document.querySelector("#lastViewedLine")
+      if(e){e.remove()}
+
+      addCooldown({
+        type: "viewRaffles",
+        t: +new Date() + GM_getValue("rafflesViewCooldown", 23*3600000),
+      })
     })
   }
 })()

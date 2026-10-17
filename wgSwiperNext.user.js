@@ -629,6 +629,7 @@
         document.location.reload()
       }else{
         showSuccessToast("Edited team members.")
+        if(swiperNext.gainXP){swiperNext.gainXP(0)}
       }
     }
     document.querySelector("#swapContainer").addEventListener("click", ev=>{
@@ -757,7 +758,7 @@
         </div>`)
       let levelIndicator = document.querySelector("#levelIndicator")
       let previousLowest
-      gainXP = async (xp, name)=>{
+      gainXP = swiperNext.gainXP = async (xp, name)=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
         let receiving = (name ? levelingUp.filter(am=>am.name===name) : levelingUp)
         .filter(am=>!(am.xp > Math.pow(120, 3)))

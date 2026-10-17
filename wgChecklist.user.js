@@ -85,9 +85,12 @@
           <i class="fa fa-angle-right"${isOldStyle ? ' style="float: right;"' : ''}></i>
         </a>
         <div id="bookmark-settings" style="display: flex; gap: 5px; padding: 5px">
-          <button class="btn" style="width: 20px"><i class="fa fa-times"></i></button>
+          <button class="btn" style="width: 50px; height: 50px; padding: 0px"><i class="fa fa-times"></i></button>
           <select style="flex-grow: 99">
             <option value="" selected disabled>Edit this bookmark...</option>
+            <optgroup data-page="hotel" label="Hotel bookmarks">
+              <option value="addAnimu">Add next Animu in party</option>
+            </outgroup>
             <optgroup label="Any bookmark">
               <option value="rename">Rename</option>
               <option value="url">Set to this URL</option>
@@ -153,7 +156,7 @@
     let hasSettings
     list.addEventListener("contextmenu", ev=>{
       let e = ev.target.closest(".nav-link")
-      if(e===buttonNew || e===hasSettings){return}
+      if(e===buttonNew || e===hasSettings || e===settings){return}
       ev.preventDefault()
       hasSettings = e
       e.after(settings)
@@ -165,6 +168,21 @@
     settings.querySelector("select").addEventListener("change", ev=>{
       ev.target.value = ""
     })
+
+    let settingsFunctions = {
+      rename: ()=>{
+        let name = prompt("New bookmark name:")
+        if(!name){return}
+        bookmarks[hasSettings.dataset.n].name = name
+        GM_setValue("bookmarks", bookmarks)
+        hasSettings.children[1].innerText = name
+      },
+      url: ()=>{
+        bookmarks[hasSettings.dataset.n].url = here
+        GM_setValue("bookmarks", bookmarks)
+        hasSettings.href = here
+      },
+    }
   }
 
   if(isOldStyle){

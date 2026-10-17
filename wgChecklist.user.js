@@ -149,6 +149,10 @@
       let e = ev.target.closest(".nav-link")
       if(e===buttonNew || e===hasSettings || e===settings){return}
       ev.preventDefault()
+      let page = path==="/hotel" && typeof(swiperNext)!=="undefined" ? "hotel" : null
+      for(let group of settings.querySelectorAll("optgroup[data-page]")){
+        group.style.display = group.dataset.page === page ? null : "none"
+      }
       hasSettings = e
       e.after(settings)
     })
@@ -196,6 +200,7 @@
       ev.target.value = ""
       let f = settingsFunctions[v]
       if(!f){return showErrorToast("I have no idea what I'm supposed to do...")}
+      f()
     })
 
     setTimeout(()=>{

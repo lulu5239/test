@@ -149,7 +149,8 @@
       let e = ev.target.closest(".nav-link")
       if(e===buttonNew || e===hasSettings || e===settings){return}
       ev.preventDefault()
-      let page = path==="/hotel" && typeof(swiperNext)!=="undefined" ? "hotel" : null
+      let p = new URL(e.href).pathname
+      let page = p==="/hotel" && typeof(swiperNext)!=="undefined" ? "hotel" : null
       for(let group of settings.querySelectorAll("optgroup[data-page]")){
         group.style.display = group.dataset.page === page ? null : "none"
       }
@@ -165,6 +166,7 @@
       addAnimu: ()=>{
         if(typeof(swiperNext)==="undefined"){return showErrorToast("Requires wgSwiperNext")}
         let b = bookmarks.find(b=>b.url === hasSettings.getAttribute("href"))
+        if(!b.Animus){return showErrorToast("Visit that page so I can view the Animus!")}
         let am = b.Animus.splice(0, 1)[0]
         GM_setValue("bookmarks", bookmarks)
         swiperNext.levelUpAnimu(am.id)

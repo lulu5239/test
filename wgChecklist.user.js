@@ -324,6 +324,16 @@
       <div data-settings="all" data-visible="true">
         Checklist position: in limited quests card <i>(currently not editable)</i>
         <br>Lublox key thing : <input data-setting="LubloxKey" /> <a href="https://lublox.xyz/web#wg/cooldowns" target="_blank">(learn more)</a>
+        <br>Lines to remove: <select data-setting="checklistIgnore" multiple="true" min="0" max="999">
+          <option value="swipe">Swiper</option>
+          <option value="battle">Battle encounters</option>
+          <option value="vote">Vote on Top.gg</option>
+          <option value="gyms">Gyms</option>
+          <option value="createCards">Create cards</option>
+          <option value="trader">Visit trader</option>
+          <option value="missions">Waifuville missions</option>
+          <option value="raffles">Raffles</option>
+        </select>
       </div>
       <div data-settings="Waifuville">
         Consider <input type="number" min="0" max="4" data-setting="WaifuvilleMissionsGoal" value="4" /> enough missions
@@ -350,7 +360,6 @@
       </div>
     </div>`)
     // Choose when to directly show checklist
-    // Choose actions to not care about
     for(let button of card.children[0].children){
       button.addEventListener("click", ()=>{
         let previous = card.querySelector(":scope > [data-visible]")
@@ -378,14 +387,15 @@
 
     let cooldowns = GM_getValue("cooldowns", [])
     let actions = []
-    if(true){
+    let ignore = GM_getValue("checklistIgnore", [])
+    if(!ignore.includes("trader")){
       actions.push({
         name: "Visit trader",
         done: !!daily.visitedTrader,
         url: "/trader",
       })
     }
-    if(true){
+    if(!ignore.includes("swipe")){
       let n = +document.querySelector(`#menu-main a[href="https://waifugame.com/swiper"] span.badge`)?.innerText || 0
       if(!(n >= group6h.lowestEncountersCount)){
         group6h.lowestEncountersCount = n
@@ -401,7 +411,7 @@
         url: "/swiper",
       })
     }
-    if(true){
+    if(!ignore.includes("battle")){
       let n = document.querySelector(`#menu-main a[href="https://waifugame.com/battle"] span.badge`)?.innerText
       if(n){
         actions.push({
@@ -412,7 +422,7 @@
         })
       }
     }
-    if(true){
+    if(!ignore.includes("vote")){
       let e = cooldowns.find(e=>e.type==="vote")
       if(e){
         actions.push({
@@ -423,7 +433,7 @@
         })
       }
     }
-    if(cooldowns.find(e=>e.type.startsWith("mission."))){
+    if(!ignore.includes("missions") && cooldowns.find(e=>e.type.startsWith("mission."))){
       let l = cooldowns.filter(e=>e.type.startsWith("mission.") && e.t>tnow)
       actions.push({
         name: l.length ? "Waifuville missions" : "Start Waifuville mission",
@@ -432,7 +442,7 @@
         url: "/ville",
       })
     }
-    if(true){
+    if(!ignore.includes("raffles")){
       let e = cooldowns.find(e=>e.type==="viewRaffles")
       if(e && tnow - e.t < 48*3600000){
         actions.push({
@@ -444,7 +454,7 @@
       }
     }
     // Complete daily quest
-    if(true){
+    if(!ignore.includes("gyms")){
       let n = !daily.gyms ? 0 : Object.values(daily.gyms).reduce((p, n)=>p+n, 0)
       actions.push({
         name: "Farm gyms",
@@ -454,7 +464,7 @@
         done: n >= (checklistSettings.gymsGoal ?? 90) && !checklistSettings.gymsListGoal?.find(g=>!daily.gyms?.[g] || daily.gyms[g]<10),
       })
     }
-    if(subscription.current > 0){
+    if(!ignore.includes("createCards") && subscription.current > 0){
       let max = [0, 1, 5, 10][subscription.current]
       actions.push({
         name: "Create cards",

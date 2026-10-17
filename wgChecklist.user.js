@@ -319,6 +319,7 @@
         <option value="Waifuville">Waifuville</option>
         <option value="gyms">Gyms</option>
         <option value="cards">Card creation</option>
+        <option value="raffles">Raffles page</option>
       </select>
       <div data-settings="all" data-visible="true">
         Checklist position: in limited quests card <i>(currently not editable)</i>
@@ -343,6 +344,9 @@
       </div>
       <div data-settings="cards">
         Default tag(s) to search when clicking the link: <input data-setting="cardsDefaultTags" />
+      </div>
+      <div data-settings="raffles">
+        Time after which you should go back on the raffles page: <input type="number" data-setting="rafflesViewCooldown" min="1" max="24" value="23" /> hours
       </div>
     </div>`)
     // Choose when to directly show checklist
@@ -678,7 +682,7 @@
 
       addCooldown({
         type: "viewRaffles",
-        t: +new Date() + GM_getValue("rafflesViewCooldown", 23*3600000),
+        t: +new Date() + GM_getValue("rafflesViewCooldown", 23)*3600000,
       })
     })
   }

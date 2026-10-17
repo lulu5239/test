@@ -387,7 +387,7 @@
 
     let cooldowns = GM_getValue("cooldowns", [])
     let actions = []
-    let ignore = GM_getValue("checklistIgnore", [])
+    let ignore = checklistSettings.checklistIgnore
     if(!ignore.includes("trader")){
       actions.push({
         name: "Visit trader",
@@ -692,7 +692,7 @@
 
       addCooldown({
         type: "viewRaffles",
-        t: +new Date() + GM_getValue("rafflesViewCooldown", 23)*3600000,
+        t: +new Date() + (GM_getValue("checklistSettings", {}).rafflesViewCooldown || 23)*3600000,
       })
     })
   }

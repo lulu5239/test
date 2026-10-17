@@ -109,7 +109,6 @@
       let e = buttonModel.cloneNode(true)
       e.children[1].innerText = bookmark.name
       e.href = bookmark.url
-      e.dataset.n = i
       list.append(e)
     }
     list.append(buttonNew)
@@ -121,20 +120,12 @@
       buttonNew.children[0].style.background = isBookmarked ? "linear-gradient(20deg, #a22, #937)" : "linear-gradient(20deg, #2a2, #397)"
     }
     updateButtonNew()
-    let reN = ()=>{
-      let i = 0
-      for(let e of list.children){
-        if(!e.classList.has("nav-link")){continue}
-        e.dataset.n = i
-      i++}
-    }
     buttonNew.addEventListener("click", ev=>{
       if(isBookmarked){
         let e = list.querySelector(`[href="${here}"]`)
         if(e){e.remove()}
         let index = bookmarks.findIndex(b=>b.url === here)
         if(index >= 0){bookmarks.splice(index, 1)}
-        reN()
       }else{
         let name = prompt("Bookmark name:")
         if(!name){return}
@@ -165,23 +156,64 @@
       hasSettings = undefined
       settings.remove()
     })
-    settings.querySelector("select").addEventListener("change", ev=>{
-      ev.target.value = ""
-    })
 
     let settingsFunctions = {
+      addAnimu: ()=>{
+        if(typeof(swiperNext)==="undefined"){return showErrorToast("Requires wgSwiperNext")}
+        let b = bookmarks.find(b=>b.url === hasSettings.href)
+        let am = b.Animus.splice(0, 1)[0]
+        GM_setValue("bookmarks", bookmarks)
+        swiperNext.levelUpAnimu(am.id)
+      },
+      
       rename: ()=>{
         let name = prompt("New bookmark name:")
         if(!name){return}
-        bookmarks[hasSettings.dataset.n].name = name
+        bookmarks.find(b=>b.url === hasSettings.href).name = name
         GM_setValue("bookmarks", bookmarks)
         hasSettings.children[1].innerText = name
       },
       url: ()=>{
-        bookmarks[hasSettings.dataset.n].url = here
+        bookmarks.find(b=>b.url === hasSettings.href).url = here
         GM_setValue("bookmarks", bookmarks)
         hasSettings.href = here
       },
+      delete: ()=>{
+        if(!confirm(`Do you really want to delete the bookmark "${hasSettings.children[1].innerText}"?`)){return}
+        hasSettings.remove()
+        settings.remove()
+        let index = bookmarks.findIndex(b=>b.url === hasSettings.href)
+        if(index >= 0){bookmarks.splice(index, 1)}
+        GM_setValue("bookmarks", bookmarks)
+        if(isBookmarked === hasSettings){
+          updateButtonNew()
+        }
+        hasSettings = undefined
+      },
+    }
+    settings.querySelector("select").addEventListener("change", ev=>{
+      let v = ev.target.value
+      ev.target.value = ""
+      let f = settingsFunctions[v]
+      if(!f){return showErrorToast("I have no idea what I'm supposed to do...")}
+    })
+
+    setTimeout(()=>{
+      if(typeof(swiperNext)==="undefined"){return}
+      swiperNext.bookmarkSettings = settingsFunctions
+    }, 1)
+
+    if(isBookmarked && path==="/hotel"){
+      let hotelList = document.querySelector("#hotelList")
+      // Wait for Animus to load
+      for(let i=0; i<120; i++){
+        if(hotelList.children.length){break}
+        await new Promise(ok=>setTimeout(ok, 500))
+      }
+
+      isBookmarked.Animus = [...hotelList.children].map(e=>({
+        id: e.querySelector(".actionShowHotelWaifu").dataset.id,
+      }))
     }
   }
 

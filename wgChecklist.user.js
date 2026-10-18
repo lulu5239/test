@@ -154,6 +154,7 @@
       for(let group of settings.querySelectorAll("optgroup[data-page]")){
         group.style.display = group.dataset.page === page ? null : "none"
       }
+      settings.querySelector(`option[value="url"]`).disabled = !isBookmarked
       hasSettings = e
       e.after(settings)
     })
@@ -183,6 +184,7 @@
         bookmarks.find(b=>b.url === hasSettings.getAttribute("href")).url = here
         GM_setValue("bookmarks", bookmarks)
         hasSettings.href = here
+        updateButtonNew()
       },
       delete: ()=>{
         if(!confirm(`Do you really want to delete the bookmark "${hasSettings.children[1].innerText}"?`)){return}

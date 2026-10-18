@@ -1588,7 +1588,7 @@
             if(!card.dataset.nameonly){continue}
             let level = +card.querySelector(".levelBadge.badge").innerText.slice(3)
             if(level < 120){
-              newLevelUpSlots.push(i)
+              newLevelUpSlots.push(+i)
               levelingUp.push({
                 name: card.dataset.nameonly,
                 id: card.dataset.amid,

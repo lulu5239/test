@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-17
+// @version      2026-10-18
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -804,6 +804,7 @@
           name: am.name,
           id: am.id,
           cardID: am.cardid,
+          absXP: am.xp,
           xpText: `${am.xp - levelXP}/${needXP} XP to Lv.${level+1}`,
           relXP: (am.xp - levelXP) / needXP *100,
           hpText: "unloaded",

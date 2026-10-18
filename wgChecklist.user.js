@@ -154,7 +154,7 @@
       for(let group of settings.querySelectorAll("optgroup[data-page]")){
         group.style.display = group.dataset.page === page ? null : "none"
       }
-      settings.querySelector(`option[value="url"]`).disabled = !isBookmarked
+      settings.querySelector(`option[value="url"]`).disabled = !!isBookmarked
       hasSettings = e
       e.after(settings)
     })

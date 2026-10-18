@@ -45,7 +45,7 @@
           authorization: LubloxKey,
         },
         body: JSON.stringify(e),
-      }).catch(e=>e.body && e.body.then(body=>showErrorToast(body)))
+      }).then(e=>e.text().then(body=>body!=="OK" && showErrorToast(body)))
     }
   }
 

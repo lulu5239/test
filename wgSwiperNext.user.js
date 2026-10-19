@@ -987,6 +987,7 @@
           // 👊❓ “Lulu5239” auto-battled Towa Herschel #73 (Lv.75)... Outcome: Lv.UP +1 Asuna #5292 +5,265XP LowHP
           // 👊❓ “Lulu5239” auto-battled Momose Rio #81 (Lv.55)... Outcome: Asuna #2282 +7,704XP 200% XP BONUS
           // 👊❓ “Lulu5239” auto-battled Tsunomaki Watame #1059 (Lv.75)... Outcome: Asuna #4075 +6,075XP KO 200% XP BONUS, Adult Neptune #43 +6,075XP 200% XP BONUS
+          // 👊❓ “Lulu5239” auto-battled Yagatake Arashi #16 (Lv.45)... Outcome: Lv.UP +3 Epsilon #59 +1,145XP, Adult Neptune #43 +1,145XP
           let i = 0
           let words = data.result.slice(data.result.indexOf("... Outcome: ")+13).split(" ")
           while(i<words.length){
@@ -996,7 +997,7 @@
             name = words.slice(i, name)
             i += name.length // name is array of words
             let xp = +words[i].replace(/\,/g, "").slice(1, -2)
-            i = words.findIndex((w, p)=>p>i && w.endsWith(",")) +1
+            i = words.findIndex((w, p)=>p>=i && w.endsWith(",")) +1
             if(gainXP){gainXP(xp, name.join(" "))}
             if(!i){break}
           }

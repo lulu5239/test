@@ -615,7 +615,7 @@
         if(index>=0){levelingUp.splice(index, 1)}
         if(am?.Level < 120 && "stats" in am && newSlot < 6){
           levelingUp.push({
-            name: am.name,
+            name: am.Name,
             id: am.id,
             cardid: am.cardID,
             xp: am.absXP,

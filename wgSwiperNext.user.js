@@ -1981,16 +1981,20 @@
     }
 
     if(settings.recordWaifuvilleMissions){
-      let originalMarkParcelRead = markParcelRead
-      markParcelRead = (...args)=>{
-        originalMarkParcelRead(...args)
-
-        if(!args[0].data("loaded") || !/Mission Success \((.*?)\)/.test(args[0][0].querySelector(".card-header button").innerText.split("\n", 1)[0].trim())){return}
+      $('#inbox').on('shown.bs.collapse', '.collapse[data-parcelid]', async function () {
+        let e = this.closest(".card")
+        if(!/Mission Success \((.*?)\)/.test(e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim())){return}
+        let collapse = $(e.querySelector(".collapse"))
+        for(let i=0; i<60; i++){
+          if(collapse.data("loaded")){break}
+          await new Promise(ok=>setTimeout(ok, 500))
+        }
+        if(!e.dataset.loaded){return}
         let missions = GM_getValue("WaifuvilleMissions", [])
         let data = {
-          name: args[0][0].querySelector("button[type=button]").childNodes[2].data.trim().split(" (")[1].slice(0, -1),
-          CR: +args[0][0].querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
-          situation: args[0][0].querySelector("p").innerText,
+          name: e.querySelector("button[type=button]").childNodes[2].data.trim().split(" (")[1].slice(0, -1),
+          CR: e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
+          situation: e.querySelector("p").innerText,
         }
         let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
         if(index===-1){
@@ -1999,7 +2003,7 @@
           missions[index] = {...missions[index], data}
         }
         GM_setValue("WaifuvilleMissions", missions)
-      }
+      })
     }
   }
 

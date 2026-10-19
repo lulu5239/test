@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-09
+// @version      2026-10-18
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -615,7 +615,7 @@
         if(index>=0){levelingUp.splice(index, 1)}
         if(am?.Level < 120 && "stats" in am && newSlot < 6){
           levelingUp.push({
-            name: am.name,
+            name: am.Name,
             id: am.id,
             cardid: am.cardID,
             xp: am.absXP,
@@ -629,6 +629,7 @@
         document.location.reload()
       }else{
         showSuccessToast("Edited team members.")
+        if(swiperNext.gainXP){swiperNext.gainXP(0)}
       }
     }
     document.querySelector("#swapContainer").addEventListener("click", ev=>{
@@ -645,7 +646,7 @@
     swiperNext.levelUpAnimu = async (a=selectedAnimu, slot=0)=>{
       let am = a.stats ? a : {...(await (await fetch("/json/am/"+a)).json()), id: a}
       let formation = Object.values(GM_getValue("formations", {})).find(f=>f.selected)
-      swap(am, slot>=0 && formation?.levelUpSlots?.[slot] || 0, true)
+      swap(am, slot>=0 && +formation?.levelUpSlots?.[slot] || 0, true)
     }
   }
 
@@ -757,7 +758,7 @@
         </div>`)
       let levelIndicator = document.querySelector("#levelIndicator")
       let previousLowest
-      gainXP = async (xp, name)=>{
+      gainXP = swiperNext.gainXP = async (xp, name)=>{
         let levelingUp = GM_getValue("levelingUpAnimus", [])
         let receiving = (name ? levelingUp.filter(am=>am.name===name) : levelingUp)
         .filter(am=>!(am.xp > Math.pow(120, 3)))
@@ -803,6 +804,7 @@
           name: am.name,
           id: am.id,
           cardID: am.cardid,
+          absXP: am.xp,
           xpText: `${am.xp - levelXP}/${needXP} XP to Lv.${level+1}`,
           relXP: (am.xp - levelXP) / needXP *100,
           hpText: "unloaded",
@@ -985,6 +987,7 @@
           // 👊❓ “Lulu5239” auto-battled Towa Herschel #73 (Lv.75)... Outcome: Lv.UP +1 Asuna #5292 +5,265XP LowHP
           // 👊❓ “Lulu5239” auto-battled Momose Rio #81 (Lv.55)... Outcome: Asuna #2282 +7,704XP 200% XP BONUS
           // 👊❓ “Lulu5239” auto-battled Tsunomaki Watame #1059 (Lv.75)... Outcome: Asuna #4075 +6,075XP KO 200% XP BONUS, Adult Neptune #43 +6,075XP 200% XP BONUS
+          // 👊❓ “Lulu5239” auto-battled Yagatake Arashi #16 (Lv.45)... Outcome: Lv.UP +3 Epsilon #59 +1,145XP, Adult Neptune #43 +1,145XP
           let i = 0
           let words = data.result.slice(data.result.indexOf("... Outcome: ")+13).split(" ")
           while(i<words.length){
@@ -994,7 +997,7 @@
             name = words.slice(i, name)
             i += name.length // name is array of words
             let xp = +words[i].replace(/\,/g, "").slice(1, -2)
-            i = words.findIndex((w, p)=>p>i && w.endsWith(",")) +1
+            i = words.findIndex((w, p)=>p>=i && w.endsWith(",")) +1
             if(gainXP){gainXP(xp, name.join(" "))}
             if(!i){break}
           }
@@ -1587,7 +1590,7 @@
             if(!card.dataset.nameonly){continue}
             let level = +card.querySelector(".levelBadge.badge").innerText.slice(3)
             if(level < 120){
-              newLevelUpSlots.push(i)
+              newLevelUpSlots.push(+i)
               levelingUp.push({
                 name: card.dataset.nameonly,
                 id: card.dataset.amid,
@@ -1960,7 +1963,7 @@
   }
 
   if(path==="/inbox" && settings.deleteUselessGymMessages){
-    for(let e of [...document.querySelectorAll(`#accordion > .card:has(a[href="/quests"])`)].filter(e=>e.querySelector(".card-header button").innerText.includes("GYM: ") && !e.querySelector(".fa-paperclip, .fa-enveloppe.scale-icon")).slice(+settings.deleteUselessGymMessages || 0)){
+    for(let e of [...document.querySelectorAll(`#accordion > .card`)].filter(e=>/GYM\: (.*?) Completed\!/.test(e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim()) && !e.querySelector(".fa-paperclip, .fa-enveloppe.scale-icon")).slice(+settings.deleteUselessGymMessages || 0)){
       fetch("/inbox", {
         method: "POST",
         headers: {"content-type": "application/json", accept: "application/json"},
@@ -1978,11 +1981,19 @@
     }
 
     if(settings.recordWaifuvilleMissions){
-      let missions = GM_getValue("WaifuvilleMissions", [])
-      for(let e of [...document.querySelectorAll(`#accordion > .card:has(a.btn-danger .fa-city)`)].filter(e=>e.querySelector(".card-header button").innerText.includes("Mission Success ("))){
+      $('#inbox').on('shown.bs.collapse', '.collapse[data-parcelid]', async function () {
+        let e = this.closest(".card")
+        if(!/Mission Success \((.*?)\)/.test(e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim())){return}
+        let collapse = $(e.querySelector(".collapse"))
+        for(let i=0; i<60; i++){
+          if(collapse.data("loaded")){break}
+          await new Promise(ok=>setTimeout(ok, 500))
+        }
+        if(!collapse.data("loaded")){return}
+        let missions = GM_getValue("WaifuvilleMissions", [])
         let data = {
           name: e.querySelector("button[type=button]").childNodes[2].data.trim().split(" (")[1].slice(0, -1),
-          CR: +e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
+          CR: e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
           situation: e.querySelector("p").innerText,
         }
         let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
@@ -1991,8 +2002,8 @@
         }else{
           missions[index] = {...missions[index], data}
         }
-      }
-      GM_setValue("WaifuvilleMissions", missions)
+        GM_setValue("WaifuvilleMissions", missions)
+      })
     }
   }
 

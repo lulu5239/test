@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-08-20
+// @version      2026-10-18
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -45,7 +45,7 @@
           authorization: LubloxKey,
         },
         body: JSON.stringify(e),
-      }).catch(e=>showErrorToast(e.body))
+      }).then(e=>e.text().then(body=>body!=="OK" && showErrorToast(body)))
     }
   }
 
@@ -84,13 +84,28 @@
           <span class="menu-title">Bookmark</span>
           <i class="fa fa-angle-right"${isOldStyle ? ' style="float: right;"' : ''}></i>
         </a>
+        <div id="bookmark-settings" style="display: flex; gap: 5px; padding: 5px">
+          <button class="btn" style="width: 50px; height: 50px; padding: 0px"><i class="fa fa-times"></i></button>
+          <select style="flex-grow: 99">
+            <option value="" selected disabled>Edit this bookmark...</option>
+            <optgroup data-page="hotel" label="Hotel bookmarks">
+              <option value="addAnimu">Add next Animu in party</option>
+            </outgroup>
+            <optgroup label="Any bookmark">
+              <option value="rename">Rename</option>
+              <option value="url">Set to this URL</option>
+              <option value="delete">Delete</option>
+            </optgroup>
+          </select>
+        </div>
       </div>`
     )
     let list = document.querySelector("#bookmarks-list")
     let bookmarks = GM_getValue("bookmarks", [])
     let buttonNew = list.children[0]
     let buttonModel = buttonNew.cloneNode(true)
-    for(let bookmark of bookmarks){
+    for(let i in bookmarks){
+      let bookmark = bookmarks[i]
       let e = buttonModel.cloneNode(true)
       e.children[1].innerText = bookmark.name
       e.href = bookmark.url
@@ -126,6 +141,92 @@
       GM_setValue("bookmarks", bookmarks)
       updateButtonNew()
     })
+    
+    let settings = list.querySelector("#bookmark-settings")
+    settings.remove()
+    let hasSettings
+    list.addEventListener("contextmenu", ev=>{
+      let e = ev.target.closest(".nav-link")
+      if(e===buttonNew || e===hasSettings || e===settings){return}
+      ev.preventDefault()
+      let p = new URL(e.href).pathname
+      let page = p==="/hotel" && typeof(swiperNext)!=="undefined" ? "hotel" : null
+      for(let group of settings.querySelectorAll("optgroup[data-page]")){
+        group.style.display = group.dataset.page === page ? null : "none"
+      }
+      settings.querySelector(`option[value="url"]`).disabled = !!isBookmarked
+      hasSettings = e
+      e.after(settings)
+    })
+    settings.querySelector("button").addEventListener("click", ()=>{
+      hasSettings = undefined
+      settings.remove()
+    })
+
+    let settingsFunctions = {
+      addAnimu: ()=>{
+        if(typeof(swiperNext)==="undefined"){return showErrorToast("Requires wgSwiperNext")}
+        let b = GM_getValue("bookmarks").find(b=>b.url === hasSettings.getAttribute("href"))
+        if(!b){return showErrorToast("The bookmark doesn't exist anymore...")}
+        bookmarks[bookmarks.findIndex(e=>e.url === b.url)] = b
+        if(!b.Animus?.[0]){return showErrorToast("Visit that page so I can view the Animus!")}
+        let am = b.Animus.splice(0, 1)[0]
+        GM_setValue("bookmarks", bookmarks)
+        swiperNext.levelUpAnimu(am.id)
+      },
+      
+      rename: ()=>{
+        let name = prompt("New bookmark name:")
+        if(!name){return}
+        bookmarks.find(b=>b.url === hasSettings.getAttribute("href")).name = name
+        GM_setValue("bookmarks", bookmarks)
+        hasSettings.children[1].innerText = name
+      },
+      url: ()=>{
+        bookmarks.find(b=>b.url === hasSettings.getAttribute("href")).url = here
+        GM_setValue("bookmarks", bookmarks)
+        hasSettings.href = here
+        updateButtonNew()
+      },
+      delete: ()=>{
+        if(!confirm(`Do you really want to delete the bookmark "${hasSettings.children[1].innerText}"?`)){return}
+        hasSettings.remove()
+        settings.remove()
+        let index = bookmarks.findIndex(b=>b.url === hasSettings.getAttribute("href"))
+        if(index >= 0){bookmarks.splice(index, 1)}
+        GM_setValue("bookmarks", bookmarks)
+        if(isBookmarked?.url === hasSettings.getAttribute("href")){
+          updateButtonNew()
+        }
+        hasSettings = undefined
+      },
+    }
+    settings.querySelector("select").addEventListener("change", ev=>{
+      let v = ev.target.value
+      ev.target.value = ""
+      let f = settingsFunctions[v]
+      if(!f){return showErrorToast("I have no idea what I'm supposed to do...")}
+      f()
+    })
+
+    setTimeout(()=>{
+      if(typeof(swiperNext)==="undefined"){return}
+      swiperNext.bookmarkSettings = settingsFunctions
+    }, 1)
+
+    if(isBookmarked && path==="/hotel"){
+      let hotelList = document.querySelector("#hotelList")
+      // Wait for Animus to load
+      for(let i=0; i<120; i++){
+        if(hotelList.children.length){break}
+        await new Promise(ok=>setTimeout(ok, 500))
+      }
+
+      isBookmarked.Animus = [...hotelList.children].map(e=>({
+        id: e.querySelector(".actionShowHotelWaifu")?.dataset.id,
+      })).filter(am=>am.id)
+      GM_setValue("bookmarks", bookmarks)
+    }
   }
 
   if(isOldStyle){
@@ -222,10 +323,21 @@
         <option value="Waifuville">Waifuville</option>
         <option value="gyms">Gyms</option>
         <option value="cards">Card creation</option>
+        <option value="raffles">Raffles page</option>
       </select>
       <div data-settings="all" data-visible="true">
         Checklist position: in limited quests card <i>(currently not editable)</i>
         <br>Lublox key thing : <input data-setting="LubloxKey" /> <a href="https://lublox.xyz/web#wg/cooldowns" target="_blank">(learn more)</a>
+        <br>Lines to remove: <select data-setting="checklistIgnore" multiple="true" min="0" max="999">
+          <option value="swipe">Swiper</option>
+          <option value="battle">Battle encounters</option>
+          <option value="vote">Vote on Top.gg</option>
+          <option value="gyms">Gyms</option>
+          <option value="createCards">Create cards</option>
+          <option value="trader">Visit trader</option>
+          <option value="missions">Waifuville missions</option>
+          <option value="raffles">Raffles</option>
+        </select>
       </div>
       <div data-settings="Waifuville">
         Consider <input type="number" min="0" max="4" data-setting="WaifuvilleMissionsGoal" value="4" /> enough missions
@@ -247,9 +359,11 @@
       <div data-settings="cards">
         Default tag(s) to search when clicking the link: <input data-setting="cardsDefaultTags" />
       </div>
+      <div data-settings="raffles">
+        Time after which you should go back on the raffles page: <input type="number" data-setting="rafflesViewCooldown" min="1" max="24" value="23" /> hours
+      </div>
     </div>`)
     // Choose when to directly show checklist
-    // Choose actions to not care about
     for(let button of card.children[0].children){
       button.addEventListener("click", ()=>{
         let previous = card.querySelector(":scope > [data-visible]")
@@ -277,14 +391,15 @@
 
     let cooldowns = GM_getValue("cooldowns", [])
     let actions = []
-    if(true){
+    let ignore = checklistSettings.checklistIgnore
+    if(!ignore.includes("trader")){
       actions.push({
         name: "Visit trader",
         done: !!daily.visitedTrader,
         url: "/trader",
       })
     }
-    if(true){
+    if(!ignore.includes("swipe")){
       let n = +document.querySelector(`#menu-main a[href="https://waifugame.com/swiper"] span.badge`)?.innerText || 0
       if(!(n >= group6h.lowestEncountersCount)){
         group6h.lowestEncountersCount = n
@@ -300,7 +415,7 @@
         url: "/swiper",
       })
     }
-    if(true){
+    if(!ignore.includes("battle")){
       let n = document.querySelector(`#menu-main a[href="https://waifugame.com/battle"] span.badge`)?.innerText
       if(n){
         actions.push({
@@ -311,7 +426,7 @@
         })
       }
     }
-    if(true){
+    if(!ignore.includes("vote")){
       let e = cooldowns.find(e=>e.type==="vote")
       if(e){
         actions.push({
@@ -322,7 +437,7 @@
         })
       }
     }
-    if(cooldowns.find(e=>e.type.startsWith("mission."))){
+    if(!ignore.includes("missions") && cooldowns.find(e=>e.type.startsWith("mission."))){
       let l = cooldowns.filter(e=>e.type.startsWith("mission.") && e.t>tnow)
       actions.push({
         name: l.length ? "Waifuville missions" : "Start Waifuville mission",
@@ -331,8 +446,19 @@
         url: "/ville",
       })
     }
+    if(!ignore.includes("raffles")){
+      let e = cooldowns.find(e=>e.type==="viewRaffles")
+      if(e && tnow - e.t < 48*3600000){
+        actions.push({
+          name: "Look at new raffles",
+          timers: [{ t: e.t }],
+          done: e.t > tnow,
+          url: "/raffles?scrollToNew=true",
+        })
+      }
+    }
     // Complete daily quest
-    if(true){
+    if(!ignore.includes("gyms")){
       let n = !daily.gyms ? 0 : Object.values(daily.gyms).reduce((p, n)=>p+n, 0)
       actions.push({
         name: "Farm gyms",
@@ -342,7 +468,7 @@
         done: n >= (checklistSettings.gymsGoal ?? 90) && !checklistSettings.gymsListGoal?.find(g=>!daily.gyms?.[g] || daily.gyms[g]<10),
       })
     }
-    if(subscription.current > 0){
+    if(!ignore.includes("createCards") && subscription.current > 0){
       let max = [0, 1, 5, 10][subscription.current]
       actions.push({
         name: "Create cards",
@@ -530,6 +656,48 @@
     addCooldown({
       type: "vote",
       t: +new Date() + secondsToNextHelperBonus*1000,
+    })
+  }
+
+  if(path==="/raffles"){
+    document.querySelector(".page-content > .content").insertAdjacentHTML("afterend",
+      `<div>
+        <button class="btn btn-block bg-blue-dark" id="sawRaffles">I looked at the raffles</button>
+      </div>`
+    )
+    let lastID = GM_getValue("lastRaffleSeen", 0)
+    let last = document.querySelector(`.raffle-row[data-id="${lastID}"]`)
+    if(!last && lastID){
+      for(let row of document.querySelectorAll(".raffle-row")){
+        if(row.dataset.id > lastID){break}
+        last = row
+      }
+    }
+    if(last){
+      last.insertAdjacentHTML("afterend",
+        `<div id="lastViewedLine" style="padding-top: 10px">
+          <h3 style="border-top: solid #ff0 2px; padding: 20px">New raffles since last time:</h3>
+        </div>`
+      )
+      // Add button to scroll to there ?
+      if(new URLSearchParams(document.location.search).get("scrollToNew")){
+        document.querySelector("#lastViewedLine").scrollIntoView()
+      }
+    }else{
+      lastID = null
+      GM_setValue("lastRaffleSeen", null)
+    }
+    document.querySelector("#sawRaffles").addEventListener("click", ev=>{
+      GM_setValue("lastRaffleSeen", document.querySelector(".page-content > .content > :nth-last-child(1 of .raffle-row)").dataset.id)
+      ev.target.disabled = true
+      let e = document.querySelector("#lastViewedLine")
+      if(e){e.remove()}
+      ev.target.classList.remove("bg-blue-dark")
+
+      addCooldown({
+        type: "viewRaffles",
+        t: +new Date() + (GM_getValue("checklistSettings", {}).rafflesViewCooldown || 23)*3600000,
+      })
     })
   }
 })()

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-19
+// @version      2026-10-20
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -636,9 +636,9 @@
     if(card.stats && card.nature){
       battleHelpVars.usingBest = true
     }
-    let goodEnough = card.goodATT / currentCard.goodATT < 1.25
-    if(goodEnough && card.stats?.SPD && card.stats.SPD > fullStats.p2.stats.SPD){goodEnough = false}
-    if(card===currentCard || goodEnough){
+    let goodEnough = card.goodATT / currentCard.goodATT
+    if(goodEnough < 1.02 && card.stats?.SPD && card.stats.SPD > fullStats.p2.stats.SPD){goodEnough = false}
+    if(card===currentCard || goodEnough < 1.25){
       if(battleHelpVars.auto){
         return document.querySelector("#btn_bestMove").click()
       }

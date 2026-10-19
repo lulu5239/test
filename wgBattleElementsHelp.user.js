@@ -637,7 +637,7 @@
       battleHelpVars.usingBest = true
     }
     let goodEnough = card.goodATT / currentCard.goodATT
-    if(goodEnough < 1.02 && card.stats?.SPD && card.stats.SPD > fullStats.p2.stats.SPD){goodEnough = false}
+    if(goodEnough > 1.02 && card.stats?.SPD && card.stats.SPD > fullStats.p2.stats.SPD){goodEnough = false}
     if(card===currentCard || goodEnough < 1.25){
       if(battleHelpVars.auto){
         return document.querySelector("#btn_bestMove").click()

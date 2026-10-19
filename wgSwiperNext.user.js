@@ -276,7 +276,7 @@
           r.levelsChanged = 0
         }
       }
-      giveItemHandler(r)
+      giveItemHandler(r, am.id)
       return r
     }
     document.querySelector("#waifuFeed").addEventListener("click", async ev=>{

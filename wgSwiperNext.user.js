@@ -1963,7 +1963,7 @@
   }
 
   if(path==="/inbox" && settings.deleteUselessGymMessages){
-    for(let e of [...document.querySelectorAll(`#accordion > .card:has(a[href="/quests"])`)].filter(e=>e.querySelector(".card-header button").innerText.includes("GYM: ") && !e.querySelector(".fa-paperclip, .fa-enveloppe.scale-icon")).slice(+settings.deleteUselessGymMessages || 0)){
+    for(let e of [...document.querySelectorAll(`#accordion > .card`)].filter(e=>/GYM\: (.*?) Completed\!/.test(e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim()) && !e.querySelector(".fa-paperclip, .fa-enveloppe.scale-icon")).slice(+settings.deleteUselessGymMessages || 0)){
       fetch("/inbox", {
         method: "POST",
         headers: {"content-type": "application/json", accept: "application/json"},
@@ -1981,12 +1981,16 @@
     }
 
     if(settings.recordWaifuvilleMissions){
-      let missions = GM_getValue("WaifuvilleMissions", [])
-      for(let e of [...document.querySelectorAll(`#accordion > .card:has(a.btn-danger .fa-city)`)].filter(e=>e.querySelector(".card-header button").innerText.includes("Mission Success ("))){
+      let originalMarkParcelRead = markParcelRead
+      markParcelRead = (...args)=>{
+        originalMarkParcelRead(...args)
+
+        if(!args[0].data("loaded") || !/Mission Success \((.*?)\)/.test(args[0][0].querySelector(".card-header button").innerText.split("\n", 1)[0].trim())){return}
+        let missions = GM_getValue("WaifuvilleMissions", [])
         let data = {
-          name: e.querySelector("button[type=button]").childNodes[2].data.trim().split(" (")[1].slice(0, -1),
-          CR: +e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
-          situation: e.querySelector("p").innerText,
+          name: args[0][0].querySelector("button[type=button]").childNodes[2].data.trim().split(" (")[1].slice(0, -1),
+          CR: +args[0][0].querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
+          situation: args[0][0].querySelector("p").innerText,
         }
         let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
         if(index===-1){
@@ -1994,8 +1998,8 @@
         }else{
           missions[index] = {...missions[index], data}
         }
+        GM_setValue("WaifuvilleMissions", missions)
       }
-      GM_setValue("WaifuvilleMissions", missions)
     }
   }
 

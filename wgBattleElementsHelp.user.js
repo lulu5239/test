@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-01
+// @version      2026-10-19
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -434,9 +434,6 @@
         }
         if(plr==="p2"){
           highestStatistic[2] = true
-          setTimeout(()=>{
-            $("#opponent_pic .actionShowCard").data("cardid", stats.card_id)
-          }, 200)
         }
       }
     }
@@ -498,9 +495,6 @@
   showInventory = (...args)=>{ // handleBattleAjax was a constant
     if(!args[0].faked){
       lastSequenceData = battleHelpVars.lastSequenceData = args[0]
-      if(fastBattle){
-        for(let action of lastSequenceData.sequence){action.d = action.a==="debug" ? 400 : 0}
-      }
     }
     let swap = args[0].sequence?.find(e=>e.a==="forceswap" && e.t==="player1")
     if(swap && !args[0].faked){

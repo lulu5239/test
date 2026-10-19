@@ -1989,7 +1989,7 @@
           if(collapse.data("loaded")){break}
           await new Promise(ok=>setTimeout(ok, 500))
         }
-        if(!e.dataset.loaded){return}
+        if(!collapse.data("loaded")){return}
         let missions = GM_getValue("WaifuvilleMissions", [])
         let data = {
           name: e.querySelector("button[type=button]").childNodes[2].data.trim().split(" (")[1].slice(0, -1),

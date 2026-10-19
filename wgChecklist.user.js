@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-17
+// @version      2026-10-18
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -166,7 +166,9 @@
     let settingsFunctions = {
       addAnimu: ()=>{
         if(typeof(swiperNext)==="undefined"){return showErrorToast("Requires wgSwiperNext")}
-        let b = bookmarks.find(b=>b.url === hasSettings.getAttribute("href"))
+        let b = GM_getValue("bookmarks").find(b=>b.url === hasSettings.getAttribute("href"))
+        if(!b){return showErrorToast("The bookmark doesn't exist anymore...")}
+        bookmarks[bookmarks.findIndex(e=>e.url === b.url)] = b
         if(!b.Animus?.[0]){return showErrorToast("Visit that page so I can view the Animus!")}
         let am = b.Animus.splice(0, 1)[0]
         GM_setValue("bookmarks", bookmarks)

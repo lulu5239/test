@@ -633,11 +633,12 @@
       }
     }
     document.querySelector("#swapContainer").addEventListener("click", ev=>{
-      if(!ev.target.classList.contains("actionSetSlot")){return}
+      let target = ev.target.closest(".actionSetSlot")
+      if(!target){return}
       ev.stopPropagation()
       ev.preventDefault()
 
-      swap(selectedAnimu?.id===selectedAnniemay ? selectedAnimu : {id: selectedAnniemay}, +ev.target.dataset.slot).catch(e=>{
+      swap(selectedAnimu?.id===selectedAnniemay ? selectedAnimu : {id: selectedAnniemay}, +target.dataset.slot).catch(e=>{
         console.error(e)
         $('#toast-4').toast('show');
       })

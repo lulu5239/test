@@ -2011,7 +2011,10 @@
   if(path==="/cards/new" && settings.cardCreatorPageInput){
     document.querySelector("#searchForm").insertAdjacentHTML("beforebegin", `<center>Page: <input type="number" id="pageBox" /></center>`)
     let box = document.querySelector("#pageBox")
-    box.addEventListener("change", ev=>{page = +ev.target.value})
+    box.addEventListener("change", ev=>{
+      page = +ev.target.value
+      nextOffset = (page+1) * searchPageSize
+    })
 
     let originalSearch = search
     search = (...a)=>{

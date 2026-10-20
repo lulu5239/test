@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-19
+// @version      2026-10-20
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -161,7 +161,7 @@
       if(args[0]){rerolled = true}
       if(!rerolled && settings.defaultRerollSet){
         let best = GM_getValue("bestItems")
-        if(best && selectedAnimu?.xpText){
+        if(best && selectedAnimu?.xpText!==undefined){
           setRerollItems({ best })
           if(selectedAnimu.cardID && !["Max Level!", "Lv. 120", "Lv.120"].includes(selectedAnimu?.xpText)){
             fetchCardData(selectedAnimu.cardID).then(card=>setRerollItems({ best, card }))

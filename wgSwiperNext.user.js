@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-18
+// @version      2026-10-19
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -633,11 +633,12 @@
       }
     }
     document.querySelector("#swapContainer").addEventListener("click", ev=>{
-      if(!ev.target.classList.contains("actionSetSlot")){return}
+      let target = ev.target.closest(".actionSetSlot")
+      if(!target){return}
       ev.stopPropagation()
       ev.preventDefault()
 
-      swap(selectedAnimu?.id===selectedAnniemay ? selectedAnimu : {id: selectedAnniemay}, +ev.target.dataset.slot).catch(e=>{
+      swap(selectedAnimu?.id===selectedAnniemay ? selectedAnimu : {id: selectedAnniemay}, +target.dataset.slot).catch(e=>{
         console.error(e)
         $('#toast-4').toast('show');
       })

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-18
+// @version      2026-10-21
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -310,8 +310,8 @@
       <div data-model="row">
         <span><a></a></span>
         <div data-thing="right-side">
-          <a class="badge colorful-background" data-model="progress"></a>
-          <a class="badge colorful-background" data-model="timer" data-countdownprecision="2"></a>
+          <span class="badge colorful-background" data-model="progress"></span>
+          <span class="badge colorful-background" data-model="timer" data-countdownprecision="2"></span>
           <i class="fa fa-check" data-model="checkmark"></i>
         </div>
       </div>

@@ -1998,7 +1998,7 @@
         if(!collapse.data("loaded")){return}
         let missions = GM_getValue("WaifuvilleMissions", [])
         let data = {
-          name: e.querySelector("button[type=button]").childNodes[2].data.trim().split(" (")[1].slice(0, -1),
+          name: e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim(),
           CR: e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
           situation: e.querySelector("p").innerText,
         }
@@ -2006,7 +2006,7 @@
         if(index===-1){
           missions.push(data)
         }else{
-          missions[index] = {...missions[index], data}
+          missions[index] = {...missions[index], ...data}
         }
         GM_setValue("WaifuvilleMissions", missions)
       })

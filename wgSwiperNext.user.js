@@ -1969,7 +1969,7 @@
   }
 
   if(path==="/inbox" && settings.deleteUselessGymMessages){
-    for(let e of [...document.querySelectorAll(`#accordion > .card`)].filter(e=>/GYM\: (.*?) Completed\!/.test(e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim()) && !e.querySelector(".fa-paperclip, .fa-enveloppe.scale-icon")).slice(+settings.deleteUselessGymMessages || 0)){
+    for(let e of [...document.querySelectorAll(`#accordion > .card`)].filter(e=>/GYM\: (.*?) Completed\!/.test(e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim()) && !e.querySelector(".inbox-reward-chip, .fa-enveloppe.scale-icon")).slice(+settings.deleteUselessGymMessages || 0)){
       fetch("/inbox", {
         method: "POST",
         headers: {"content-type": "application/json", accept: "application/json"},
@@ -1998,7 +1998,7 @@
         if(!collapse.data("loaded")){return}
         let missions = GM_getValue("WaifuvilleMissions", [])
         let data = {
-          name: e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim(),
+          name: e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim().split(" (")[1].split(")")[0],
           CR: e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
           situation: e.querySelector("p").innerText,
         }

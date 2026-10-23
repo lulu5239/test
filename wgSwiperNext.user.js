@@ -1999,7 +1999,7 @@
         let missions = GM_getValue("WaifuvilleMissions", [])
         let data = {
           name: e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim().split(" (")[1].split(")")[0],
-          CR: e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
+          CR: +e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
           situation: e.querySelector("p").innerText,
         }
         let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)

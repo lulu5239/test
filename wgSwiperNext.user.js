@@ -1942,7 +1942,7 @@
                 if(r.querySelector("abbr")){return ["shards", +r.childNodes[1].data.trim().slice(0, -7)]}
                 let fa = Object.values(r.querySelector("i").classList).find(c=>c.startsWith("fa-"))
                 if(fa==="fa-crown"){return ["SP", +r.innerText.trim().slice(0, -3)]}
-                if(fa==="fa-gg"){return ["GG", +r.innerText.trim()]}
+                if(fa==="fa-gg"){return ["GG", +r.innerText.trim().replace(/\,/, "")]}
                 return ["item", r.innerText.trim()]
               }),
               id,

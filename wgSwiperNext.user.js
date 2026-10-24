@@ -1951,7 +1951,7 @@
             if(index===-1){
               missions.push(data)
             }else{
-              missions[index] = {...missions[index], data}
+              missions[index] = {...missions[index], ...data}
             }
             GM_setValue("WaifuvilleMissions", missions)
           }

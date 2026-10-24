@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame battle elements help
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-20
+// @version      2026-10-23
 // @description  Instead of remembering all of the elemental advantages, this little script will display them where it's the most useful.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -628,7 +628,7 @@
   actionMenu.querySelector("#btn_swapToBest").addEventListener("click", ()=>{
     let max
     for(let card of Object.values(party)){
-      if(!card.hp || card.noPP || card.level<maximumLevel && card.hp<50 || card.level<maximumLevel && battleHelpVars.objectiveLevel && card.level>=battleHelpVars.objectiveLevel){delete card.goodATT; continue}
+      if(!card.hp || card.noPP || card.level<maximumLevel && card.hp<50 /*|| card.level<maximumLevel && battleHelpVars.objectiveLevel && card.level>=battleHelpVars.objectiveLevel*/){delete card.goodATT; continue}
       card.goodATT = (card.good>0 ? card.good : 1/Math.abs(card.good-2)) * (card.stats?.[magicElements.includes(card.element) ? "SpATT" : "ATT"] || card.level*3 || 1) /(card.level<maximumLevel ? 5 : 1)
       if(max===undefined || card.goodATT>max){max=card.goodATT}
     }
@@ -636,9 +636,9 @@
     if(card.stats && card.nature){
       battleHelpVars.usingBest = true
     }
-    let goodEnough = card.goodATT / currentCard.goodATT
+    let goodEnough = card.goodATT / (currentCard.goodATT||1)
     if(goodEnough > 1.02 && card.stats?.SPD && card.stats.SPD > fullStats.p2.stats.SPD){goodEnough = false}
-    if(card===currentCard || goodEnough < 1.25){
+    if(card===currentCard || goodEnough && goodEnough < 1.25){
       if(battleHelpVars.auto){
         return document.querySelector("#btn_bestMove").click()
       }

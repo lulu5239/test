@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-21
+// @version      2026-10-23
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1942,7 +1942,7 @@
                 if(r.querySelector("abbr")){return ["shards", +r.childNodes[1].data.trim().slice(0, -7)]}
                 let fa = Object.values(r.querySelector("i").classList).find(c=>c.startsWith("fa-"))
                 if(fa==="fa-crown"){return ["SP", +r.innerText.trim().slice(0, -3)]}
-                if(fa==="fa-gg"){return ["GG", +r.innerText.trim()]}
+                if(fa==="fa-gg"){return ["GG", +r.innerText.trim().replace(/\,/, "")]}
                 return ["item", r.innerText.trim()]
               }),
               id,
@@ -1951,7 +1951,7 @@
             if(index===-1){
               missions.push(data)
             }else{
-              missions[index] = {...missions[index], data}
+              missions[index] = {...missions[index], ...data}
             }
             GM_setValue("WaifuvilleMissions", missions)
           }
@@ -1969,7 +1969,7 @@
   }
 
   if(path==="/inbox" && settings.deleteUselessGymMessages){
-    for(let e of [...document.querySelectorAll(`#accordion > .card`)].filter(e=>/GYM\: (.*?) Completed\!/.test(e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim()) && !e.querySelector(".fa-paperclip, .fa-enveloppe.scale-icon")).slice(+settings.deleteUselessGymMessages || 0)){
+    for(let e of [...document.querySelectorAll(`#accordion > .card`)].filter(e=>/GYM\: (.*?) Completed\!/.test(e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim()) && !e.querySelector(".inbox-reward-chip, .fa-enveloppe.scale-icon")).slice(+settings.deleteUselessGymMessages || 0)){
       fetch("/inbox", {
         method: "POST",
         headers: {"content-type": "application/json", accept: "application/json"},
@@ -1998,15 +1998,15 @@
         if(!collapse.data("loaded")){return}
         let missions = GM_getValue("WaifuvilleMissions", [])
         let data = {
-          name: e.querySelector("button[type=button]").childNodes[2].data.trim().split(" (")[1].slice(0, -1),
-          CR: e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
+          name: e.querySelector(".card-header button").innerText.split("\n", 1)[0].trim().split(" (")[1].split(")")[0],
+          CR: +e.querySelector("strong.badge-dark").innerText.slice(3).replace(/\,/g, ""),
           situation: e.querySelector("p").innerText,
         }
         let index = missions.findIndex(m=>m.name===data.name && m.CR===data.CR)
         if(index===-1){
           missions.push(data)
         }else{
-          missions[index] = {...missions[index], data}
+          missions[index] = {...missions[index], ...data}
         }
         GM_setValue("WaifuvilleMissions", missions)
       })

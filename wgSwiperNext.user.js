@@ -2064,6 +2064,22 @@
         items: [...table.querySelectorAll("button.buyBtn.btn, span.trader-stock-trigger")].map(e=>e.dataset.item ? JSON.parse(e.dataset.item) : todayTrader.items?.find(item=>item?.id === +e.closest("article.trader-product").dataset["trader-item"])).filter(Boolean),
       })
     }
+
+    let currency = new URLSearchParams(document.location.search).get("currency")?.toLowerCase()
+    if(currency === "gg"){
+      for(let article of table.children){
+        let pricing = article.querySelector(".trader-price-options")
+        if(!pricing.querySelector(".buyBtn.btn") && pricing.querySelector("span.trader-stock-trigger button")?.innerText !== "GG sold out"){article.remove(); continue}
+        let secondary = article.querySelector(".trader-secondary")
+        if(secondary){secondary.remove()}
+        let eBuyBtn = pricing.querySelector(".eBuyBtn.btn")
+        if(eBuyBtn){
+          eBuyBtn.parentElement.remove()
+          pricing.classList.add("trader-price-options--single")
+        }
+      }
+    }
+    
     if(!settings.alwaysTraderBuyAgain && nextDay - +new Date() > 300000){return}
     table.insertAdjacentHTML("afterend", `<div class="card card-custom" style="display: none"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
     +`<style>
@@ -2166,20 +2182,5 @@
         e.dataset.status = "done"
       }
     }, nextDay - +new Date())
-
-    let currency = new URLSearchParams(document.location.search).get("currency")?.toLowerCase()
-    if(currency === "gg"){
-      for(let article of table.children){
-        let pricing = article.querySelector(".trader-price-options")
-        if(!pricing.querySelector(".buyBtn.btn") && pricing.querySelector("span.trader-stock-trigger button")?.innerText !== "GG sold out"){article.remove(); continue}
-        let secondary = article.querySelector("trader-secondary")
-        if(secondary){secondary.remove()}
-        let eBuyBtn = pricing.querySelector(".eBuyBtn.btn")
-        if(eBuyBtn){
-          eBuyBtn.parentElement.remove()
-          pricing.classList.add("trader-price-options--single")
-        }
-      }
-    }
   }
 })();

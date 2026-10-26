@@ -2166,5 +2166,15 @@
         e.dataset.status = "done"
       }
     }, nextDay - +new Date())
+
+    let currency = new URLSearchParams(document.location.search).get("currency")?.toLowerCase()
+    if(currency === "gg"){
+      for(let article of table.children){
+        let pricing = article.querySelector(".trader-price-options")
+        if(!pricing.querySelector(".buyBtn.btn") && pricing.querySelector("span.trader-stock-trigger button")?.innerText !== "GG sold out"){article.remove(); continue}
+        let secondary = article.querySelector("trader-secondary")
+        if(secondary){secondary.remove()}
+      }
+    }
   }
 })();

@@ -2174,6 +2174,11 @@
         if(!pricing.querySelector(".buyBtn.btn") && pricing.querySelector("span.trader-stock-trigger button")?.innerText !== "GG sold out"){article.remove(); continue}
         let secondary = article.querySelector("trader-secondary")
         if(secondary){secondary.remove()}
+        let eBuyBtn = pricing.querySelector(".eBuyBtn.btn")
+        if(eBuyBtn){
+          eBuyBtn.parentElement.remove()
+          pricing.classList.add("trader-price-options--single")
+        }
       }
     }
   }

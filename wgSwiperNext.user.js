@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-23
+// @version      2026-10-26
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -2055,18 +2055,11 @@
   }
 
   if(path==="/trader"){
-    let nextDay = +document.querySelector(`.page-content .card ul [data-countdown]`).dataset.countdown *1000
-    let todayTrader = GM_getValue("todayTrader", {reset: 0})
-    let table = document.querySelector(".page-content .content table:not(.mb-0)")
-    if(true){
-      GM_setValue("todayTrader", todayTrader = {
-        reset: nextDay,
-        items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0].dataset.item ? JSON.parse(e.children[2].children[0].dataset.item) : todayTrader.items?.find(item=>item?.spritesheet === e.children[0].children[0].src.slice(22))).filter(Boolean),
-      })
-    }
+    let nextDay = +document.querySelector(`.page-content .card:first-child strong span[data-countdown]`).dataset.countdown *1000
+    let todayTrader = []
+    let table = document.querySelector(".card.trader-catalog")
     if(!settings.alwaysTraderBuyAgain && nextDay - +new Date() > 300000){return}
     table.insertAdjacentHTML("afterend", `<div class="card card-custom" style="display: none"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
-    +`<div class="card card-custom" style="display: none"><span>The user-script doesn't have enough data about some of the items!</span><button id="fetchMissingTraderItems" class="btn btn-block bg-orange-dark mt-2">Fetch from Lulu5239's website</button></div>`
     +`<style>
       .card-custom {
         text-align: center;
@@ -2098,10 +2091,11 @@
     let tooLate
     let onclick = ev=>{
       if(tooLate){return showErrorToast("Too late!")}
-      let item = JSON.parse(ev.target.dataset.item)
-      let n = Math.floor(+prompt(`How many? At ${item.value} GG each. (Maximum 10.)`))
+      let id = +ev.target.closest("[data-trader-item]").dataset["trader-item"]
+      let item = todayTrader.find(item=>item.id === id)
+      let n = Math.floor(+prompt(`How many? At ${item?.value || "some"} GG each. (Maximum 10.)`))
       if(!(n >= 0 && n <= 10)){return showErrorToast("Not valid number.")}
-      let e = reBuyList.querySelector(`[data-item="${item.id}"]`) || reBuyItem.cloneNode(true)
+      let e = reBuyList.querySelector(`[data-item="${id}"]`) || reBuyItem.cloneNode(true)
       ev.target.innerHTML = "Buy again" + (n>0 ? ` <b>x${n}</b>` : "")
       if(n===0){
         e.remove()
@@ -2113,43 +2107,14 @@
       if(!e.parentElement){reBuyList.append(e)}
       reBuyList.parentElement.style.display = null
     }
-    let addBuyAgainButtons = ()=>{
-      let rows = [...table.querySelector("tbody").children].filter(e=>!e.children[2].children[0].classList.contains("buyBtn"))
-      let missing = []
-      for(let row of rows){
-        let item = todayTrader.items.find(item=>item.spritesheet===row.children[0].children[0].src.slice(22))
-        if(!item){missing.push(row); continue}
-        row.children[2].innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-warning">Buy again</button>`
-        row.children[2].children[0].dataset.item = JSON.stringify(item)
-        row.children[2].children[0].addEventListener("click", onclick)
+    let addReBuyButtons = ()=>{
+      for(let span of table.querySelectorAll(".trader-stock-trigger")){
+        let parent = span.parentElement
+        parent.innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-warning trader-price">Buy again</button>`
+        parent.children[0].addEventListener("click", onclick)
       }
-      return missing
     }
-    let missing = addBuyAgainButtons()
-    let fetchButton = document.querySelector("#fetchMissingTraderItems")
-    if(missing.length){
-      fetchButton.parentElement.style.display = null
-      fetchButton.addEventListener("click", async ev=>{
-        ev.target.disabled = true
-        let r = await fetch("https://lublox.xyz/wg/items", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(missing.map(row=>({ spritesheet: row.children[0].children[0].src.slice(22) }))),
-        }).catch(console.warn)
-        r = r && await r.json().catch(console.warn)
-        if(!r){
-          ev.target.disabled = false
-          showErrorToast("Couldn't get data from the Lublox website.")
-        return}
-        todayTrader.items.push(...r)
-        GM_setValue("todayTrader", todayTrader)
-        fetchButton.parentElement.remove()
-        return addBuyAgainButtons()
-      })
-    }else{
-      fetchButton.parentElement.remove()
-    }
-
+    
     setTimeout(async ()=>{
       for(let n=0; true; n++){
         let e = reBuyList.children[n]

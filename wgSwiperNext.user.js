@@ -2059,7 +2059,146 @@
     })
   }
 
-  if(path==="/trader"){
+  if(path==="/trader" && document.querySelector(".page-content .content table:not(.mb-0)")){
+    let nextDay = +document.querySelector(`.page-content .card ul [data-countdown]`).dataset.countdown *1000
+    let todayTrader = GM_getValue("todayTrader", {reset: 0})
+    let table = document.querySelector(".page-content .content table:not(.mb-0)")
+    if(true){
+      GM_setValue("todayTrader", todayTrader = {
+        reset: nextDay,
+        items: [...table.querySelector("tbody").children].map(e=>e.children[2].children[0].dataset.item ? JSON.parse(e.children[2].children[0].dataset.item) : todayTrader.items?.find(item=>item?.spritesheet === e.children[0].children[0].src.slice(22))).filter(Boolean),
+      })
+    }
+    if(!settings.alwaysTraderBuyAgain && nextDay - +new Date() > 300000){return}
+    table.insertAdjacentHTML("afterend", `<div class="card card-custom" style="display: none"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
+    +`<div class="card card-custom" style="display: none"><span>The user-script doesn't have enough data about some of the items!</span><button id="fetchMissingTraderItems" class="btn btn-block bg-orange-dark mt-2">Fetch from Lulu5239's website</button></div>`
+    +`<style>
+      .card-custom {
+        text-align: center;
+        padding: 10px;
+      }
+      #reBuyList > span {
+        background-color: #444;
+        corner-radius: 2px;
+        padding: 3px;
+        color: #fff;
+        margin-left: 2px;
+        margin-right: 2px;
+      }
+      #reBuyList > span[data-status="requesting"] {
+        background-color: #663;
+      }
+      #reBuyList > span[data-status="done"] {
+        background-color: #1a1;
+      }
+      #reBuyList > span[data-status="late"] {
+        background-color: #a11;
+      }
+      #reBuyList > span[data-status="retry"] {
+        background-color: #961;
+      }
+    </style>`)
+    let reBuyList = document.querySelector("#reBuyList")
+    let reBuyItem = reBuyList.children[0]; reBuyItem.remove()
+    let tooLate
+    let onclick = ev=>{
+      if(tooLate){return showErrorToast("Too late!")}
+      let item = JSON.parse(ev.target.dataset.item)
+      let n = Math.floor(+prompt(`How many? At ${item.value} GG each. (Maximum 10.)`))
+      if(!(n >= 0 && n <= 10)){return showErrorToast("Not valid number.")}
+      let e = reBuyList.querySelector(`[data-item="${item.id}"]`) || reBuyItem.cloneNode(true)
+      ev.target.innerHTML = "Buy again" + (n>0 ? ` <b>x${n}</b>` : "")
+      if(n===0){
+        e.remove()
+      return}
+      e.dataset.item = item.id
+      e.dataset.count = n+""
+      e.querySelector("b").innerText = n+"x"
+      e.querySelector("a").innerText = item.name
+      if(!e.parentElement){reBuyList.append(e)}
+      reBuyList.parentElement.style.display = null
+    }
+    let addBuyAgainButtons = ()=>{
+      let rows = [...table.querySelector("tbody").children].filter(e=>!e.children[2].children[0].classList.contains("buyBtn"))
+      let missing = []
+      for(let row of rows){
+        let item = todayTrader.items.find(item=>item.spritesheet===row.children[0].children[0].src.slice(22))
+        if(!item){missing.push(row); continue}
+        row.children[2].innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-warning">Buy again</button>`
+        row.children[2].children[0].dataset.item = JSON.stringify(item)
+        row.children[2].children[0].addEventListener("click", onclick)
+      }
+      return missing
+    }
+    let missing = addBuyAgainButtons()
+    let fetchButton = document.querySelector("#fetchMissingTraderItems")
+    if(missing.length){
+      fetchButton.parentElement.style.display = null
+      fetchButton.addEventListener("click", async ev=>{
+        ev.target.disabled = true
+        let r = await fetch("https://lublox.xyz/wg/items", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(missing.map(row=>({ spritesheet: row.children[0].children[0].src.slice(22) }))),
+        }).catch(console.warn)
+        r = r && await r.json().catch(console.warn)
+        if(!r){
+          ev.target.disabled = false
+          showErrorToast("Couldn't get data from the Lublox website.")
+        return}
+        todayTrader.items.push(...r)
+        GM_setValue("todayTrader", todayTrader)
+        fetchButton.parentElement.remove()
+        return addBuyAgainButtons()
+      })
+    }else{
+      fetchButton.parentElement.remove()
+    }
+
+    setTimeout(async ()=>{
+      for(let n=0; true; n++){
+        let e = reBuyList.children[n]
+        if(!e){break}
+        if(tooLate){
+          e.dataset.status = "late"
+        continue}
+        e.dataset.status = "requesting"
+        let firstData = await fetch("/buy", {
+          method: "POST",
+          body: JSON.stringify({
+            _token: token,
+            buyItemID: +e.dataset.item,
+            buyItemCount: +e.dataset.count,
+          }),
+          headers: {
+            "content-type": "application/json",
+             accept: "application/json",
+          },
+        })
+        if(firstData.headers.get("content-type")==="application/json"){
+          let data = await firstData.json()
+          if(data.message==="The Store expired. Reload the page and try again..."){
+            tooLate = true
+            e.dataset.status = "late"
+          }else if(data.message?.startsWith("The Trader only has ")){
+            n -= 1
+            e.dataset.status = "retry"
+          }else if(firstData.status === 429){
+            e.dataset.status = "retry"
+            await new Promise(ok=>setTimeout(ok, 1000))
+            n -= 1
+          }else{
+            tooLate = true
+            e.dataset.status = "late"
+          }
+        }else if(firstData.status >= 400){
+          tooLate = true
+          e.dataset.status = "late"
+        continue}
+        e.dataset.status = "done"
+      }
+    }, nextDay - +new Date())
+  }else if(path==="/trader" && document.querySelector(".card.trader-catalog")){
     let nextDay = +document.querySelector(`.page-content .card:first-child strong span[data-countdown]`).dataset.countdown *1000
     let todayTrader = GM_getValue("todayTrader", {reset: 0})
     let table = document.querySelector(".card.trader-catalog")

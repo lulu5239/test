@@ -2056,8 +2056,14 @@
 
   if(path==="/trader"){
     let nextDay = +document.querySelector(`.page-content .card:first-child strong span[data-countdown]`).dataset.countdown *1000
-    let todayTrader = []
+    let todayTrader = GM_getValue("todayTrader", {reset: 0})
     let table = document.querySelector(".card.trader-catalog")
+    if(true){
+      GM_setValue("todayTrader", todayTrader = {
+        reset: nextDay,
+        items: [...table.querySelectorAll("button.buyBtn.btn, span.trader-stock-trigger")].map(e=>e.dataset.item ? JSON.parse(e.dataset.item) : todayTrader.items?.find(item=>item?.id === +e.closest("article.trader-product").dataset["trader-item"])).filter(Boolean),
+      })
+    }
     if(!settings.alwaysTraderBuyAgain && nextDay - +new Date() > 300000){return}
     table.insertAdjacentHTML("afterend", `<div class="card card-custom" style="display: none"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
     +`<style>
@@ -2100,20 +2106,22 @@
       if(n===0){
         e.remove()
       return}
-      e.dataset.item = item.id
+      e.dataset.item = id
       e.dataset.count = n+""
       e.querySelector("b").innerText = n+"x"
-      e.querySelector("a").innerText = item.name
+      e.querySelector("a").innerText = ev.target.closest("article.trader-product").querySelector("h3").innerText
       if(!e.parentElement){reBuyList.append(e)}
       reBuyList.parentElement.style.display = null
     }
     let addReBuyButtons = ()=>{
       for(let span of table.querySelectorAll(".trader-stock-trigger")){
+        if(span.querySelector("button").innerText === "GG unavailable"){continue}
         let parent = span.parentElement
         parent.innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-warning trader-price">Buy again</button>`
         parent.children[0].addEventListener("click", onclick)
       }
     }
+    addReBuyButtons()
     
     setTimeout(async ()=>{
       for(let n=0; true; n++){

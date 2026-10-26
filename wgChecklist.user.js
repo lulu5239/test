@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame checklist
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-21
+// @version      2026-10-26
 // @description  The user-script about navigation.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -396,7 +396,7 @@
       actions.push({
         name: "Visit trader",
         done: !!daily.visitedTrader,
-        url: "/trader",
+        url: "/trader?currency=GG",
       })
     }
     if(!ignore.includes("swipe")){

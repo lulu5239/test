@@ -1366,7 +1366,7 @@
           ])} <i>(it won't appear if you used another XP item during the delay)</i><br>
           <br>
           ${settingCheckbox("highlightRewardingRaffles", "Highlight rewarding raffles")} <i>(this uses Lulu5239's website)</i><br>
-          ${settingCheckbox("removeInboxItemsLink", "Remove list of items in inbox messages from the homepage")
+          ${settingCheckbox("removeInboxItemsLink", "Remove list of items in inbox messages from the homepage")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>

@@ -2155,7 +2155,8 @@
       fetchButton.parentElement.remove()
     }
 
-    setTimeout(async ()=>{
+    let lastTrade
+    setTimeout(()=>{
       for(let n=0; true; n++){
         let e = reBuyList.children[n]
         if(!e){break}
@@ -2180,13 +2181,15 @@
           if(data.message==="The Store expired. Reload the page and try again..."){
             tooLate = true
             e.dataset.status = "late"
-          }else if(data.message?.startsWith("The Trader only has ")){
-            n -= 1
-            e.dataset.status = "retry"
-          }else if(firstData.status === 429){
+          continue}else if(data.message?.startsWith("The Trader only has ")){
+            e.dataset.status = "error"
+          continue}else if(firstData.status === 429){
             e.dataset.status = "retry"
             await new Promise(ok=>setTimeout(ok, 1000))
             n -= 1
+          continue}else if(data.success){
+            lastTrade = data
+            e.dataset.status = "done"
           }else{
             tooLate = true
             e.dataset.status = "late"
@@ -2245,7 +2248,7 @@
       #reBuyList > span[data-status="done"] {
         background-color: #1a1;
       }
-      #reBuyList > span[data-status="late"] {
+      #reBuyList > :is(span[data-status="late"], span[data-status="error"]) {
         background-color: #a11;
       }
       #reBuyList > span[data-status="retry"] {
@@ -2282,8 +2285,9 @@
       }
     }
     addReBuyButtons()
-    
-    setTimeout(async ()=>{
+
+    let lastTrade
+    setTimeout(()=>{
       for(let n=0; true; n++){
         let e = reBuyList.children[n]
         if(!e){break}
@@ -2308,13 +2312,15 @@
           if(data.message==="The Store expired. Reload the page and try again..."){
             tooLate = true
             e.dataset.status = "late"
-          }else if(data.message?.startsWith("The Trader only has ")){
-            n -= 1
-            e.dataset.status = "retry"
-          }else if(firstData.status === 429){
+          continue}else if(data.message?.startsWith("The Trader only has ")){
+            e.dataset.status = "error"
+          continue}else if(firstData.status === 429){
             e.dataset.status = "retry"
             await new Promise(ok=>setTimeout(ok, 1000))
             n -= 1
+          continue}else if(data.success){
+            lastTrade = data
+            e.dataset.status = "done"
           }else{
             tooLate = true
             e.dataset.status = "late"

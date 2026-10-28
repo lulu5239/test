@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-26
+// @version      2026-10-28
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1366,7 +1366,7 @@
           ])} <i>(it won't appear if you used another XP item during the delay)</i><br>
           <br>
           ${settingCheckbox("highlightRewardingRaffles", "Highlight rewarding raffles")} <i>(this uses Lulu5239's website)</i><br>
-          ${settingCheckbox("removeInboxItemsLink", "Remove list of items in inbox messages from the homepage")}
+          ${settingCheckbox("removeInboxItemsLink", "Remove list of items in inbox messages from the homepage and items page")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -1771,7 +1771,11 @@
     document.querySelector(`#hoteledWaifuMenu [data-action="load+feed"]`).addEventListener("click", ()=>{feed(true)})
   }
 
-  if(path==="/items" && settings.defaultRerollSet){
+  if(path==="/items"){
+    if(settings.removeInboxItemsLink){
+      document.querySelector(".inbox-reward-summary-link")?.parentElement.remove()
+    }
+    if(!settings.defaultRerollSet){return}
     let getItem = id=>document.querySelector(`.actionShowItemSheet[data-iid="${id}"]`)
     let storableItem = e=>({
       id: e.dataset.iid,

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-23
+// @version      2026-10-28
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1365,7 +1365,8 @@
             {value: "3000", name: "3s"},
           ])} <i>(it won't appear if you used another XP item during the delay)</i><br>
           <br>
-          ${settingCheckbox("highlightRewardingRaffles", "Highlight rewarding raffles")} <i>(this uses Lulu5239's website)</i>
+          ${settingCheckbox("highlightRewardingRaffles", "Highlight rewarding raffles")} <i>(this uses Lulu5239's website)</i><br>
+          ${settingCheckbox("removeInboxItemsLink", "Remove list of items in inbox messages from the homepage and items page")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -1632,6 +1633,10 @@
       }
       select.setAttribute("onchange", "switchFormation()")
     }
+
+    if(settings.removeInboxItemsLink){
+      document.querySelector(".inbox-reward-summary-link")?.parentElement.remove()
+    }
   }
 
   if(path==="/profile/wishlist"){
@@ -1766,7 +1771,11 @@
     document.querySelector(`#hoteledWaifuMenu [data-action="load+feed"]`).addEventListener("click", ()=>{feed(true)})
   }
 
-  if(path==="/items" && settings.defaultRerollSet){
+  if(path==="/items"){
+    if(settings.removeInboxItemsLink){
+      document.querySelector(".inbox-reward-summary-link")?.parentElement.remove()
+    }
+    if(!settings.defaultRerollSet){return}
     let getItem = id=>document.querySelector(`.actionShowItemSheet[data-iid="${id}"]`)
     let storableItem = e=>({
       id: e.dataset.iid,
@@ -2054,7 +2063,7 @@
     })
   }
 
-  if(path==="/trader"){
+  if(path==="/trader" && document.querySelector(".page-content .content table:not(.mb-0)")){
     let nextDay = +document.querySelector(`.page-content .card ul [data-countdown]`).dataset.countdown *1000
     let todayTrader = GM_getValue("todayTrader", {reset: 0})
     let table = document.querySelector(".page-content .content table:not(.mb-0)")
@@ -2150,6 +2159,7 @@
       fetchButton.parentElement.remove()
     }
 
+    let lastTrade
     setTimeout(async ()=>{
       for(let n=0; true; n++){
         let e = reBuyList.children[n]
@@ -2175,13 +2185,146 @@
           if(data.message==="The Store expired. Reload the page and try again..."){
             tooLate = true
             e.dataset.status = "late"
-          }else if(data.message?.startsWith("The Trader only has ")){
-            n -= 1
-            e.dataset.status = "retry"
-          }else if(firstData.status === 429){
+          continue}else if(data.message?.startsWith("The Trader only has ")){
+            e.dataset.status = "error"
+          continue}else if(firstData.status === 429){
             e.dataset.status = "retry"
             await new Promise(ok=>setTimeout(ok, 1000))
             n -= 1
+          continue}else if(data.success){
+            lastTrade = data
+            e.dataset.status = "done"
+          }else{
+            tooLate = true
+            e.dataset.status = "late"
+          }
+        }else if(firstData.status >= 400){
+          tooLate = true
+          e.dataset.status = "late"
+        continue}
+        e.dataset.status = "done"
+      }
+    }, nextDay - +new Date())
+  }else if(path==="/trader" && document.querySelector(".card.trader-catalog")){
+    let nextDay = +document.querySelector(`.page-content .card:first-child strong span[data-countdown]`).dataset.countdown *1000
+    let todayTrader = GM_getValue("todayTrader", {reset: 0})
+    let table = document.querySelector(".card.trader-catalog")
+    if(true){
+      GM_setValue("todayTrader", todayTrader = {
+        reset: nextDay,
+        items: [...table.querySelectorAll("button.buyBtn.btn, span.trader-stock-trigger")].map(e=>e.dataset.item ? JSON.parse(e.dataset.item) : todayTrader.items?.find(item=>item?.id === +e.closest("article.trader-product").dataset["trader-item"])).filter(Boolean),
+      })
+    }
+
+    let currency = new URLSearchParams(document.location.search).get("currency")?.toLowerCase()
+    if(currency === "gg"){
+      for(let article of [...table.children]){
+        let pricing = article.querySelector(".trader-price-options")
+        if(!pricing.querySelector(".buyBtn.btn") && pricing.querySelector("span.trader-stock-trigger button")?.innerText !== "GG sold out"){article.remove(); continue}
+        let secondary = article.querySelector(".trader-secondary")
+        if(secondary){secondary.remove()}
+        let eBuyBtn = pricing.querySelector(".eBuyBtn.btn")
+        if(eBuyBtn){
+          eBuyBtn.parentElement.remove()
+          pricing.classList.add("trader-price-options--single")
+        }
+      }
+    }
+    
+    if(!settings.alwaysTraderBuyAgain && nextDay - +new Date() > 300000){return}
+    table.insertAdjacentHTML("afterend", `<div class="card card-custom" style="display: none"><span>Items to buy again:</span><div id="reBuyList"><span><b>x</b> <a></a></span></div><i>Keep the tab open! This will use an old bug.</i></div>`
+    +`<style>
+      .card-custom {
+        text-align: center;
+        padding: 10px;
+      }
+      #reBuyList > span {
+        background-color: #444;
+        corner-radius: 2px;
+        padding: 3px;
+        color: #fff;
+        margin-left: 2px;
+        margin-right: 2px;
+      }
+      #reBuyList > span[data-status="requesting"] {
+        background-color: #663;
+      }
+      #reBuyList > span[data-status="done"] {
+        background-color: #1a1;
+      }
+      #reBuyList > :is(span[data-status="late"], span[data-status="error"]) {
+        background-color: #a11;
+      }
+      #reBuyList > span[data-status="retry"] {
+        background-color: #961;
+      }
+    </style>`)
+    let reBuyList = document.querySelector("#reBuyList")
+    let reBuyItem = reBuyList.children[0]; reBuyItem.remove()
+    let tooLate
+    let onclick = ev=>{
+      if(tooLate){return showErrorToast("Too late!")}
+      let id = +ev.target.closest("[data-trader-item]").dataset["trader-item"]
+      let item = todayTrader.find(item=>item.id === id)
+      let n = Math.floor(+prompt(`How many? At ${item?.value || "some"} GG each. (Maximum 10.)`))
+      if(!(n >= 0 && n <= 10)){return showErrorToast("Not valid number.")}
+      let e = reBuyList.querySelector(`[data-item="${id}"]`) || reBuyItem.cloneNode(true)
+      ev.target.innerHTML = "Buy again" + (n>0 ? ` <b>x${n}</b>` : "")
+      if(n===0){
+        e.remove()
+      return}
+      e.dataset.item = id
+      e.dataset.count = n+""
+      e.querySelector("b").innerText = n+"x"
+      e.querySelector("a").innerText = ev.target.closest("article.trader-product").querySelector("h3").innerText
+      if(!e.parentElement){reBuyList.append(e)}
+      reBuyList.parentElement.style.display = null
+    }
+    let addReBuyButtons = ()=>{
+      for(let span of table.querySelectorAll(".trader-stock-trigger")){
+        if(span.querySelector("button").innerText === "GG unavailable"){continue}
+        let parent = span.parentElement
+        parent.innerHTML = `<button class="reBuyBtn btn btn-sm btn-block btn-outline-warning trader-price">Buy again</button>`
+        parent.children[0].addEventListener("click", onclick)
+      }
+    }
+    addReBuyButtons()
+
+    let lastTrade
+    setTimeout(async ()=>{
+      for(let n=0; true; n++){
+        let e = reBuyList.children[n]
+        if(!e){break}
+        if(tooLate){
+          e.dataset.status = "late"
+        continue}
+        e.dataset.status = "requesting"
+        let firstData = await fetch("/buy", {
+          method: "POST",
+          body: JSON.stringify({
+            _token: token,
+            buyItemID: +e.dataset.item,
+            buyItemCount: +e.dataset.count,
+          }),
+          headers: {
+            "content-type": "application/json",
+             accept: "application/json",
+          },
+        })
+        if(firstData.headers.get("content-type")==="application/json"){
+          let data = await firstData.json()
+          if(data.message==="The Store expired. Reload the page and try again..."){
+            tooLate = true
+            e.dataset.status = "late"
+          continue}else if(data.message?.startsWith("The Trader only has ")){
+            e.dataset.status = "error"
+          continue}else if(firstData.status === 429){
+            e.dataset.status = "retry"
+            await new Promise(ok=>setTimeout(ok, 1000))
+            n -= 1
+          continue}else if(data.success){
+            lastTrade = data
+            e.dataset.status = "done"
           }else{
             tooLate = true
             e.dataset.status = "late"

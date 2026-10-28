@@ -2160,7 +2160,7 @@
     }
 
     let lastTrade
-    setTimeout(()=>{
+    setTimeout(async ()=>{
       for(let n=0; true; n++){
         let e = reBuyList.children[n]
         if(!e){break}
@@ -2291,7 +2291,7 @@
     addReBuyButtons()
 
     let lastTrade
-    setTimeout(()=>{
+    setTimeout(async ()=>{
       for(let n=0; true; n++){
         let e = reBuyList.children[n]
         if(!e){break}

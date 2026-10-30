@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waifugame swiper next
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-28
+// @version      2026-10-29
 // @description  Move your cards to boxes from the swiper page, and various other sometimes helpful options.
 // @author       Lulu5239
 // @match        https://waifugame.com/*
@@ -1366,7 +1366,7 @@
           ])} <i>(it won't appear if you used another XP item during the delay)</i><br>
           <br>
           ${settingCheckbox("highlightRewardingRaffles", "Highlight rewarding raffles")} <i>(this uses Lulu5239's website)</i><br>
-          ${settingCheckbox("removeInboxItemsLink", "Remove list of items in inbox messages from the homepage and items page")}
+          ${settingCheckbox("removeInboxItemsLink", "Remove list of items in inbox messages from some pages")}
         </div>
         <div data-page="keybinds">
           Pressing keys on your keyboard would select the associated action:<br>
@@ -1501,7 +1501,7 @@
           settings[key] = option.value
         }
         GM_setValue("settings", settings)
-        if(["showTopSimps", "cardsListFixedSize"].includes(key)){
+        if(["showTopSimps", "cardsListFixedSize", "removeInboxItemsLink"].includes(key)){
           showSuccessToast("Refresh the page to see the changes.")
         }
       })
@@ -1570,6 +1570,10 @@
       }
       ev.preventDefault()
     }, {capture: true})
+
+    if(settings.removeInboxItemsLink){
+      document.querySelector(".inbox-reward-summary-link")?.parentElement.remove()
+    }
   return}
 
   if(path==="/home"){
